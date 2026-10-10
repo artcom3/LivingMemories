@@ -1,38 +1,38 @@
 export const narrativeStyles = {
   CHILDREN: {
-    label: "Cuento infantil",
+    label: "Children's story",
     prompt:
       "Relato cercano y sencillo, adaptado al lector, con un cierre cálido.",
   },
   MEMOIR: {
-    label: "Memoria familiar",
+    label: "Family memoir",
     prompt:
       "Testimonio íntimo y respetuoso; conserva las expresiones y la perspectiva del narrador.",
   },
   CHRONICLE: {
-    label: "Crónica",
+    label: "Chronicle",
     prompt:
       "Crónica clara de los acontecimientos documentados, sin completar fechas desconocidas.",
   },
   ADVENTURE: {
-    label: "Aventura ilustrada",
+    label: "Illustrated adventure",
     prompt:
       "Ritmo de aventura centrado en los hechos reales, sin añadir hazañas ni diálogos inventados.",
   },
   COMIC: {
-    label: "Cómic / manga",
+    label: "Comic / manga",
     prompt:
       "Relato dividido en escenas breves y cartelas, con ritmo de cómic; no inventes diálogos ni sucesos.",
   },
 } as const;
 export const visualStyles = {
   WATERCOLOR: {
-    label: "Acuarela suave",
+    label: "Soft watercolor",
     prompt:
       "Soft watercolor, warm family book, consistent characters and palette.",
   },
   STORYBOOK: {
-    label: "Libro ilustrado",
+    label: "Picture book",
     prompt:
       "Hand-drawn picture book, textured paper, warm colors, consistent characters.",
   },
@@ -47,39 +47,39 @@ export const visualStyles = {
       "Original anime-inspired illustration, soft cel shading, consistent characters; no existing franchise or artist imitation.",
   },
   COMIC: {
-    label: "Cómic",
+    label: "Comic",
     prompt:
       "Original graphic novel illustration, clear ink lines and flat color, consistent characters.",
   },
 } as const;
 export const musicStyles = {
   ACOUSTIC: {
-    label: "Acústica familiar",
+    label: "Family acoustic",
     prompt: "Warm acoustic guitar, intimate, gentle, nostalgic.",
   },
   ANDEAN: {
-    label: "Folclore andino",
+    label: "Andean folk",
     prompt:
       "Andean folk inspired, charango, quena and gentle percussion; culturally respectful.",
   },
   PIANO: {
-    label: "Piano emotivo",
+    label: "Expressive piano",
     prompt: "Tender solo piano, expressive, reflective and warm.",
   },
   LULLABY: {
-    label: "Canción de cuna",
+    label: "Lullaby",
     prompt: "Gentle lullaby, soft acoustic instruments, calm and comforting.",
   },
   CINEMATIC: {
-    label: "Banda sonora",
+    label: "Cinematic score",
     prompt: "Original cinematic score, warm strings, subtle dynamics, hopeful.",
   },
   LOFI: {
-    label: "Lo-fi tranquilo",
+    label: "Calm lo-fi",
     prompt: "Soft lo-fi groove, mellow keys and relaxed percussion.",
   },
   POP: {
-    label: "Pop alegre",
+    label: "Upbeat pop",
     prompt: "Original cheerful family pop, acoustic rhythm, positive and warm.",
   },
 } as const;
@@ -125,14 +125,22 @@ export type Evidence = {
   dateContext: string | null;
   emotionContext: string | null;
   transcript?: string;
-  timestamps?: { text: string; start: number; end: number }[];
+  timestamps?: {
+    text: string;
+    start: number;
+    end: number;
+  }[];
   sampledSeconds?: number[];
 };
 export type CreativeDraft = {
   title: string;
   summary: string;
   notes: string[];
-  pages: { text: string; illustrationPrompt: string; sourceIds: string[] }[];
+  pages: {
+    text: string;
+    illustrationPrompt: string;
+    sourceIds: string[];
+  }[];
   musicPrompt: string;
   lyrics: string;
   sourceIds: string[];
@@ -145,11 +153,11 @@ export type Artifact = {
   page?: number;
 };
 export const creationStatusLabels: Record<string, string> = {
-  QUEUED: "Esperando turno",
-  ANALYZING: "Preparando borrador",
-  REVIEW: "Borrador por revisar",
-  RENDER_QUEUED: "Esperando generación",
-  RENDERING: "Generando contenido",
-  READY: "Listo para escuchar y revisar",
-  FAILED: "No se pudo completar",
+  QUEUED: "Queued",
+  ANALYZING: "Preparing draft",
+  REVIEW: "Draft ready for review",
+  RENDER_QUEUED: "Waiting for generation",
+  RENDERING: "Generating content",
+  READY: "Ready to listen and review",
+  FAILED: "Could not complete",
 };

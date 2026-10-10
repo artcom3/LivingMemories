@@ -25,8 +25,7 @@ export function endpoint(run: (request: Request) => Promise<Response>) {
         return json(
           {
             code: "CONFLICT",
-            message:
-              "Los datos cambiaron. Inicia sesión o vuelve a intentarlo.",
+            message: "The data has changed. Sign in or try again.",
           },
           409,
         );
@@ -37,7 +36,7 @@ export function endpoint(run: (request: Request) => Promise<Response>) {
       return json(
         {
           code: "UNAVAILABLE",
-          message: "No pudimos completar la acción. Inténtalo de nuevo.",
+          message: "We could not complete this action. Try again.",
         },
         503,
       );
@@ -47,11 +46,7 @@ export function endpoint(run: (request: Request) => Promise<Response>) {
 export async function actor(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session)
-    throw new AccessError(
-      401,
-      "SIGN_IN_REQUIRED",
-      "Inicia sesión para continuar.",
-    );
+    throw new AccessError(401, "SIGN_IN_REQUIRED", "Sign in to continue.");
   return session.user.id;
 }
 export function checkOrigin(request: Request) {
@@ -62,7 +57,7 @@ export function checkOrigin(request: Request) {
     throw new AccessError(
       403,
       "INVALID_ORIGIN",
-      "La solicitud no está permitida.",
+      "This request is not allowed.",
     );
 }
 export async function body(request: Request, maxBytes = 16384): Promise<Input> {
@@ -71,10 +66,11 @@ export async function body(request: Request, maxBytes = 16384): Promise<Input> {
     request.headers.get("content-type")?.split(";")[0].trim() !==
     "application/json"
   )
-    throw new AccessError(415, "INVALID_INPUT", "Envía los datos como JSON.");
+    throw new AccessError(415, "INVALID_INPUT", "Send the data as JSON.");
   // Bound our small form payloads even when Content-Length is absent.
   const reader = request.body?.getReader();
-  if (!reader) throw new AccessError(400, "INVALID_INPUT", "Faltan los datos.");
+  if (!reader)
+    throw new AccessError(400, "INVALID_INPUT", "The data is missing.");
   const chunks: Uint8Array[] = [];
   let size = 0;
   while (true) {
@@ -83,11 +79,7 @@ export async function body(request: Request, maxBytes = 16384): Promise<Input> {
     size += value.byteLength;
     if (size > maxBytes) {
       await reader.cancel();
-      throw new AccessError(
-        413,
-        "INVALID_INPUT",
-        "El formulario es demasiado grande.",
-      );
+      throw new AccessError(413, "INVALID_INPUT", "The form is too large.");
     }
     chunks.push(value);
   }
@@ -97,6 +89,6 @@ export async function body(request: Request, maxBytes = 16384): Promise<Input> {
       throw new Error();
     return value as Input;
   } catch {
-    throw new AccessError(400, "INVALID_INPUT", "El formulario no es válido.");
+    throw new AccessError(400, "INVALID_INPUT", "The form is invalid.");
   }
 }

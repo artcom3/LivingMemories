@@ -1,17 +1,8 @@
-/* Palette from docs/landing/brief.md. The --sw-* tokens theme the scroll-world
-   engine; its defaults live in `@layer sw`, so these unlayered values win. They
-   are scoped to the landing so private family pages keep their own theme. */
+/* The paper and ink palette is shared with the app in globals.css. The --sw-*
+   tokens theme the scroll-world engine; its defaults live in `@layer sw`, so
+   these unlayered values win. Only engine-specific tokens stay scoped here. */
 .landing-page,
 .landing-page .sw-root {
-  /* Measured from the generated scene corners (#f9ebda to #fbf1e1). */
-  --paper: #f9eddd;
-  --ink: #2b2a33;
-  --ink-soft: #6b6560;
-  --terracota: #c8735a;
-  --salvia: #8fa98a;
-  --azul: #6e8fb5;
-  --ocre: #d9a45b;
-
   /* Spring-like curve for every UI transition (landing-page-design B7). */
   --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
 
@@ -74,7 +65,7 @@
   box-shadow: none;
   background: var(--terracota);
   /* Phosphor book-open (fill), MIT. */
-  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><path d='M240,56V200a8,8,0,0,1-8,8H160a24,24,0,0,0-24,23.94,7.9,7.9,0,0,1-5.12,7.55A8,8,0,0,1,120,232a24,24,0,0,0-24-24H24a8,8,0,0,1-8-8V56a8,8,0,0,1,8-8H88a32,32,0,0,1,32,32v87.73a8.17,8.17,0,0,0,7.47,8.25,8,8,0,0,0,8.53-8V80a32,32,0,0,1,32-32h64A8,8,0,0,1,240,56Z'/></svg>")
+  mask: url("/brand/book-open.svg")
     center / contain no-repeat;
 }
 .sw-brand__name {

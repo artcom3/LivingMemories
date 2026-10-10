@@ -18,15 +18,17 @@ import { storage } from "@/lib/infrastructure/connections";
 import { required } from "@/lib/infrastructure/config";
 import { narrativeStyles, visualStyles } from "../creations/shared";
 import { hasContext, readerProfiles, type ReaderProfile } from "./shared";
-
 type Tx = Prisma.TransactionClient;
-type Member = { userId: string; role: "ADMIN" | "CONTRIBUTOR" | "READER" };
+type Member = {
+  userId: string;
+  role: "ADMIN" | "CONTRIBUTOR" | "READER";
+};
 function write(member: Member) {
   if (member.role === "READER")
     throw new AccessError(
       403,
       "FORBIDDEN",
-      "Tu acceso de lector no permite aportar memorias.",
+      "Your reader role does not allow you to add memories.",
     );
 }
 function visible(actorId: string, member: Member) {
@@ -67,7 +69,6 @@ const sourceSelect = {
   withdrawnAt: true,
   createdAt: true,
 } as const;
-
 export async function memoryOverview(
   actorId: string,
   familyId: string,
@@ -119,8 +120,8 @@ export async function createCollection(
   familyId: string,
   input: Input,
 ) {
-  const name = text(input.name, "El nombre del álbum");
-  const description = optionalText(input.description, "La descripción", 2000);
+  const name = text(input.name, "The album name");
+  const description = optionalText(input.description, "The description", 2000);
   return withFamily(actorId, familyId, async (tx, member) => {
     write(member);
     return tx.memoryCollection.create({
@@ -144,8 +145,8 @@ export async function updateCollection(
     return tx.memoryCollection.update({
       where: { id },
       data: {
-        name: text(input.name, "El nombre del álbum"),
-        description: optionalText(input.description, "La descripción", 2000),
+        name: text(input.name, "The album name"),
+        description: optionalText(input.description, "The description", 2000),
       },
       select: { id: true },
     });
@@ -185,10 +186,10 @@ async function relationships(
       data: {
         familyId,
         createdById: actorId,
-        name: text(input.newNarratorName, "El nombre del narrador"),
+        name: text(input.newNarratorName, "The storyteller's name"),
         relationship: optionalText(
           input.newNarratorRelationship,
-          "El parentesco",
+          "The relationship",
           100,
         ),
       },
@@ -226,9 +227,13 @@ export async function createMemory(
   familyId: string,
   input: Input,
 ) {
-  const title = text(input.title, "El título", 160);
-  const description = optionalText(input.description, "La descripción", 4000);
-  const originalText = optionalText(input.originalText, "El relato", 10000);
+  const title = text(input.title, "The title", 160);
+  const description = optionalText(input.description, "The description", 4000);
+  const originalText = optionalText(
+    input.originalText,
+    "The written account",
+    10000,
+  );
   return withFamily(actorId, familyId, async (tx, member) => {
     write(member);
     const links = await relationships(tx, familyId, actorId, member, input);
@@ -244,7 +249,7 @@ export async function createMemory(
               sources: {
                 create: {
                   type: "TEXT",
-                  originalName: "Relato escrito",
+                  originalName: "Written account",
                   originalText,
                 },
               },
@@ -300,8 +305,8 @@ export async function updateMemory(
     return tx.memory.update({
       where: { id: memoryId },
       data: {
-        title: text(input.title, "El título", 160),
-        description: optionalText(input.description, "La descripción", 4000),
+        title: text(input.title, "The title", 160),
+        description: optionalText(input.description, "The description", 4000),
         ...links,
       },
       select: { id: true },
@@ -331,7 +336,7 @@ export async function trashMemory(
       throw new AccessError(
         400,
         "EXPIRED",
-        "Ha terminado el plazo de recuperación de esta memoria.",
+        "The recovery period for this memory has ended.",
       );
     await tx.memory.update({
       where: { id: memoryId },
@@ -348,7 +353,7 @@ async function capacity(tx: Tx, memoryId: string) {
     throw new AccessError(
       400,
       "SOURCE_LIMIT",
-      "Esta memoria ya tiene 20 materiales. Retira uno antes de añadir otro.",
+      "This memory already has 20 materials. Remove one before adding another.",
     );
 }
 export async function addText(
@@ -357,7 +362,7 @@ export async function addText(
   memoryId: string,
   input: Input,
 ) {
-  const originalText = text(input.originalText, "El relato", 10000);
+  const originalText = text(input.originalText, "The written account", 10000);
   return withFamily(actorId, familyId, async (tx, member) => {
     await memoryFor(tx, member, actorId, familyId, memoryId);
     await capacity(tx, memoryId);
@@ -366,8 +371,8 @@ export async function addText(
         memoryId,
         type: "TEXT",
         originalName:
-          optionalText(input.originalName, "El título del texto", 160) ||
-          "Relato escrito",
+          optionalText(input.originalName, "The text title", 160) ||
+          "Written account",
         originalText,
       },
       select: { id: true },
@@ -381,7 +386,10 @@ export async function addText(
 }
 const formats: Record<
   string,
-  { type: "PHOTO" | "AUDIO" | "VIDEO"; mime: string }
+  {
+    type: "PHOTO" | "AUDIO" | "VIDEO";
+    mime: string;
+  }
 > = {
   jpg: { type: "PHOTO", mime: "image/jpeg" },
   jpeg: { type: "PHOTO", mime: "image/jpeg" },
@@ -414,18 +422,18 @@ export async function uploadSource(
     throw new AccessError(
       400,
       "FORMAT",
-      "Elige una fotografía JPEG, PNG, WebP o HEIC, un audio MP3, WAV, M4A, WebM, OGG o FLAC, o un video MP4, MOV o WebM.",
+      "Choose a JPEG, PNG, WebP, or HEIC photo; MP3, WAV, M4A, WebM, OGG, or FLAC audio; or MP4, MOV, or WebM video.",
     );
-  const limit = format.type === "PHOTO" ? 15_000_000 : 100_000_000;
+  const limit = format.type === "PHOTO" ? 15000000 : 100000000;
   if (!file.size || file.size > limit)
     throw new AccessError(
       400,
       "SIZE",
       format.type === "PHOTO"
-        ? "La fotografía debe pesar como máximo 15 MB."
-        : "El audio o video debe pesar como máximo 100 MB.",
+        ? "The photo must be no larger than 15 MB."
+        : "Audio or video must be no larger than 100 MB.",
     );
-  const originalName = text(file.name, "El nombre del archivo", 255);
+  const originalName = text(file.name, "The file name", 255);
   const key =
     "families/" +
     familyId +
@@ -491,17 +499,17 @@ export async function sourceContext(
       data: {
         contextDescription: optionalText(
           input.contextDescription,
-          "La descripción",
+          "The description",
           4000,
         ),
-        peopleContext: optionalText(input.peopleContext, "Las personas", 500),
-        locationContext: optionalText(input.locationContext, "El lugar", 300),
-        dateContext: optionalText(input.dateContext, "La fecha", 200),
-        emotionContext: optionalText(
-          input.emotionContext,
-          "El significado",
+        peopleContext: optionalText(input.peopleContext, "The people", 500),
+        locationContext: optionalText(
+          input.locationContext,
+          "The location",
           300,
         ),
+        dateContext: optionalText(input.dateContext, "The date", 200),
+        emotionContext: optionalText(input.emotionContext, "The meaning", 300),
       },
     });
     return { ok: true };
@@ -542,11 +550,7 @@ export async function originalSource(
     return found;
   });
   if (range && !/^bytes=\d+-\d*$/.test(range))
-    throw new AccessError(
-      416,
-      "RANGE",
-      "El intervalo solicitado no es válido.",
-    );
+    throw new AccessError(416, "RANGE", "The requested range is invalid.");
   const object = await storage().send(
     new GetObjectCommand({
       Bucket: required("S3_BUCKET"),
@@ -577,26 +581,22 @@ export async function prepareStory(
   input: Input,
   id?: string,
 ) {
-  const title = text(input.title, "El título", 160);
+  const title = text(input.title, "The title", 160);
   if (input.language !== "es" && input.language !== "en")
-    throw new AccessError(400, "INPUT", "Elige español o inglés.");
+    throw new AccessError(400, "INPUT", "Choose Spanish or English.");
   const profile = String(input.readerProfile) as ReaderProfile;
   if (!Object.hasOwn(readerProfiles, profile))
-    throw new AccessError(400, "INPUT", "Elige un perfil lector.");
+    throw new AccessError(400, "INPUT", "Choose a reader profile.");
   const pages = Number(input.pages);
   if (!Number.isInteger(pages) || pages < 1 || pages > 24)
-    throw new AccessError(400, "INPUT", "Elige entre 1 y 24 páginas.");
+    throw new AccessError(400, "INPUT", "Choose between 1 and 24 pages.");
   if (
     !Array.isArray(input.sourceIds) ||
     !input.sourceIds.length ||
     input.sourceIds.length > 100 ||
     input.sourceIds.some((v) => typeof v !== "string")
   )
-    throw new AccessError(
-      400,
-      "INPUT",
-      "Selecciona materiales para el cuento.",
-    );
+    throw new AccessError(400, "INPUT", "Select materials for the story.");
   const sourceIds = [...new Set(input.sourceIds as string[])];
   const narrativeStyle = String(input.narrativeStyle || "CHILDREN");
   const visualStyle = String(input.visualStyle || "WATERCOLOR");
@@ -607,7 +607,7 @@ export async function prepareStory(
     throw new AccessError(
       400,
       "INPUT",
-      "Elige estilos de relato e ilustración válidos.",
+      "Choose valid story and illustration styles.",
     );
   return withFamily(actorId, familyId, async (tx, member) => {
     write(member);
@@ -630,7 +630,7 @@ export async function prepareStory(
       throw new AccessError(
         400,
         "PRIMARY_REQUIRED",
-        "Selecciona al menos un material de la memoria principal.",
+        "Select at least one material from the main memory.",
       );
     if (
       !selected.some((s) => s.type === "PHOTO") &&
@@ -639,7 +639,7 @@ export async function prepareStory(
       throw new AccessError(
         400,
         "PHOTO_REFERENCE",
-        "Añade una fotografía de referencia o permite personajes ilustrados genéricos.",
+        "Add a reference photo or allow generic illustrated characters.",
       );
     if (
       id &&
@@ -654,7 +654,7 @@ export async function prepareStory(
       language: input.language as string,
       readerProfile: profile,
       pages,
-      instructions: optionalText(input.instructions, "Las indicaciones", 4000),
+      instructions: optionalText(input.instructions, "The instructions", 4000),
       genericCharacters: input.genericCharacters === true,
       narrativeStyle,
       visualStyle,

@@ -1,4 +1,17 @@
 "use client";
+import { InitialAvatar } from "@/components/private/initial-avatar";
+import { EmptyState, Feedback } from "@/components/private/content-primitives";
+import { Button } from "@/components/ui/button";
+import { Disclosure } from "@/components/private/disclosure";
+import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/private/form-field";
+import { Textarea } from "@/components/ui/textarea";
+import { FieldGroup } from "@/components/ui/field";
+import {
+  NativeSelectOption,
+  NativeSelect,
+} from "@/components/ui/native-select";
+import { useConfirmation } from "@/components/private/confirmation-provider";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -15,19 +28,22 @@ export function MemoryIndex({
   data,
   section = "memories",
   trash = false,
+  initialAlbum = "",
 }: {
   familyId: string;
   role: string;
   data: MemoryOverview;
   section?: "memories" | "albums" | "stories";
   trash?: boolean;
+  initialAlbum?: string;
 }) {
   const [query, setQuery] = useState("");
   const [contextFilter, setContextFilter] = useState("all");
-  const [album, setAlbum] = useState("");
+  const [album, setAlbum] = useState(initialAlbum);
   const [editingAlbum, setEditingAlbum] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const confirm = useConfirmation();
   const router = useRouter();
   const base = "/families/" + familyId;
   const visible = data.memories.filter(
@@ -43,27 +59,26 @@ export function MemoryIndex({
   const currentAlbum = data.collections.find((a) => a.id === editingAlbum);
   if (role === "READER")
     return (
-      <section className="empty-state">
-        <h2>Las historias compartidas vivirán aquí</h2>
+      <EmptyState className="empty-state">
+        <h2>Shared stories will live here</h2>
         <p>
-          Tu familia podrá compartir los cuentos después de revisarlos. Los
-          recuerdos originales y los borradores permanecen privados.
+          Your family can share stories after reviewing them. Original memories
+          and drafts remain private.
         </p>
-      </section>
+      </EmptyState>
     );
   if (section === "stories")
     return (
       <section>
         <div className="section-heading">
-          <h2>Cuentos en preparación</h2>
+          <h2>Stories in preparation</h2>
           <p className="muted">
-            Retoma una preparación o elige primero la memoria que quieres
-            contar.
+            Continue a preparation or first choose the memory you want to tell.
           </p>
         </div>
-        <Link href={base + "/stories/new"} className="button primary">
-          Preparar un cuento
-        </Link>
+        <Button asChild variant="default">
+          <Link href={base + "/stories/new"}>Prepare a story</Link>
+        </Button>
         <div className="memory-list">
           {data.preparations.length ? (
             data.preparations.map((story) => (
@@ -72,9 +87,7 @@ export function MemoryIndex({
                 key={story.id}
                 href={base + "/stories/" + story.id}
               >
-                <span className="family-initial" aria-hidden="true">
-                  C
-                </span>
+                <InitialAvatar>S</InitialAvatar>
                 <span>
                   <h3>{story.title}</h3>
                   <span className="form-hint">
@@ -83,26 +96,26 @@ export function MemoryIndex({
                       readerProfiles[story.readerProfile as ReaderProfile]
                         ?.label
                     }{" "}
-                    · {story.language === "en" ? "Inglés" : "Español"} ·{" "}
-                    {story.pages} páginas
+                    · {story.language === "en" ? "English" : "Spanish"} ·{" "}
+                    {story.pages} pages
                   </span>
-                  <span className="profile-caption">Preparación guardada</span>
+                  <span className="profile-caption">Preparation saved</span>
                 </span>
-                <span className="family-open">Retomar ↗</span>
+                <span className="family-open">Continue ↗</span>
               </Link>
             ))
           ) : (
-            <div className="empty-state">
-              <h3>Un cuento comienza con un recuerdo real</h3>
+            <EmptyState className="empty-state">
+              <h3>A story starts with a real memory</h3>
               <p>
-                Guarda una memoria, añade sus materiales y elige el idioma y el
-                lector. La preparación no genera ni publica un cuento por sí
-                sola.
+                Save a memory, add its materials, and choose the language and
+                reader. Saving a preparation does not generate or publish a
+                story.
               </p>
-              <Link href={base + "/memories/new"} className="button secondary">
-                Guardar mi primer recuerdo
-              </Link>
-            </div>
+              <Button asChild variant="outline">
+                <Link href={base + "/memories/new"}>Save my first memory</Link>
+              </Button>
+            </EmptyState>
           )}
         </div>
       </section>
@@ -111,27 +124,20 @@ export function MemoryIndex({
     <section>
       <div className="content-toolbar">
         <div>
-          <h2>
-            {section === "albums"
-              ? "Álbumes familiares"
-              : trash
-                ? "Papelera de memorias"
-                : "Tus memorias"}
-          </h2>
           <p className="muted">
             {section === "albums"
-              ? "Reúne recuerdos de una persona, una época o un lugar."
-              : "Cada recuerdo conserva a quien lo cuenta y sus materiales originales."}
+              ? "Bring together memories of a person, a time, or a place."
+              : "Every memory preserves its storyteller and original materials."}
           </p>
         </div>
         {!trash ? (
-          <Link className="button primary" href={base + "/memories/new"}>
-            Guardar un recuerdo
-          </Link>
+          <Button asChild variant="default">
+            <Link href={base + "/memories/new"}>Save a memory</Link>
+          </Button>
         ) : (
-          <Link href={base} className="button secondary">
-            Volver a memorias
-          </Link>
+          <Button asChild variant="outline">
+            <Link href={base}>Back to memories</Link>
+          </Button>
         )}
       </div>
       {section === "albums" ? (
@@ -139,9 +145,7 @@ export function MemoryIndex({
           <div className="family-list">
             {data.collections.map((collection) => (
               <article className="family-entry" key={collection.id}>
-                <span className="family-initial" aria-hidden="true">
-                  Á
-                </span>
+                <InitialAvatar>A</InitialAvatar>
                 <div>
                   <h3>{collection.name}</h3>
                   <p className="muted">{collection.description}</p>
@@ -151,29 +155,34 @@ export function MemoryIndex({
                         (m) => m.collectionId === collection.id,
                       ).length
                     }{" "}
-                    recuerdos
+                    {data.memories.filter(
+                      (m) => m.collectionId === collection.id,
+                    ).length === 1
+                      ? "memory"
+                      : "memories"}
                   </span>
                   <div className="row-actions">
-                    <button
-                      className="button quiet"
+                    <Button
                       onClick={() => setAlbum(collection.id)}
+                      variant="ghost"
+                      type="button"
                     >
-                      Ver recuerdos
-                    </button>
-                    <button
-                      className="button quiet"
+                      View memories
+                    </Button>
+                    <Button
                       onClick={() => setEditingAlbum(collection.id)}
+                      variant="ghost"
+                      type="button"
                     >
-                      Editar álbum
-                    </button>
-                    <button
-                      className="button quiet destructive"
+                      Edit album
+                    </Button>
+                    <Button
                       disabled={busy}
                       onClick={async () => {
                         if (
-                          !window.confirm(
-                            "¿Quitar este álbum? Sus memorias y materiales se conservarán.",
-                          )
+                          !(await confirm(
+                            "Remove this album? Its memories and materials will be preserved.",
+                          ))
                         )
                           return;
                         setBusy(true);
@@ -192,42 +201,44 @@ export function MemoryIndex({
                           setFeedback(
                             error instanceof Error
                               ? error.message
-                              : "No se pudo quitar el álbum.",
+                              : "We could not remove the album.",
                           );
                         } finally {
                           setBusy(false);
                         }
                       }}
+                      variant="destructive"
+                      type="button"
                     >
-                      Quitar álbum
-                    </button>
-                    <Link
-                      className="button quiet"
-                      href={base + "/stories/new?album=" + collection.id}
-                    >
-                      Crear cuento con este álbum
-                    </Link>
-                    <Link
-                      className="button quiet"
-                      href={base + "/music/new?album=" + collection.id}
-                    >
-                      Crear música con este álbum
-                    </Link>
-                    <Link
-                      className="button quiet"
-                      href={base + "/memories/new?album=" + collection.id}
-                    >
-                      Añadir un recuerdo
-                    </Link>
+                      Remove album
+                    </Button>
+                    <Button asChild variant="ghost">
+                      <Link href={base + "/stories/new?album=" + collection.id}>
+                        Create a story from this album
+                      </Link>
+                    </Button>
+                    <Button asChild variant="ghost">
+                      <Link href={base + "/music/new?album=" + collection.id}>
+                        Create music from this album
+                      </Link>
+                    </Button>
+                    <Button asChild variant="ghost">
+                      <Link
+                        href={base + "/memories/new?album=" + collection.id}
+                      >
+                        Add a memory
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               </article>
             ))}
           </div>
-          <details className="create-family" open={Boolean(currentAlbum)}>
-            <summary>
-              {currentAlbum ? "Editar álbum" : "Crear un álbum"}
-            </summary>
+          <Disclosure
+            className="create-family"
+            open={Boolean(currentAlbum)}
+            title={<>{currentAlbum ? "Edit album" : "Create an album"}</>}
+          >
             <form
               className="form-stack"
               key={currentAlbum?.id || "new"}
@@ -252,111 +263,130 @@ export function MemoryIndex({
                   setFeedback(
                     error instanceof Error
                       ? error.message
-                      : "No se pudo guardar.",
+                      : "We could not save your changes.",
                   );
                 } finally {
                   setBusy(false);
                 }
               }}
             >
-              <label>
-                Nombre del álbum
-                <input
-                  name="name"
-                  required
-                  defaultValue={currentAlbum?.name}
-                  maxLength={100}
-                  placeholder="Los recuerdos de la abuela"
-                />
-              </label>
-              <label>
-                Descripción
-                <textarea
-                  name="description"
-                  maxLength={2000}
-                  defaultValue={currentAlbum?.description || ""}
-                />
-              </label>
-              <div className="row-actions">
-                <button className="button primary" disabled={busy}>
-                  Guardar álbum
-                </button>
-                {currentAlbum ? (
-                  <button
-                    type="button"
-                    className="button quiet"
-                    onClick={() => setEditingAlbum(null)}
-                  >
-                    Cancelar
-                  </button>
+              <FieldGroup>
+                <FormField
+                  control={
+                    <Input
+                      name="name"
+                      required
+                      defaultValue={currentAlbum?.name}
+                      maxLength={100}
+                      placeholder="Grandma's memories"
+                    />
+                  }
+                >
+                  Album name
+                </FormField>
+                <FormField
+                  control={
+                    <Textarea
+                      name="description"
+                      maxLength={2000}
+                      defaultValue={currentAlbum?.description || ""}
+                    />
+                  }
+                >
+                  Description
+                </FormField>
+                <div className="row-actions">
+                  <Button disabled={busy} variant="default">
+                    Save album
+                  </Button>
+                  {currentAlbum ? (
+                    <Button
+                      type="button"
+                      onClick={() => setEditingAlbum(null)}
+                      variant="ghost"
+                    >
+                      Cancel
+                    </Button>
+                  ) : null}
+                </div>
+                {feedback ? (
+                  <Feedback role="alert" className="error">
+                    {feedback}
+                  </Feedback>
                 ) : null}
-              </div>
-              {feedback ? (
-                <p role="alert" className="form-error">
-                  {feedback}
-                </p>
-              ) : null}
+              </FieldGroup>
             </form>
-          </details>
+          </Disclosure>
         </>
       ) : null}
       {section === "memories" || album ? (
         <>
           <div className="content-filters">
-            <label>
-              Buscar recuerdos
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Título, narrador o álbum"
-              />
-            </label>
-            <label>
-              Álbum
-              <select
-                value={album}
-                onChange={(event) => setAlbum(event.target.value)}
-              >
-                <option value="">Todos los álbumes</option>
-                {data.collections.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Contexto
-              <select
-                value={contextFilter}
-                onChange={(event) => setContextFilter(event.target.value)}
-              >
-                <option value="all">Todos los recuerdos</option>
-                <option value="pending">Con materiales por describir</option>
-              </select>
-            </label>
+            <FormField
+              control={
+                <Input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Title, storyteller, or album"
+                />
+              }
+            >
+              Search memories
+            </FormField>
+            <FormField
+              control={
+                <NativeSelect
+                  value={album}
+                  onChange={(event) => setAlbum(event.target.value)}
+                >
+                  <NativeSelectOption value="">All albums</NativeSelectOption>
+                  {data.collections.map((a) => (
+                    <NativeSelectOption key={a.id} value={a.id}>
+                      {a.name}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              }
+            >
+              Album
+            </FormField>
+            <FormField
+              control={
+                <NativeSelect
+                  value={contextFilter}
+                  onChange={(event) => setContextFilter(event.target.value)}
+                >
+                  <NativeSelectOption value="all">
+                    All memories
+                  </NativeSelectOption>
+                  <NativeSelectOption value="pending">
+                    With materials to describe
+                  </NativeSelectOption>
+                </NativeSelect>
+              }
+            >
+              Context
+            </FormField>
           </div>
           <div className="memory-list">
             {visible.length ? (
               visible.map((memory) => (
                 <article className="family-entry" key={memory.id}>
-                  <span className="family-initial" aria-hidden="true">
-                    {memory.title.slice(0, 1)}
-                  </span>
+                  <InitialAvatar>{memory.title.slice(0, 1)}</InitialAvatar>
                   <div className="memory-entry-body">
                     <h3>{memory.title}</h3>
                     <p className="muted">
-                      {memory.narrator?.name || "Narrador por completar"}
+                      {memory.narrator?.name || "Storyteller to be added"}
                       {memory.collection ? " · " + memory.collection.name : ""}
                     </p>
                     <span className="form-hint">
-                      {memory.sources.length} materiales ·{" "}
-                      {memory.sources.filter(hasContext).length} con contexto
+                      {memory.sources.length}{" "}
+                      {memory.sources.length === 1 ? "material" : "materials"} ·{" "}
+                      {memory.sources.filter(hasContext).length} with context
                     </span>
                     <div className="row-actions">
                       {trash ? (
-                        <button
-                          className="button secondary"
+                        <Button
                           disabled={busy}
                           onClick={async () => {
                             setBusy(true);
@@ -374,30 +404,32 @@ export function MemoryIndex({
                               setFeedback(
                                 error instanceof Error
                                   ? error.message
-                                  : "No se pudo recuperar.",
+                                  : "We could not restore this memory.",
                               );
                             } finally {
                               setBusy(false);
                             }
                           }}
+                          variant="outline"
+                          type="button"
                         >
-                          Recuperar memoria
-                        </button>
+                          Restore memory
+                        </Button>
                       ) : (
                         <>
-                          <Link
-                            className="button quiet"
-                            href={base + "/memories/" + memory.id}
-                          >
-                            Continuar recuerdo
-                          </Link>
-                          {memory.sources.length ? (
-                            <Link
-                              className="button quiet"
-                              href={base + "/stories/new?memory=" + memory.id}
-                            >
-                              Preparar cuento
+                          <Button asChild variant="ghost">
+                            <Link href={base + "/memories/" + memory.id}>
+                              Continue memory
                             </Link>
+                          </Button>
+                          {memory.sources.length ? (
+                            <Button asChild variant="ghost">
+                              <Link
+                                href={base + "/stories/new?memory=" + memory.id}
+                              >
+                                Prepare story
+                              </Link>
+                            </Button>
                           ) : null}
                         </>
                       )}
@@ -406,40 +438,37 @@ export function MemoryIndex({
                 </article>
               ))
             ) : (
-              <div className="empty-state">
+              <EmptyState className="empty-state">
                 <h3>
                   {trash
-                    ? "No hay memorias en la papelera"
+                    ? "There are no memories in the trash"
                     : query || album
-                      ? "No encontramos recuerdos con ese filtro"
-                      : "¿Qué historia te gustaría conservar?"}
+                      ? "No memories match this filter"
+                      : "What story would you like to preserve?"}
                 </h3>
                 <p>
                   {trash
-                    ? "Las memorias retiradas se pueden recuperar durante 30 días."
-                    : "Empieza con un texto, una fotografía o una grabación. Puedes completar el contexto después."}
+                    ? "Deleted memories can be restored within 30 days."
+                    : "Start with a written account, a photo, or a recording. You can add context later."}
                 </p>
                 {!trash ? (
-                  <Link
-                    className="button secondary"
-                    href={base + "/memories/new"}
-                  >
-                    Guardar un recuerdo
-                  </Link>
+                  <Button asChild variant="outline">
+                    <Link href={base + "/memories/new"}>Save a memory</Link>
+                  </Button>
                 ) : null}
-              </div>
+              </EmptyState>
             )}
           </div>
           {feedback ? (
-            <p role="alert" className="form-error">
+            <Feedback role="alert" className="error">
               {feedback}
-            </p>
+            </Feedback>
           ) : null}
         </>
       ) : null}
       {section === "memories" && !trash ? (
         <Link className="back-link" href={base + "/trash"}>
-          Ver papelera
+          View trash
         </Link>
       ) : null}
     </section>

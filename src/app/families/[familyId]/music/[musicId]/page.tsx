@@ -1,5 +1,3 @@
-import { AppShell } from "@/components/app-shell";
-import { FamilyNavigation } from "@/components/family-navigation";
 import { MusicPreparationForm } from "@/components/music-preparation-form";
 import { CreationWorkspace } from "@/components/creation-workspace";
 import { available, familyPageContext } from "@/lib/memories/page-context";
@@ -11,7 +9,7 @@ export default async function MusicPage({
   params: Promise<{ familyId: string; musicId: string }>;
 }) {
   const { familyId, musicId } = await params;
-  const { user, view } = await familyPageContext(familyId);
+  const { user } = await familyPageContext(familyId);
   const [data, preparation] = await available(
     Promise.all([
       memoryOverview(user.id, familyId),
@@ -19,8 +17,7 @@ export default async function MusicPage({
     ]),
   );
   return (
-    <AppShell userName={user.name}>
-      <FamilyNavigation family={view.family} role={view.role} active="music" />
+    <>
       <MusicPreparationForm
         familyId={familyId}
         memories={data.memories}
@@ -31,6 +28,6 @@ export default async function MusicPage({
         kind="music"
         preparationId={musicId}
       />
-    </AppShell>
+    </>
   );
 }

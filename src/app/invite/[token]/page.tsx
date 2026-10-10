@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
@@ -9,7 +10,9 @@ export const dynamic = "force-dynamic";
 export default async function InvitationPage({
   params,
 }: {
-  params: Promise<{ token: string }>;
+  params: Promise<{
+    token: string;
+  }>;
 }) {
   const { token } = await params;
   let preview;
@@ -20,15 +23,15 @@ export default async function InvitationPage({
     return (
       <AppShell>
         <section className="entry-card standalone">
-          <span className="eyebrow">INVITACIÓN</span>
-          <h1>Este enlace ya no está disponible</h1>
+          <span className="eyebrow">INVITATION</span>
+          <h1>This link is no longer available</h1>
           <p>
-            Puede haber vencido, haberse utilizado o haber sido retirado. Pide
-            un nuevo enlace al administrador de tu familia.
+            It may have expired, been used, or been revoked. Ask your family
+            administrator for a new link.
           </p>
-          <Link className="button secondary" href="/login">
-            Ir al inicio de sesión
-          </Link>
+          <Button asChild variant="outline">
+            <Link href="/login">Go to sign in</Link>
+          </Button>
         </section>
       </AppShell>
     );
@@ -37,13 +40,12 @@ export default async function InvitationPage({
   return (
     <AppShell>
       <section className="entry-card standalone">
-        <span className="eyebrow">UN LUGAR EN TU FAMILIA</span>
-        <h1>Te esperan en {preview.familyName}</h1>
+        <span className="eyebrow">A PLACE IN YOUR FAMILY</span>
+        <h1>You are invited to {preview.familyName}</h1>
         <p className="muted">
-          Tu acceso será de{" "}
-          <strong>{roleLabels[preview.role].toLowerCase()}</strong>. Los
-          perfiles de quienes cuentan sus historias pueden existir sin una
-          cuenta.
+          Your role will be{" "}
+          <strong>{roleLabels[preview.role].toLowerCase()}</strong>. Storyteller
+          profiles can exist without an account.
         </p>
         <InvitationForm
           token={token}

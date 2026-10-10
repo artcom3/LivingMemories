@@ -1,4 +1,9 @@
 "use client";
+import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/private/form-field";
+import { Feedback } from "@/components/private/content-primitives";
+import { Button } from "@/components/ui/button";
+import { FieldGroup } from "@/components/ui/field";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { mutate } from "@/lib/families/client";
@@ -18,34 +23,37 @@ export function FamilyCreateForm() {
           const family = await mutate("/api/families", "POST", {
             name: data.get("name"),
           });
-          router.push("/families/" + family.id);
+          router.push("/families/" + family.id + "/dashboard");
           router.refresh();
         } catch (error) {
-          setError(
-            error instanceof Error ? error.message : "Inténtalo de nuevo.",
-          );
+          setError(error instanceof Error ? error.message : "Try again.");
         } finally {
           setBusy(false);
         }
       }}
     >
-      <label>
-        Nombre del espacio familiar
-        <input
-          name="name"
-          placeholder="Familia García"
-          required
-          maxLength={100}
-        />
-      </label>
-      {error ? (
-        <p className="form-error" role="alert">
-          {error}
-        </p>
-      ) : null}
-      <button className="button secondary" disabled={busy}>
-        {busy ? "Creando…" : "Crear espacio familiar"}
-      </button>
+      <FieldGroup>
+        <FormField
+          control={
+            <Input
+              name="name"
+              placeholder="The Garcia family"
+              required
+              maxLength={100}
+            />
+          }
+        >
+          Family space name
+        </FormField>
+        {error ? (
+          <Feedback className="error" role="alert">
+            {error}
+          </Feedback>
+        ) : null}
+        <Button disabled={busy} variant="outline">
+          {busy ? "Creating\u2026" : "Create family space"}
+        </Button>
+      </FieldGroup>
     </form>
   );
 }

@@ -1,5 +1,20 @@
 "use client";
+import { Feedback } from "@/components/private/content-primitives";
+import { Button } from "@/components/ui/button";
+import {
+  NativeSelectOption,
+  NativeSelect,
+} from "@/components/ui/native-select";
+import { FormField } from "@/components/private/form-field";
+import { Textarea } from "@/components/ui/textarea";
+import { FieldLegend, FieldSet } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Disclosure } from "@/components/private/disclosure";
 import Link from "next/link";
+import {
+  englishSystemMessage,
+  sourceDisplayName,
+} from "@/lib/ui/english-system-message";
 import { useEffect, useState } from "react";
 import { mutate } from "@/lib/families/client";
 import {
@@ -19,7 +34,11 @@ type Run = {
   errorMessage: string | null;
   reservedCents: number;
 };
-type Version = { id: string; status: string; hasDraft?: boolean };
+type Version = {
+  id: string;
+  status: string;
+  hasDraft?: boolean;
+};
 type Config = {
   openai: boolean;
   gemini: boolean;
@@ -64,9 +83,7 @@ export function CreationWorkspace({
       })
       .catch(() => {
         if (active)
-          setError(
-            "No pudimos consultar las generaciones. Actualiza la página.",
-          );
+          setError("We could not check the generations. Refresh the page.");
       });
     return () => {
       active = false;
@@ -83,8 +100,8 @@ export function CreationWorkspace({
         if (!response.ok)
           throw new Error(
             response.status === 404
-              ? "Una fuente fue retirada o ya no tienes acceso. Los resultados de esta versión no están disponibles."
-              : "No pudimos consultar el estado. Actualiza la página.",
+              ? "A source was removed or you no longer have access. This version's results are unavailable."
+              : "We could not check the status. Refresh the page.",
           );
         const next: Run = await response.json();
         if (!active) return;
@@ -112,7 +129,7 @@ export function CreationWorkspace({
           setRun(null);
           setDraft(null);
           setError(
-            e instanceof Error ? e.message : "No pudimos consultar el estado.",
+            e instanceof Error ? e.message : "We could not check the status.",
           );
         }
       }
@@ -137,7 +154,7 @@ export function CreationWorkspace({
       setRun({ id: result.id, status: "QUEUED" } as Run);
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "No pudimos crear el borrador.",
+        e instanceof Error ? e.message : "We could not create the draft.",
       );
     } finally {
       setBusy(false);
@@ -177,34 +194,33 @@ export function CreationWorkspace({
   return (
     <section className="creation-preview">
       <div className="section-heading">
-        <h2>Crear y revisar</h2>
+        <h2>Create and review</h2>
         <p className="muted">
-          El borrador utiliza la última preparación guardada y conserva el
-          contexto que tenían sus fuentes al comenzar.
+          The draft uses the latest saved preparation and preserves the source
+          context as it was when generation started.
         </p>
       </div>
       {config && !config.canGenerate ? (
-        <p className="feedback">
-          La generación está pendiente de conectar OpenAI o Gemini. Para audio
-          también necesitarás ElevenLabs. Puedes guardar álbumes, materiales y
-          estilos mientras tanto.
-        </p>
+        <Feedback className="feedback">
+          Connect OpenAI or Gemini to enable generation. Audio also requires
+          ElevenLabs. You can save albums, materials, and styles in the
+          meantime.
+        </Feedback>
       ) : null}
       {config?.textProvider ? (
         <p className="form-hint">
-          Los nuevos borradores usarán{" "}
-          {config.textProvider === "gemini" ? "Gemini" : "OpenAI"} para
-          interpretar las fuentes y crear el texto y las ilustraciones.
+          New drafts will use{" "}
+          {config.textProvider === "gemini" ? "Gemini" : "OpenAI"} to interpret
+          the sources and create text and illustrations.
         </p>
       ) : null}
       <p className="form-hint">
-        Cada versión reserva US$5 del cupo de pruebas, incluidas sus dos etapas.
-        Es una reserva conservadora, no una cotización del proveedor. Hasta dos
-        regeneraciones por preparación; límites mensuales: US$25 por
-        adulto/familia y US$100 para el piloto.
+        Each version reserves US$5 of the test allowance, including both stages.
+        This is a conservative reservation, not a provider quote. Up to two
+        regenerations per preparation; monthly limits: US$25 per adult/family
+        and US$100 for the pilot.
       </p>
-      <button
-        className="button primary"
+      <Button
         disabled={
           busy ||
           !!pending ||
@@ -212,139 +228,172 @@ export function CreationWorkspace({
           versions.filter((v) => v.hasDraft).length >= 3
         }
         onClick={begin}
+        variant="default"
+        type="button"
       >
         {busy
-          ? "Preparando…"
+          ? "Preparing\u2026"
           : versions.length
-            ? "Crear otro borrador con los cambios guardados"
-            : "Crear borrador para revisar"}
-      </button>
+            ? "Create another draft with your saved changes"
+            : "Create a draft to review"}
+      </Button>
       {error ? (
-        <p className="feedback error" role="alert">
+        <Feedback className="feedback error" role="alert">
           {error}
-        </p>
+        </Feedback>
       ) : null}
       {versions.length ? (
-        <label>
-          Versiones
-          <select
-            value={run?.id || ""}
-            onChange={(e) => {
-              setError("");
-              setConfirmed(false);
-              setDraft(null);
-              setRun({ id: e.target.value } as Run);
-            }}
-          >
-            <option value="" disabled>
-              Elige una versión
-            </option>
-            {versions.map((v, index) => (
-              <option key={v.id} value={v.id}>
-                Versión {versions.length - index} ·{" "}
-                {creationStatusLabels[v.status]}
-              </option>
-            ))}
-          </select>
-        </label>
+        <FormField
+          control={
+            <NativeSelect
+              value={run?.id || ""}
+              onChange={(e) => {
+                setError("");
+                setConfirmed(false);
+                setDraft(null);
+                setRun({ id: e.target.value } as Run);
+              }}
+            >
+              <NativeSelectOption value="" disabled>
+                Choose a version
+              </NativeSelectOption>
+              {versions.map((v, index) => (
+                <NativeSelectOption key={v.id} value={v.id}>
+                  Version {versions.length - index} ·{" "}
+                  {creationStatusLabels[v.status]}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          }
+        >
+          Versions
+        </FormField>
       ) : null}
       {run?.status ? (
         <p className="selection-summary" role="status">
           {creationStatusLabels[run.status]}
         </p>
       ) : null}
+      {kind === "stories" &&
+      run?.status === "READY" &&
+      run.draft?.pages.length ? (
+        <Button asChild variant="outline">
+          <Link href={`/story-mode/${familyId}/${run.id}`} prefetch={false}>
+            Open story
+          </Link>
+        </Button>
+      ) : null}
       {pending ? (
         <p className="form-hint">
-          Puedes salir y volver a esta preparación. Los archivos originales
-          permanecen guardados.
+          You can leave and return to this preparation. The original files
+          remain saved.
         </p>
       ) : null}
       {run?.errorMessage ? (
-        <p className="feedback error">{run.errorMessage}</p>
+        <Feedback className="feedback error">
+          {englishSystemMessage(run.errorMessage)}
+        </Feedback>
       ) : null}
       {draft && run?.settings ? (
         <>
           <h3>{draft.title}</h3>
           <p>{draft.summary}</p>
           {draft.notes.length ? (
-            <div className="feedback">
-              <strong>Detalles para revisar</strong>
+            <Feedback className="feedback">
+              <strong>Details to review</strong>
               {draft.notes.map((note, index) => (
                 <p key={index}>{note}</p>
               ))}
-            </div>
+            </Feedback>
           ) : null}
           {draft.pages.map((page, index) => (
             <article className="creation-page" key={index}>
-              <h3>Página {index + 1}</h3>
+              <h3>Page {index + 1}</h3>
               {run.status === "REVIEW" ? (
                 <>
-                  <label>
-                    Texto
-                    <textarea
-                      value={page.text}
-                      maxLength={6000}
-                      onChange={(e) => pageEdit(index, "text", e.target.value)}
-                    />
-                  </label>
-                  <fieldset className="source-choices">
-                    <legend>
-                      Fuentes que respaldan el texto de esta página
-                    </legend>
-                    <p className="form-hint">
-                      Marca las fuentes que confirman lo contado. Una fotografía
-                      de referencia visual no confirma por sí sola nombres,
-                      lugares o acontecimientos.
-                    </p>
-                    {run.evidence.map((source) => (
-                      <label className="check-label" key={source.sourceId}>
-                        <input
-                          type="checkbox"
-                          checked={page.sourceIds.includes(source.sourceId)}
-                          onChange={() => {
-                            setDraft((d) =>
-                              d
-                                ? {
-                                    ...d,
-                                    pages: d.pages.map((p, i) =>
-                                      i === index
-                                        ? {
-                                            ...p,
-                                            sourceIds: p.sourceIds.includes(
-                                              source.sourceId,
-                                            )
-                                              ? p.sourceIds.filter(
-                                                  (id) =>
-                                                    id !== source.sourceId,
-                                                )
-                                              : [
-                                                  ...p.sourceIds,
-                                                  source.sourceId,
-                                                ],
-                                          }
-                                        : p,
-                                    ),
-                                  }
-                                : d,
-                            );
-                            setConfirmed(false);
-                          }}
-                        />
-                        {source.originalName}
-                      </label>
-                    ))}
-                  </fieldset>
-                  {run.settings.illustrate ? (
-                    <label>
-                      Escena de la ilustración
-                      <textarea
-                        value={page.illustrationPrompt}
-                        maxLength={3000}
+                  <FormField
+                    control={
+                      <Textarea
+                        value={page.text}
+                        maxLength={6000}
                         onChange={(e) =>
-                          pageEdit(index, "illustrationPrompt", e.target.value)
+                          pageEdit(index, "text", e.target.value)
                         }
                       />
-                    </label>
+                    }
+                  >
+                    Text
+                  </FormField>
+                  <FieldSet className="source-choices">
+                    <FieldLegend>
+                      Sources supporting this page&apos;s text
+                    </FieldLegend>
+                    <p className="form-hint">
+                      Select the sources that support this account. A visual
+                      reference photo does not by itself confirm names, places,
+                      or events.
+                    </p>
+                    {run.evidence.map((source) => (
+                      <FormField
+                        className="check-label"
+                        key={source.sourceId}
+                        control={
+                          <Checkbox
+                            checked={page.sourceIds.includes(source.sourceId)}
+                            onCheckedChange={() => {
+                              setDraft((d) =>
+                                d
+                                  ? {
+                                      ...d,
+                                      pages: d.pages.map((p, i) =>
+                                        i === index
+                                          ? {
+                                              ...p,
+                                              sourceIds: p.sourceIds.includes(
+                                                source.sourceId,
+                                              )
+                                                ? p.sourceIds.filter(
+                                                    (id) =>
+                                                      id !== source.sourceId,
+                                                  )
+                                                : [
+                                                    ...p.sourceIds,
+                                                    source.sourceId,
+                                                  ],
+                                            }
+                                          : p,
+                                      ),
+                                    }
+                                  : d,
+                              );
+                              setConfirmed(false);
+                            }}
+                          />
+                        }
+                        checkbox
+                      >
+                        {sourceDisplayName(source.originalName)}
+                      </FormField>
+                    ))}
+                  </FieldSet>
+                  {run.settings.illustrate ? (
+                    <FormField
+                      control={
+                        <Textarea
+                          value={page.illustrationPrompt}
+                          maxLength={3000}
+                          onChange={(e) =>
+                            pageEdit(
+                              index,
+                              "illustrationPrompt",
+                              e.target.value,
+                            )
+                          }
+                        />
+                      }
+                    >
+                      Illustration scene
+                    </FormField>
                   ) : null}
                 </>
               ) : (
@@ -359,7 +408,7 @@ export function CreationWorkspace({
                     <img
                       key={asset.id}
                       src={assetUrl(asset.id)}
-                      alt={`Ilustración de la página ${index + 1}`}
+                      alt={`Illustration for page ${index + 1}`}
                     />
                   ) : (
                     <audio
@@ -371,12 +420,13 @@ export function CreationWorkspace({
                   ),
                 )}
               <p className="form-hint">
-                Fuentes:{" "}
+                Sources:{" "}
                 {page.sourceIds
-                  .map(
-                    (id) =>
+                  .map((id) =>
+                    sourceDisplayName(
                       run.evidence.find((e) => e.sourceId === id)
-                        ?.originalName || "Fuente retirada",
+                        ?.originalName || "Source removed",
+                    ),
                   )
                   .join(" · ")}
               </p>
@@ -384,36 +434,42 @@ export function CreationWorkspace({
           ))}
           {run.settings.kind === "MUSIC" ? (
             <div className="creation-page">
-              <h3>Propuesta musical</h3>
+              <h3>Music proposal</h3>
               <p className="form-hint">
-                La dirección musical puede estar en inglés para el generador. La
-                letra usa el idioma seleccionado.
+                Musical direction can be in English for the generator. Lyrics
+                use the selected language.
               </p>
               {run.status === "REVIEW" ? (
                 <>
-                  <label>
-                    Dirección musical
-                    <textarea
-                      value={draft.musicPrompt}
-                      maxLength={3000}
-                      onChange={(e) => {
-                        setDraft({ ...draft, musicPrompt: e.target.value });
-                        setConfirmed(false);
-                      }}
-                    />
-                  </label>
-                  {!run.settings.instrumental ? (
-                    <label>
-                      Letra
-                      <textarea
-                        value={draft.lyrics}
-                        maxLength={2000}
+                  <FormField
+                    control={
+                      <Textarea
+                        value={draft.musicPrompt}
+                        maxLength={3000}
                         onChange={(e) => {
-                          setDraft({ ...draft, lyrics: e.target.value });
+                          setDraft({ ...draft, musicPrompt: e.target.value });
                           setConfirmed(false);
                         }}
                       />
-                    </label>
+                    }
+                  >
+                    Musical direction
+                  </FormField>
+                  {!run.settings.instrumental ? (
+                    <FormField
+                      control={
+                        <Textarea
+                          value={draft.lyrics}
+                          maxLength={2000}
+                          onChange={(e) => {
+                            setDraft({ ...draft, lyrics: e.target.value });
+                            setConfirmed(false);
+                          }}
+                        />
+                      }
+                    >
+                      Lyrics
+                    </FormField>
                   ) : null}
                 </>
               ) : (
@@ -434,13 +490,15 @@ export function CreationWorkspace({
                 ))}
             </div>
           ) : null}
-          <details className="source-choices">
-            <summary>Fuentes y contexto usados en esta versión</summary>
+          <Disclosure
+            className="source-choices"
+            title={<>Sources and context used in this version</>}
+          >
             {run.evidence?.map((source) => (
               <article className="creation-page" key={source.sourceId}>
-                <h3>{source.originalName}</h3>
+                <h3>{sourceDisplayName(source.originalName)}</h3>
                 <p className="form-hint">
-                  {source.album || "Sin álbum"} · {source.memoryTitle}
+                  {source.album || "No album"} · {source.memoryTitle}
                 </p>
                 <p className="creation-evidence">
                   {[
@@ -451,14 +509,13 @@ export function CreationWorkspace({
                     source.emotionContext,
                   ]
                     .filter(Boolean)
-                    .join(" · ") || "Sin contexto manual"}
+                    .join(" · ") || "No manual context"}
                 </p>
                 {source.originalText ? (
                   <blockquote>{source.originalText}</blockquote>
                 ) : null}
                 {source.transcript ? (
-                  <details>
-                    <summary>Transcripción automática por revisar</summary>
+                  <Disclosure title={<>Automatic transcript to review</>}>
                     {source.albumDescription || source.memoryDescription ? (
                       <p className="form-hint">
                         {[source.albumDescription, source.memoryDescription]
@@ -467,49 +524,52 @@ export function CreationWorkspace({
                       </p>
                     ) : null}
                     <p className="creation-evidence">{source.transcript}</p>
-                  </details>
+                  </Disclosure>
                 ) : null}
                 {source.sampledSeconds ? (
                   <p className="form-hint">
-                    Video interpretado a partir de{" "}
-                    {source.sampledSeconds.length} fotogramas y su audio, si
-                    existe; no se analiza cada instante.
+                    Video interpreted from {source.sampledSeconds.length} frames
+                    and its audio, if available; not every moment is analyzed.
                   </p>
                 ) : null}
                 <Link
                   href={`/families/${familyId}/memories/${source.memoryId}`}
                   className="back-link"
                 >
-                  Abrir recuerdo original ↗
+                  Open original memory ↗
                 </Link>
               </article>
             ))}
-          </details>
+          </Disclosure>
           {run.status === "REVIEW" ? (
             <div className="form-stack">
-              <label className="check-label">
-                <input
-                  type="checkbox"
-                  checked={confirmed}
-                  onChange={(e) => setConfirmed(e.target.checked)}
-                />
-                He revisado los hechos, las fuentes y{" "}
+              <FormField
+                className="check-label"
+                control={
+                  <Checkbox
+                    checked={confirmed}
+                    onCheckedChange={(checked) =>
+                      setConfirmed(checked === true)
+                    }
+                  />
+                }
+                checkbox
+              >
+                I have reviewed the facts, the sources, and{" "}
                 {kind === "music"
-                  ? "la propuesta y la letra"
-                  : "el texto del relato"}
+                  ? "the proposal and lyrics"
+                  : "the story text"}
                 .
-              </label>
+              </FormField>
               {renderDisabled ? (
-                <p className="feedback">
-                  Falta conectar el proveedor de esta versión
+                <Feedback className="feedback">
                   {kind === "stories"
-                    ? " o configurar la voz del idioma elegido"
-                    : " con acceso a Music"}
-                  . El borrador seguirá guardado.
-                </p>
+                    ? "Connect the provider and configure a voice for the selected language to generate this version."
+                    : "Connect a provider with Music access to generate this version."}{" "}
+                  Your draft will remain saved.
+                </Feedback>
               ) : null}
-              <button
-                className="button primary"
+              <Button
                 disabled={busy || !confirmed || !!renderDisabled}
                 onClick={async () => {
                   setBusy(true);
@@ -528,24 +588,25 @@ export function CreationWorkspace({
                     setError(
                       e instanceof Error
                         ? e.message
-                        : "No pudimos iniciar la generación.",
+                        : "We could not start generation.",
                     );
                   } finally {
                     setBusy(false);
                   }
                 }}
+                variant="default"
+                type="button"
               >
                 {busy
-                  ? "Iniciando…"
+                  ? "Starting\u2026"
                   : kind === "music"
-                    ? "Generar música con esta propuesta"
-                    : "Confirmar y generar el cuento"}
-              </button>
+                    ? "Generate music from this proposal"
+                    : "Confirm and generate story"}
+              </Button>
             </div>
           ) : null}
           <p className="form-hint">
-            Contenido privado de prueba. Todavía no se publica para los lectores
-            de la familia.
+            Private test content. It is not yet published for family readers.
           </p>
         </>
       ) : null}

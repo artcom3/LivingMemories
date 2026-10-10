@@ -24,15 +24,15 @@ export async function deliverInvitation(
     await mail().sendMail({
       from: process.env.MAIL_FROM || "LivingMemories <app@livingmemories.test>",
       to: recipient,
-      subject: "Tu invitación a LivingMemories",
+      subject: "Your invitation to LivingMemories",
       text:
-        "Te han invitado a la familia " +
+        "You have been invited to the family " +
         familyName +
-        " en LivingMemories.\n\nAbre este enlace para participar con " +
+        " on LivingMemories.\n\nOpen this link to join using " +
         recipient +
         ":\n" +
         url +
-        "\n\nEs personal, se usa una sola vez y vence en siete días. Las cuentas son para adultos. Si no esperabas esta invitación, ignora este mensaje.",
+        "\n\nThis link is personal, can only be used once, and expires in seven days. Accounts are for adults. If you were not expecting this invitation, ignore this message.",
     });
   } catch {
     deliveryStatus = "FAILED";

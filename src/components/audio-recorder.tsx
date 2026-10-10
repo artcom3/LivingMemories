@@ -1,4 +1,6 @@
 "use client";
+import { Button } from "@/components/ui/button";
+import { Feedback } from "@/components/private/content-primitives";
 import { useEffect, useRef, useState } from "react";
 export function AudioRecorder({
   disabled,
@@ -54,7 +56,7 @@ export function AudioRecorder({
         typeof MediaRecorder === "undefined"
       )
         throw new Error(
-          "Este navegador no puede grabar. Puedes subir un audio desde tu dispositivo.",
+          "This browser cannot record audio. You can upload a recording from your device.",
         );
       stream.current = await navigator.mediaDevices.getUserMedia({
         audio: true,
@@ -86,43 +88,42 @@ export function AudioRecorder({
       setError(
         error instanceof Error && error.message.includes("navegador")
           ? error.message
-          : "No pudimos acceder al micrófono. Permite su uso o sube un audio guardado.",
+          : "We could not access your microphone. Allow access or upload a saved recording.",
       );
     }
   }
   return (
     <div className="recording-panel">
-      <h3>Grabar un recuerdo</h3>
+      <h3>Record a memory</h3>
       <p className="form-hint">
-        Puedes escuchar tu grabación antes de guardarla. Hasta 30 minutos.
+        You can listen to your recording before saving it. Up to 30 minutes.
       </p>
       <div className="row-actions">
         {recording ? (
-          <button
+          <Button
             type="button"
-            className="button secondary"
             onClick={() => recorder.current?.stop()}
+            variant="outline"
           >
-            Detener grabación · {Math.floor(seconds / 60)}:
+            Stop recording · {Math.floor(seconds / 60)}:
             {String(seconds % 60).padStart(2, "0")}
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
             type="button"
-            className="button secondary"
             disabled={disabled}
             onClick={() => void start()}
+            variant="outline"
           >
-            {audio ? "Volver a grabar" : "Empezar a grabar"}
-          </button>
+            {audio ? "Record again" : "Start recording"}
+          </Button>
         )}
       </div>
       {url ? (
         <>
           <audio src={url} controls />
-          <button
+          <Button
             type="button"
-            className="button primary"
             disabled={disabled}
             onClick={async () => {
               const extension = audio!.type.includes("mp4") ? "m4a" : "webm";
@@ -130,7 +131,7 @@ export function AudioRecorder({
                 await onSave(
                   new File(
                     [audio!],
-                    "Grabación-" + Date.now() + "." + extension,
+                    "Recording-" + Date.now() + "." + extension,
                     { type: audio!.type },
                   ),
                 )
@@ -138,15 +139,16 @@ export function AudioRecorder({
                 preview(null);
               }
             }}
+            variant="default"
           >
-            Guardar grabación
-          </button>
+            Save recording
+          </Button>
         </>
       ) : null}
       {error ? (
-        <p role="alert" className="form-error">
+        <Feedback role="alert" className="error">
           {error}
-        </p>
+        </Feedback>
       ) : null}
     </div>
   );

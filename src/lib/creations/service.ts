@@ -18,14 +18,12 @@ import {
   type Evidence,
   type Artifact,
 } from "./shared";
-
 import {
   modelSelection,
   providerConfiguration,
   type CreativeProvider,
 } from "./config";
 export { providerConfiguration } from "./config";
-
 type Tx = Prisma.TransactionClient;
 const scope = (actorId: string, role: string) =>
   role === "ADMIN" ? {} : { createdById: actorId };
@@ -42,7 +40,7 @@ function selectedIds(value: unknown) {
     throw new AccessError(
       400,
       "SOURCES",
-      "Selecciona entre 1 y 20 materiales para la primera prueba.",
+      "Select between 1 and 20 materials for the first trial.",
     );
   return [...new Set(value as string[])];
 }
@@ -70,7 +68,7 @@ export async function prepareMusic(
   input: Input,
   id?: string,
 ) {
-  const title = text(input.title, "El título", 160);
+  const title = text(input.title, "The title", 160);
   const ids = selectedIds(input.sourceIds);
   const style = String(input.style || "ACOUSTIC");
   const durationSeconds = Number(input.durationSeconds || 30);
@@ -82,7 +80,7 @@ export async function prepareMusic(
     throw new AccessError(
       400,
       "INPUT",
-      "Revisa el estilo, idioma y duración de la música.",
+      "Check the music style, language, and duration.",
     );
   return withFamily(actorId, familyId, async (tx, member) => {
     writable(member.role);
@@ -100,7 +98,7 @@ export async function prepareMusic(
       durationSeconds,
       language: String(input.language),
       instrumental: input.instrumental !== false,
-      instructions: optionalText(input.instructions, "Las indicaciones", 4000),
+      instructions: optionalText(input.instructions, "The instructions", 4000),
     };
     if (id) {
       await tx.musicPreparationSource.deleteMany({
@@ -163,13 +161,13 @@ function configured(
     throw new AccessError(
       409,
       "PROVIDERS",
-      "Falta conectar las claves de los servicios de generación. Tu preparación está guardada.",
+      "Connect the generation service API keys first. Your preparation is saved.",
     );
   if (voice === "")
     throw new AccessError(
       409,
       "VOICE",
-      "Configura una voz de ElevenLabs para este idioma antes de generar la narración.",
+      "Configure an ElevenLabs voice for this language before generating narration.",
     );
 }
 function modelSettings(language: string) {
@@ -248,13 +246,13 @@ export async function beginCreation(
       throw new AccessError(
         409,
         "BUSY",
-        "Ya hay una generación en curso para esta preparación.",
+        "A generation is already in progress for this preparation.",
       );
     if (versions.filter((v) => v.draft !== null).length >= 3)
       throw new AccessError(
         409,
         "VERSIONS",
-        "Esta prueba admite una versión y dos regeneraciones por preparación.",
+        "This trial allows one version and two regenerations per preparation.",
       );
     // Serialize the pilot allowance across families, in addition to the family lock.
     await tx.$queryRaw`SELECT pg_advisory_xact_lock(73620419)::text`;
@@ -275,7 +273,7 @@ export async function beginCreation(
       throw new AccessError(
         409,
         "BUDGET",
-        "La reserva mensual del piloto está agotada. Conservamos tu preparación.",
+        "The pilot's monthly reservation allowance has been exhausted. Your preparation is saved.",
       );
     const settings = {
       kind,
@@ -415,7 +413,7 @@ export function validateDraft(
     throw new AccessError(
       400,
       "DRAFT",
-      "Revisa el borrador y sus referencias antes de continuar.",
+      "Review the draft and its references before continuing.",
     );
   };
   if (!value || typeof value !== "object") return fail();
@@ -502,7 +500,7 @@ export async function approveCreation(
     throw new AccessError(
       400,
       "REVIEW",
-      "Confirma que revisaste el relato, la letra y sus fuentes.",
+      "Confirm that you have reviewed the story, lyrics, and their sources.",
     );
   configured(
     settings.kind === "STORY" && !!settings.illustrate,
@@ -534,7 +532,7 @@ export async function approveCreation(
       throw new AccessError(
         409,
         "STATE",
-        "Este borrador ya se está generando o requiere una nueva revisión.",
+        "This draft is already being generated or needs a new review.",
       );
     return { id };
   });
@@ -552,11 +550,7 @@ export async function creationAsset(
   );
   if (!asset) throw unavailable();
   if (range && !/^bytes=\d+-\d*$/.test(range))
-    throw new AccessError(
-      416,
-      "RANGE",
-      "El intervalo solicitado no es válido.",
-    );
+    throw new AccessError(416, "RANGE", "The requested range is invalid.");
   const object = await storage().send(
     new GetObjectCommand({
       Bucket: required("S3_BUCKET"),

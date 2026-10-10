@@ -1,34 +1,36 @@
+import { InitialAvatar } from "@/components/private/initial-avatar";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/private/content-primitives";
+import { Music } from "lucide-react";
 import Link from "next/link";
-import { AppShell } from "@/components/app-shell";
-import { FamilyNavigation } from "@/components/family-navigation";
 import { familyPageContext } from "@/lib/memories/page-context";
 import { musicPreparations } from "@/lib/creations/service";
 import { musicStyles } from "@/lib/creations/shared";
 export default async function MusicPage({
   params,
 }: {
-  params: Promise<{ familyId: string }>;
+  params: Promise<{
+    familyId: string;
+  }>;
 }) {
   const { familyId } = await params;
   const { user, view } = await familyPageContext(familyId);
   const items = await musicPreparations(user.id, familyId);
   return (
-    <AppShell userName={user.name}>
-      <FamilyNavigation family={view.family} role={view.role} active="music" />
+    <>
       <section>
         <div className="section-heading">
-          <h2>Música de tus recuerdos</h2>
+          <h2>
+            {view.role === "READER" ? "Shared music" : "Your music proposals"}
+          </h2>
           <p className="muted">
-            Retoma una propuesta musical o elige materiales de tus álbumes.
+            Continue a music proposal or choose materials from your albums.
           </p>
         </div>
         {view.role !== "READER" ? (
-          <Link
-            className="button primary"
-            href={`/families/${familyId}/music/new`}
-          >
-            Preparar música
-          </Link>
+          <Button asChild variant="default">
+            <Link href={`/families/${familyId}/music/new`}>Prepare music</Link>
+          </Button>
         ) : null}
         <div className="memory-list">
           {items.map((item) => (
@@ -37,39 +39,39 @@ export default async function MusicPage({
               key={item.id}
               href={`/families/${familyId}/music/${item.id}`}
             >
-              <span className="family-initial" aria-hidden="true">
-                ♪
-              </span>
+              <InitialAvatar>
+                <Music aria-hidden="true" />
+              </InitialAvatar>
               <span>
                 <h3>{item.title}</h3>
                 <span className="form-hint">
                   {musicStyles[item.style as keyof typeof musicStyles]?.label} ·{" "}
-                  {item.durationSeconds} segundos ·{" "}
-                  {item.instrumental ? "Instrumental" : "Con letra"}
+                  {item.durationSeconds} seconds ·{" "}
+                  {item.instrumental ? "Instrumental" : "With lyrics"}
                 </span>
                 <span className="profile-caption">
-                  {item.sources.length} materiales seleccionados
+                  {item.sources.length} materials selected
                 </span>
               </span>
-              <span className="family-open">Retomar ↗</span>
+              <span className="family-open">Continue ↗</span>
             </Link>
           ))}
         </div>
         {!items.length ? (
-          <div className="empty-state">
+          <EmptyState className="empty-state">
             <h3>
               {view.role === "READER"
-                ? "Las piezas compartidas vivirán aquí"
-                : "Dale música a un recuerdo"}
+                ? "Shared music will live here"
+                : "Give a memory its own music"}
             </h3>
             <p>
               {view.role === "READER"
-                ? "Las propuestas y pruebas todavía permanecen privadas."
-                : "Usa las fotografías, grabaciones y el contexto que ya guardaste. Puedes comenzar con una pieza instrumental de 30 segundos."}
+                ? "Proposals and test versions are still private."
+                : "Use the photos, recordings, and context you already saved. You can start with a 30-second instrumental piece."}
             </p>
-          </div>
+          </EmptyState>
         ) : null}
       </section>
-    </AppShell>
+    </>
   );
 }

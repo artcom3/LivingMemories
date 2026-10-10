@@ -14,25 +14,34 @@ import type {
   Evidence,
   Artifact,
 } from "./shared";
-
 export function generationError(error: unknown) {
-  const status = (error as { statusCode?: number })?.statusCode;
+  const status = (
+    error as {
+      statusCode?: number;
+    }
+  )?.statusCode;
   if (status === 401 || status === 403)
-    return "El proveedor rechazó la clave o el acceso a esta función. Revisa los permisos y el plan de la cuenta.";
+    return "The provider rejected the API key or access to this feature. Check the account permissions and plan.";
   if (status === 429)
-    return "El proveedor alcanzó su límite de consumo o peticiones. No reintentamos automáticamente para evitar cargos duplicados.";
+    return "The provider has reached its usage or request limit. We do not retry automatically to avoid duplicate charges.";
   if (status === 503)
-    return "El proveedor está temporalmente saturado o no disponible. Conservamos tu preparación. Puedes intentar otra versión más tarde o configurar otro modelo disponible.";
+    return "The provider is temporarily busy or unavailable. Your preparation is saved. You can try another version later or configure another available model.";
   if (status === 400 || status === 404 || status === 422)
-    return "El proveedor rechazó el modelo, la voz o los parámetros. Revisa la configuración de la integración.";
+    return "The provider rejected the model, voice, or parameters. Check the integration settings.";
   const message = error instanceof Error ? error.message : "";
   if (message === "MEDIA_DURATION" || message === "MEDIA_TOTAL")
-    return "Para estas pruebas usa audios de hasta 30 minutos, videos de hasta 10 minutos y un máximo de 30 minutos combinados por creación.";
+    return "For these trials, use audio up to 30 minutes, video up to 10 minutes, and a maximum combined duration of 30 minutes per creation.";
   if (message === "TRANSCRIPT_LENGTH")
-    return "La transcripción es demasiado larga para esta prueba. Selecciona una grabación más breve.";
-  if ((error as { code?: string })?.code === "ENOENT")
-    return "Faltan las herramientas de procesamiento de medios. Ejecuta el worker de Docker.";
-  return "No pudimos completar la generación. Conservamos la preparación y los resultados parciales. Revisa los archivos, los permisos y la conexión del proveedor antes de crear otra versión.";
+    return "The transcript is too long for this trial. Select a shorter recording.";
+  if (
+    (
+      error as {
+        code?: string;
+      }
+    )?.code === "ENOENT"
+  )
+    return "Media processing tools are missing. Run the Docker worker.";
+  return "We could not complete generation. Your preparation and partial results are saved. Check the files, permissions, and provider connection before creating another version.";
 }
 export async function processCreation(
   id: string,

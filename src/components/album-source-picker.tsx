@@ -1,9 +1,19 @@
 "use client";
+import { sourceDisplayName } from "@/lib/ui/english-system-message";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FormField } from "@/components/private/form-field";
+import { Input } from "@/components/ui/input";
+import {
+  NativeSelectOption,
+  NativeSelect,
+} from "@/components/ui/native-select";
+import { FieldGroup } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import { Disclosure } from "@/components/private/disclosure";
 import Link from "next/link";
 import { useState } from "react";
 import type { MemoryOverview } from "@/lib/memories/service";
 import { hasContext, sourceLabels } from "@/lib/memories/shared";
-
 export function AlbumSourcePicker({
   familyId,
   memories,
@@ -25,7 +35,7 @@ export function AlbumSourcePicker({
         m.collectionId || "ungrouped",
         {
           id: m.collectionId || "ungrouped",
-          name: m.collection?.name || "Sin álbum",
+          name: m.collection?.name || "No album",
         },
       ]),
     ).values(),
@@ -63,59 +73,74 @@ export function AlbumSourcePicker({
   return (
     <div className="album-picker">
       <p className="form-hint">
-        Elige uno o varios álbumes y marca sus materiales. Usaremos los archivos
-        ya guardados y su contexto; no necesitas volver a subirlos.
+        Choose one or more albums and select their materials. We will use the
+        saved files and their context; there is no need to upload them again.
       </p>
       <div className="album-choices">
         {groups.map((group) => (
-          <label className="check-label" key={group.id}>
-            <input
-              type="checkbox"
-              checked={albums.includes(group.id)}
-              onChange={() =>
-                setAlbums((v) =>
-                  v.includes(group.id)
-                    ? v.filter((id) => id !== group.id)
-                    : [...v, group.id],
-                )
-              }
-            />
+          <FormField
+            className="check-label"
+            key={group.id}
+            control={
+              <Checkbox
+                checked={albums.includes(group.id)}
+                onCheckedChange={() =>
+                  setAlbums((v) =>
+                    v.includes(group.id)
+                      ? v.filter((id) => id !== group.id)
+                      : [...v, group.id],
+                  )
+                }
+              />
+            }
+            checkbox
+          >
             {group.name}
-          </label>
+          </FormField>
         ))}
       </div>
-      <div className="form-columns">
-        <label>
-          Buscar materiales
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Archivo, recuerdo o contexto"
-          />
-        </label>
-        <label>
-          Tipo de material
-          <select value={type} onChange={(e) => setType(e.target.value)}>
-            <option value="all">Todos</option>
-            {Object.entries(sourceLabels).map(([id, label]) => (
-              <option key={id} value={id}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <FieldGroup className="form-columns">
+        <FormField
+          control={
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="File, memory, or context"
+            />
+          }
+        >
+          Search materials
+        </FormField>
+        <FormField
+          control={
+            <NativeSelect
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+            >
+              <NativeSelectOption value="all">All</NativeSelectOption>
+              {Object.entries(sourceLabels).map(([id, label]) => (
+                <NativeSelectOption key={id} value={id}>
+                  {label}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          }
+        >
+          Material type
+        </FormField>
+      </FieldGroup>
       <p role="status" className="selection-summary">
-        {selected.length} materiales seleccionados
-        {pending ? ` · ${pending} sin contexto opcional` : ""}
+        {selected.length} {selected.length === 1 ? "material" : "materials"}{" "}
+        selected
+        {pending ? ` · ${pending} without optional context` : ""}
       </p>
       {hiddenSelected ? (
         <p className="form-hint">
-          {hiddenSelected} materiales seleccionados están en álbumes que has
-          ocultado.{" "}
-          <button
+          {hiddenSelected} selected{" "}
+          {hiddenSelected === 1 ? "material is" : "materials are"} in albums you
+          have hidden.{" "}
+          <Button
             type="button"
-            className="button quiet"
             onClick={() =>
               setAlbums(
                 groups
@@ -129,19 +154,20 @@ export function AlbumSourcePicker({
                   .map((g) => g.id),
               )
             }
+            variant="ghost"
           >
-            Mostrar toda la selección
-          </button>
+            Show full selection
+          </Button>
         </p>
       ) : null}
-      <button
+      <Button
         type="button"
-        className="button quiet"
         disabled={!selected.length}
         onClick={() => onChange([])}
+        variant="ghost"
       >
-        Limpiar selección
-      </button>
+        Clear selection
+      </Button>
       {groups
         .filter((g) => albums.includes(g.id))
         .map((group) => {
@@ -157,16 +183,14 @@ export function AlbumSourcePicker({
             <section className="picker-album" key={group.id}>
               <div className="content-toolbar">
                 <h3>{group.name}</h3>
-                <button
+                <Button
                   type="button"
-                  className="button quiet"
                   disabled={!groupIds.length}
                   onClick={() => toggle(groupIds, !all)}
+                  variant="ghost"
                 >
-                  {all
-                    ? "Quitar materiales del álbum"
-                    : "Seleccionar todo el álbum"}
-                </button>
+                  {all ? "Deselect album materials" : "Select the entire album"}
+                </Button>
               </div>
               {groupMemories.map((memory) => {
                 const sources = memory.sources.filter(
@@ -174,7 +198,7 @@ export function AlbumSourcePicker({
                     (type === "all" || type === s.type) &&
                     (!query ||
                       [
-                        s.originalName,
+                        sourceDisplayName(s.originalName),
                         s.contextDescription,
                         s.peopleContext,
                         memory.title,
@@ -184,14 +208,21 @@ export function AlbumSourcePicker({
                 );
                 const sourceBase = `/api/families/${familyId}/content/memories/${memory.id}/sources/`;
                 return (
-                  <details className="source-choices" key={memory.id} open>
-                    <summary>
-                      {memory.title}
-                      {memory.id === primaryMemoryId
-                        ? " · Recuerdo principal"
-                        : ""}{" "}
-                      · {sources.length} materiales
-                    </summary>
+                  <Disclosure
+                    className="source-choices"
+                    key={memory.id}
+                    open
+                    title={
+                      <>
+                        {memory.title}
+                        {memory.id === primaryMemoryId
+                          ? " \u00B7 Main memory"
+                          : ""}{" "}
+                        · {sources.length}{" "}
+                        {sources.length === 1 ? "material" : "materials"}
+                      </>
+                    }
+                  >
                     <div className="picker-materials">
                       {sources.map((source) => (
                         <article
@@ -210,7 +241,7 @@ export function AlbumSourcePicker({
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={sourceBase + source.id}
-                              alt={source.originalName}
+                              alt={sourceDisplayName(source.originalName)}
                               loading="lazy"
                             />
                           ) : source.type === "AUDIO" ? (
@@ -226,27 +257,33 @@ export function AlbumSourcePicker({
                               preload="none"
                             />
                           ) : null}
-                          <label className="check-label">
-                            <input
-                              type="checkbox"
-                              checked={selectedSet.has(source.id)}
-                              onChange={() =>
-                                toggle([source.id], !selectedSet.has(source.id))
-                              }
-                            />
+                          <FormField
+                            className="check-label"
+                            control={
+                              <Checkbox
+                                checked={selectedSet.has(source.id)}
+                                onCheckedChange={() =>
+                                  toggle(
+                                    [source.id],
+                                    !selectedSet.has(source.id),
+                                  )
+                                }
+                              />
+                            }
+                            checkbox
+                          >
                             <span>
-                              {source.originalName}
+                              {sourceDisplayName(source.originalName)}
                               <small className="profile-caption">
                                 {sourceLabels[source.type]} ·{" "}
                                 {hasContext(source)
-                                  ? "Con contexto"
-                                  : "Sin contexto opcional"}
+                                  ? "With context"
+                                  : "No optional context"}
                               </small>
                             </span>
-                          </label>
+                          </FormField>
                           {hasContext(source) ? (
-                            <details>
-                              <summary>Ver contexto</summary>
+                            <Disclosure title={<>View context</>}>
                               <p className="form-hint">
                                 {[
                                   source.contextDescription,
@@ -258,23 +295,23 @@ export function AlbumSourcePicker({
                                   .filter(Boolean)
                                   .join(" · ")}
                               </p>
-                            </details>
+                            </Disclosure>
                           ) : null}
                           <Link
                             className="back-link"
                             href={`/families/${familyId}/memories/${memory.id}`}
                           >
-                            Revisar recuerdo y contexto ↗
+                            Review memory and context ↗
                           </Link>
                         </article>
                       ))}
                     </div>
                     {!sources.length ? (
                       <p className="form-hint">
-                        No hay materiales con este filtro.
+                        No materials match this filter.
                       </p>
                     ) : null}
-                  </details>
+                  </Disclosure>
                 );
               })}
             </section>
@@ -282,8 +319,8 @@ export function AlbumSourcePicker({
         })}
       {!albums.length ? (
         <p className="form-hint">
-          Marca un álbum para ver sus materiales. Cambiar los álbumes visibles
-          conserva tu selección.
+          Select an album to see its materials. Changing the visible albums
+          preserves your selection.
         </p>
       ) : null}
     </div>

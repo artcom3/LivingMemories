@@ -259,7 +259,7 @@ test("missing credentials leave preparations saved without queueing or reserving
   try {
     await assert.rejects(
       beginCreation(adult, family, "MUSIC", prep.id),
-      /Falta conectar/,
+      /Connect the generation service API keys/,
     );
     assert.equal(await prisma.creation.count(), 0);
   } finally {
@@ -421,7 +421,7 @@ test("failed providers are explicit, preserve drafts, and never replay an ambigu
   const result = await creationView(adult, family, run.id);
   assert.equal(result.status, "FAILED");
   assert.equal(calls, 1);
-  assert.match(result.errorMessage!, /clave o el acceso/);
+  assert.match(result.errorMessage!, /API key or access/);
   assert.doesNotMatch(result.errorMessage!, /Sensitive/);
   // A rejected attempt without a draft is not a regenerated story. It remains in the allowance ledger.
   await prisma.creation.createMany({
@@ -472,7 +472,7 @@ test("concurrent requests obey the shared monthly family and adult allowance", a
   });
   await assert.rejects(
     beginCreation(adult, family, "MUSIC", next.id),
-    /reserva mensual/,
+    /monthly reservation/,
   );
 });
 test("ElevenLabs adapter guarantees instrumental mode and sends reviewed lyrics through a v2 composition plan", async () => {
