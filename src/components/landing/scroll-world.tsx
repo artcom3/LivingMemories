@@ -1,21 +1,30 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { mountScrollWorld, type ScrollWorldConfig } from "./scrub-engine";
 
 const MAX_TILT_DEG = 2;
+// Matches the veil's CSS transition in landing.css.
+const LEAVE_MS = 450;
+
+// Development only: `?motion=full` previews the animations on machines whose OS
+// reports prefers-reduced-motion (e.g. Windows with animation effects off).
+function forcedMotion() {
+  return (
+    process.env.NODE_ENV !== "production" &&
+    new URLSearchParams(window.location.search).get("motion") === "full"
+  );
+}
 
 export function ScrollWorld({ config }: { config: ScrollWorldConfig }) {
   const container = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const root = container.current;
     if (!root) return;
-    // Development only: `?motion=full` previews the animations on machines whose
-    // OS reports prefers-reduced-motion (e.g. Windows with animation effects off).
-    const forceMotion =
-      process.env.NODE_ENV !== "production" &&
-      new URLSearchParams(window.location.search).get("motion") === "full";
+    const forceMotion = forcedMotion();
     if (forceMotion) document.documentElement.dataset.motion = "full";
 
     const destroy = mountScrollWorld(root, { ...config, forceMotion });
@@ -27,7 +36,48 @@ export function ScrollWorld({ config }: { config: ScrollWorldConfig }) {
     };
   }, [config]);
 
-  return <div ref={container} />;
+  // Leaving the landing for the app: internal links (card calls to action, Sign
+  // in) fade the page into paper first, then navigate with the `landing-exit`
+  // transition type so src/app/template.tsx fades the destination in.
+  useEffect(() => {
+    const page = container.current?.closest<HTMLElement>(".landing-page");
+    if (!page) return;
+    let timer = 0;
+    const onClick = (event: MouseEvent) => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = (event.target as Element | null)?.closest?.("a");
+      const href = link?.getAttribute("href") ?? "";
+      if (!link || link.target || link.hasAttribute("download")) return;
+      if (!href.startsWith("/") || href.startsWith("//")) return;
+      // Capture phase + stopPropagation: Next's <Link> must not navigate too.
+      event.preventDefault();
+      event.stopPropagation();
+      if (page.classList.contains("landing-page--leaving")) return;
+      const reduce = !forcedMotion() && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduce) {
+        router.push(href);
+        return;
+      }
+      page.classList.add("landing-page--leaving");
+      timer = window.setTimeout(
+        () => router.push(href, { transitionTypes: ["landing-exit"] }),
+        LEAVE_MS,
+      );
+    };
+    page.addEventListener("click", onClick, { capture: true });
+    return () => {
+      page.removeEventListener("click", onClick, { capture: true });
+      window.clearTimeout(timer);
+      page.classList.remove("landing-page--leaving");
+    };
+  }, [router]);
+
+  return (
+    <>
+      <div ref={container} />
+      <div className="landing-veil" aria-hidden="true" />
+    </>
+  );
 }
 
 // Leans the fixed stage a couple of degrees toward the pointer, eased every

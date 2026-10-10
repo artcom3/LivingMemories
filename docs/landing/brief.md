@@ -185,9 +185,29 @@ Scripts del proceso en `scripts/landing/` (necesitan ffmpeg):
 | `encode.sh` | Codifica el clip para el scroll |
 | `poster.sh` | Recorta el lienzo a la proporción del clip, para que el póster coincida con su fotograma 0 |
 
+## Llamadas a la acción (2026-10-10)
+
+Cada tarjeta lleva solo su botón de acción: sin contador `01 / 06`, sin etiquetas y sin el riel lateral. El botón es negro, con la flecha en el color de la escena.
+
+| Tarjeta | Pestaña | Botón | Destino |
+| --- | --- | --- | --- |
+| Cover | Cover | Open your family diary | `/go/diary` → `/families/<id>` |
+| Recordings | Recordings | Record a memory | `/go/record` → `memories/new` |
+| Memories | Memories | Organize your albums | `/go/albums` → `albums` |
+| Stories | My stories | Write your own story | `/go/write` → `stories/new` |
+| The story | The story | Read your family's stories | `/go/stories` → `stories` |
+| Your diary | Your diary | Request an invitation · Sign in | `#invitation` · `/login` |
+
+`src/app/go/[action]/page.tsx` resuelve cada acción, usando el mapa de `src/lib/landing/actions.ts`:
+- **Sin sesión:** manda al login con `next=/go/<acción>`, que `src/app/login/page.tsx` acepta.
+- **Con una familia:** va directo a la página de la acción.
+- **Con varias:** abre `/families?go=<acción>` para elegir familia.
+- **Lectores:** las acciones de crear (`record`, `write`) los llevan a la portada de la familia.
+- **Familia ajena o acción inválida:** 404.
+
+Al hacer clic en un enlace interno, la landing se funde al color papel en 450 ms (`scroll-world.tsx`). Después navega con el tipo de transición `landing-exit`, y `src/app/template.tsx` hace entrar la página de destino con `<ViewTransition>`, usando el CSS de `src/app/globals.css`. El resto de navegaciones de la app no se animan.
 
 ## Pendiente
 
-- Elegir entre Seedance 2.5 y Veo 3.1 tras una prueba con dos clips.
 - Destino de las solicitudes de invitación: tabla nueva en PostgreSQL o correo por Mailpit en local.
-- Versión en inglés.
+- Hosting de los videos antes de desplegar (CDN o MinIO).

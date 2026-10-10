@@ -9,8 +9,9 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const candidate = (await searchParams).next || "/";
+  // /go/<action> is the landing's call-to-action resolver (src/app/go).
   const next =
-    /^\/(?:families(?:\/[A-Za-z0-9_-]+)?|invite\/[A-Za-z0-9_-]{43})$/.test(
+    /^\/(?:families(?:\/[A-Za-z0-9_-]+)?|invite\/[A-Za-z0-9_-]{43}|go\/(?:diary|record|albums|write|stories))$/.test(
       candidate,
     )
       ? candidate

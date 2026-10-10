@@ -28,6 +28,10 @@ export interface ScrollWorldConfig {
   cta?: ScrollWorldLink;
   /** Secondary links in the top bar, before the CTA (e.g. sign in). */
   links?: ScrollWorldLink[];
+  /** Show the side route rail of section dots. Default true. */
+  route?: boolean;
+  /** Show the "01 / 06" counter on each copy card. Default true. */
+  copyNumbers?: boolean;
   hint?: string;
   nav?: boolean;
   atmosphere?: boolean;

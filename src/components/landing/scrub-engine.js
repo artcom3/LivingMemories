@@ -8,7 +8,8 @@
    `stillTransition: 'page'` option, a 3D page turn for seams without a clip;
    `keyboardSteps` (with stepSpeed/stepDuration) for arrows/PageUp/PageDown, also
    used by nav and route clicks; `copyFade`/`copySlide` copy timing and motion;
-   `stillOffset`; and `links`, secondary top bar links before the CTA.
+   `stillOffset`; `links`, secondary top bar links before the CTA; and
+   `route: false` / `copyNumbers: false` to drop the side rail and card counters.
    ----------------------------------------------------------------------------
    Framework-agnostic. Vanilla JS, zero dependencies. It builds its own DOM and
    injects its own (namespaced) CSS into a container you give it, so it drops into
@@ -31,7 +32,7 @@
                           // (exactly where the copy peaks) and moves quicker at the
                           // edges. 0 = linear (default). Keep ≤ 0.6; 1 = full pause.
            eyebrow, title, body, tags:[…],
-           cta:{ primary:{label,href}, secondary:{label,href} } }, // last section only
+           cta:{ primary:{label,href}, secondary:{label,href} } }, // optional, any section
          …
        ],
        connectors: [clipUrl, …],          // length = sections.length - 1 (nulls allowed)
@@ -170,7 +171,9 @@ function mountScrollWorld(container, config) {
   hint.appendChild(el('i'));
   const track = el('div', 'sw-track');
 
-  [sky, scrollbar, topbar, stage, copylayer, route, hint, track].forEach(n => container.appendChild(n));
+  // `route: false` leaves the side rail out of the DOM (its dots still exist, unmounted).
+  [sky, scrollbar, topbar, stage, copylayer, config.route === false ? null : route, hint, track]
+    .forEach(n => { if (n) container.appendChild(n); });
 
   // segment scenes
   const stillImg = src => {
@@ -207,7 +210,7 @@ function mountScrollWorld(container, config) {
   SECTIONS.forEach((s, i) => {
     const c = el('article', 'sw-copy'); c.style.setProperty('--sw-accent', s.accent || '');
     c.innerHTML =
-      `<span class="sw-copy__num">${pad(i + 1)} / ${pad(N)}</span>` +
+      (config.copyNumbers === false ? '' : `<span class="sw-copy__num">${pad(i + 1)} / ${pad(N)}</span>`) +
       (s.eyebrow ? `<span class="sw-copy__eyebrow">${esc(s.eyebrow)}</span>` : '') +
       (s.title ? `<h2 class="sw-copy__title">${esc(s.title)}</h2>` : '') +
       (s.body ? `<p class="sw-copy__body">${esc(s.body)}</p>` : '') +
@@ -571,7 +574,7 @@ function injectCSS() {
   .sw-copy__body{margin-top:18px;font-size:clamp(1rem,1.25vw,1.14rem);line-height:1.55;color:color-mix(in srgb,var(--sw-ink) 78%,var(--sw-ink-soft));max-width:40ch;text-shadow:0 1px 12px color-mix(in srgb,var(--sw-bg) 90%,transparent);}
   .sw-copy__tags{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 0;padding:0;}
   .sw-copy__tags li{font-size:.82rem;font-weight:600;color:color-mix(in srgb,var(--sw-accent) 70%,#000);padding:7px 14px;border-radius:999px;background:color-mix(in srgb,var(--sw-accent) 14%,#fff);border:1px solid color-mix(in srgb,var(--sw-accent) 30%,transparent);}
-  .sw-copy__cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px;pointer-events:auto;}
+  .sw-copy__cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px;pointer-events:inherit;}
   .sw-btn{text-decoration:none;font-weight:600;font-size:.95rem;padding:13px 24px;border-radius:999px;transition:transform .2s;}
   .sw-btn--primary{color:#fff;background:var(--sw-ink);} .sw-btn--primary:hover{transform:translateY(-2px);}
   .sw-btn--ghost{color:var(--sw-ink);border:1.5px solid color-mix(in srgb,var(--sw-ink) 25%,transparent);} .sw-btn--ghost:hover{transform:translateY(-2px);}

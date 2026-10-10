@@ -25,6 +25,10 @@ export const diaryWorld: ScrollWorldConfig = {
   brand: { name: "LivingMemories", href: "#top" },
   cta: { label: "Request an invitation", href: "#invitation" },
   links: [{ label: "Sign in", href: "/login" }],
+  // Cards carry their own calls to action; the side rail and "01 / 06" counters
+  // only competed with them.
+  route: false,
+  copyNumbers: false,
   hint: "Scroll to open the diary",
   atmosphere: false,
   stillTransition: "page",
@@ -53,7 +57,7 @@ export const diaryWorld: ScrollWorldConfig = {
       eyebrow: "Family diary",
       title: "Your family, told for generations",
       body: "Keep your elders' voices and turn them into stories your children can read and listen to.",
-      tags: ["English and Spanish", "Private"],
+      cta: { primary: { label: "Open your family diary", href: "/go/diary" } },
     },
     {
       id: "grabaciones",
@@ -64,7 +68,7 @@ export const diaryWorld: ScrollWorldConfig = {
       eyebrow: "Record their voice",
       title: "Every story starts with a voice",
       body: "Record grandma telling a memory or singing a song from her childhood, at home with your phone.",
-      tags: ["Audio", "Songs", "Guided questions"],
+      cta: { primary: { label: "Record a memory", href: "/go/record" } },
     },
     {
       id: "recuerdos",
@@ -75,18 +79,18 @@ export const diaryWorld: ScrollWorldConfig = {
       eyebrow: "Gather the clues",
       title: "Photos, letters and notes in one place",
       body: "The app sorts people, places and dates, and you confirm every detail.",
-      tags: ["Photos", "Text", "You decide"],
+      cta: { primary: { label: "Organize your albums", href: "/go/albums" } },
     },
     {
       id: "historias",
-      label: "Stories",
+      label: "My stories",
       still: still("historias"),
       clip: clip("historias"),
       accent: accent.salvia,
       eyebrow: "Family library",
       title: "Generations on the same page",
       body: "Every memory keeps who told it and where it came from.",
-      tags: ["Visible sources"],
+      cta: { primary: { label: "Write your own story", href: "/go/write" } },
     },
     {
       id: "cuento",
@@ -97,7 +101,7 @@ export const diaryWorld: ScrollWorldConfig = {
       eyebrow: "For the little ones",
       title: "A story made from their real life",
       body: "Illustrated in watercolor, narrated and adapted to the listener's age, with nothing made up.",
-      tags: ["Ages 2 to adult", "Narrated"],
+      cta: { primary: { label: "Read your family's stories", href: "/go/stories" } },
     },
     {
       id: "final",
@@ -108,7 +112,10 @@ export const diaryWorld: ScrollWorldConfig = {
       eyebrow: "Private pilot",
       title: "Open your family's diary",
       body: "We are inviting a small group of families to try it first.",
-      cta: { primary: { label: "Request an invitation", href: "#invitation" } },
+      cta: {
+        primary: { label: "Request an invitation", href: "#invitation" },
+        secondary: { label: "Sign in", href: "/login" },
+      },
     },
   ],
   // Page-turn clips between consecutive scenes, rendered from the dives' real
