@@ -32,6 +32,12 @@ export interface ScrollWorldConfig {
   diveScroll?: number;
   connScroll?: number;
   crossfade?: number;
+  /** Seams with no connector clip: dissolve (default) or a 3D page turn. */
+  stillTransition?: "crossfade" | "page";
+  /** Viewport heights of scroll per page turn. Default 0.9. */
+  pageScroll?: number;
+  /** Ignore prefers-reduced-motion. For development previews only. */
+  forceMotion?: boolean;
   sections: ScrollWorldSection[];
   /** Length is sections.length - 1; null crossfades that seam directly. */
   connectors?: (string | null)[];

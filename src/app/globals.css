@@ -13,6 +13,9 @@
   --azul: #6e8fb5;
   --ocre: #d9a45b;
 
+  /* Spring-like curve for every UI transition (landing-page-design B7). */
+  --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
+
   --sw-bg: var(--paper);
   --sw-ink: var(--ink);
   --sw-ink-soft: var(--ink-soft);
@@ -40,12 +43,254 @@
   }
 }
 
-/* The engine's drifting particles are dark gradient dots; they don't belong on
-   watercolor paper. */
+/* ---- scroll-world chrome ----------------------------------------------------
+   Engine overrides so the journey follows landing-page-design: Tailwind type
+   scale and spacing, flat backgrounds, custom easing, full interaction states. */
+
+/* The drifting particles are dark gradient dots; they don't belong on paper. */
 .sw-particles {
   display: none;
 }
 
+/* Floating glass island nav. */
+.sw-topbar {
+  top: 24px;
+  left: 50%;
+  right: auto;
+  translate: -50% 0;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  gap: 16px;
+  padding: 8px 8px 8px 16px;
+  border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--paper) 72%, transparent);
+  backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: 0 16px 48px -24px color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.sw-brand__mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--terracota);
+  /* Phosphor book-open (fill), MIT. */
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><path d='M240,56V200a8,8,0,0,1-8,8H160a24,24,0,0,0-24,23.94,7.9,7.9,0,0,1-5.12,7.55A8,8,0,0,1,120,232a24,24,0,0,0-24-24H24a8,8,0,0,1-8-8V56a8,8,0,0,1,8-8H88a32,32,0,0,1,32,32v87.73a8.17,8.17,0,0,0,7.47,8.25,8,8,0,0,0,8.53-8V80a32,32,0,0,1,32-32h64A8,8,0,0,1,240,56Z'/></svg>")
+    center / contain no-repeat;
+}
+.sw-brand__name {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+.sw-nav {
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  backdrop-filter: none;
+}
 .sw-nav__item {
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
   white-space: nowrap;
+  transition:
+    color 700ms var(--ease-fluid),
+    background-color 700ms var(--ease-fluid);
+}
+.sw-topcta {
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  background: var(--ink);
+  transition:
+    translate 700ms var(--ease-fluid),
+    scale 700ms var(--ease-fluid);
+}
+.sw-topcta:hover {
+  translate: 0 -2px;
+}
+.sw-topcta:active,
+.sw-btn:active,
+.sw-nav__item:active {
+  scale: 0.98;
+}
+
+/* Scene copy: a flat translucent paper card instead of the gradient scrim. */
+.sw-copylayer::before {
+  display: none;
+}
+.sw-copy {
+  translate: 0 -50%;
+  width: min(42vw, 460px);
+  padding: 32px;
+  border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--paper) 78%, transparent);
+  backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: 0 24px 64px -32px color-mix(in srgb, var(--ink) 35%, transparent);
+}
+.sw-copy__num {
+  font-size: 12px;
+  line-height: 16px;
+}
+.sw-copy__eyebrow {
+  margin-top: 16px;
+  font-size: 12px;
+  line-height: 16px;
+}
+.sw-copy__title {
+  margin-top: 8px;
+  font-size: 36px;
+  line-height: 40px;
+  text-shadow: none;
+  text-wrap: balance;
+}
+/* Hero heading: the one sanctioned text gradient (landing-page-design B5). */
+.sw-copy:first-child .sw-copy__title {
+  font-size: 48px;
+  line-height: 1;
+  background: linear-gradient(90deg, #000000, #666666);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.sw-copy__body {
+  max-width: none;
+  margin-top: 16px;
+  font-size: 18px;
+  line-height: 28px;
+  text-shadow: none;
+  text-wrap: pretty;
+}
+.sw-copy__tags {
+  margin-top: 24px;
+}
+.sw-copy__tags li {
+  padding: 4px 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+.sw-copy__cta {
+  margin-top: 24px;
+}
+.sw-btn {
+  padding: 8px 12px;
+  font-size: 16px;
+  line-height: 24px;
+  transition:
+    translate 700ms var(--ease-fluid),
+    scale 700ms var(--ease-fluid);
+}
+.sw-btn--primary:hover,
+.sw-btn--ghost:hover {
+  transform: none;
+  translate: 0 -2px;
+}
+
+/* Staggered reveal of the active scene's copy. */
+.sw-copy > * {
+  transition:
+    opacity 800ms var(--ease-fluid),
+    translate 800ms var(--ease-fluid),
+    filter 800ms var(--ease-fluid);
+}
+.sw-copy:not(.is-active) > * {
+  opacity: 0;
+  translate: 0 16px;
+  filter: blur(6px);
+}
+.sw-copy > :nth-child(2) { transition-delay: 80ms; }
+.sw-copy > :nth-child(3) { transition-delay: 160ms; }
+.sw-copy > :nth-child(4) { transition-delay: 240ms; }
+.sw-copy > :nth-child(5) { transition-delay: 320ms; }
+.sw-copy > :nth-child(6) { transition-delay: 400ms; }
+
+/* Route rail as bookmark ribbons in each scene's colour. */
+.sw-route {
+  gap: 12px;
+}
+.sw-route::before {
+  display: none;
+}
+.sw-route__dot {
+  width: 16px;
+  height: 32px;
+  place-items: start center;
+}
+.sw-route__dot i {
+  width: 12px;
+  height: 20px;
+  border-radius: 2px 2px 0 0;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+  background: color-mix(in srgb, var(--sw-accent) 45%, transparent);
+  box-shadow: none;
+  transition:
+    height 700ms var(--ease-fluid),
+    background-color 700ms var(--ease-fluid);
+}
+.sw-route__dot:hover i,
+.sw-route__dot.is-active i {
+  transform: none;
+  box-shadow: none;
+  background: var(--sw-accent);
+}
+.sw-route__dot.is-active i {
+  height: 32px;
+}
+.sw-route__label {
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 16px;
+}
+.sw-hint {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.sw-nav__item:focus-visible,
+.sw-topcta:focus-visible,
+.sw-btn:focus-visible,
+.sw-route__dot:focus-visible,
+.sw-brand:focus-visible {
+  outline: 2px solid var(--terracota);
+  outline-offset: 2px;
+}
+
+@media (max-width: 860px) {
+  .sw-topbar {
+    top: 16px;
+  }
+  .sw-copy {
+    translate: none;
+    width: auto;
+    padding: 24px;
+  }
+  .sw-copy__title {
+    font-size: 30px;
+    line-height: 36px;
+  }
+  .sw-copy:first-child .sw-copy__title {
+    font-size: 36px;
+    line-height: 40px;
+  }
+  .sw-copy__body {
+    font-size: 16px;
+    line-height: 24px;
+  }
+}
+
+/* `data-motion="full"` is the development preview override (?motion=full). */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .sw-copy > * {
+    transition: none;
+  }
+  :root:not([data-motion="full"]) .sw-copy:not(.is-active) > * {
+    opacity: 1;
+    translate: none;
+    filter: none;
+  }
 }

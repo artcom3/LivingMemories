@@ -17,6 +17,8 @@ export const diaryWorld: ScrollWorldConfig = {
   cta: { label: "Solicitar invitación", href: "#invitacion" },
   hint: "Desliza para abrir el diario",
   atmosphere: false,
+  stillTransition: "page",
+  pageScroll: 1,
   diveScroll: 1.3,
   connScroll: 0.9,
   sections: [

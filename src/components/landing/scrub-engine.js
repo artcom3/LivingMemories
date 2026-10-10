@@ -2,9 +2,10 @@
    scroll-world — portable scroll-scrubbed camera-flight engine
    ----------------------------------------------------------------------------
    LivingMemories copy of .claude/skills/scroll-world/references/scrub-engine.js
-   (v0.8.0). Local changes: ES module export, and mountScrollWorld() returns a
+   (v0.8.0). Local changes: ES module export; mountScrollWorld() returns a
    destroy() that removes listeners, stops the rAF loop and revokes blob URLs so
-   React can unmount it (Strict Mode double mount, Fast Refresh).
+   React can unmount it (Strict Mode double mount, Fast Refresh); and the
+   `stillTransition: 'page'` option, a 3D page turn for seams without a clip.
    ----------------------------------------------------------------------------
    Framework-agnostic. Vanilla JS, zero dependencies. It builds its own DOM and
    injects its own (namespaced) CSS into a container you give it, so it drops into
@@ -69,7 +70,7 @@
    ========================================================================== */
 
 function mountScrollWorld(container, config) {
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = !config.forceMotion && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // Phone detection. `coarse` is captured once (input type doesn't change mid-session);
   // the ≤860px query is read live via isMobile() so a desktop resize/DevTools toggle
   // switches sources and seek behaviour without a reload.
@@ -82,6 +83,10 @@ function mountScrollWorld(container, config) {
   const DIVE_W = config.diveScroll || 1.3;
   const CONN_W = config.connScroll || 0.9;
   const CROSSFADE = (config.crossfade != null) ? config.crossfade : 0.12;  // seam dissolve width (vh)
+  // Seams without a connector clip: 'crossfade' (default) or 'page' — a scroll-driven
+  // 3D page turn hinged on the left edge. A connector clip, when present, always wins.
+  const PAGE_TURN = config.stillTransition === 'page';
+  const PAGE_W = config.pageScroll || 0.9;
   const N = SECTIONS.length;
   if (!N) return () => {};
 
@@ -108,6 +113,12 @@ function mountScrollWorld(container, config) {
       SEGMENTS.push({ kind: 'conn', si: i, clip: CONNECTORS[i], clipM: CONNECTORS_M[i],
                       still: SECTIONS[i + 1].still, stillM: SECTIONS[i + 1].stillMobile,
                       accent: SECTIONS[i + 1].accent, w: CONN_W });
+    } else if (i < N - 1 && PAGE_TURN) {
+      // The leaf's front shows scene i exactly as its dive ends; the scene underneath
+      // shows scene i+1 exactly as its dive begins, so both seams hand off identical pixels.
+      SEGMENTS.push({ kind: 'page', si: i, still: s.still, stillM: s.stillMobile,
+                      nextStill: SECTIONS[i + 1].still, nextStillM: SECTIONS[i + 1].stillMobile,
+                      accent: SECTIONS[i + 1].accent, w: PAGE_W });
     }
   });
   const NSEG = SEGMENTS.length;
@@ -147,13 +158,32 @@ function mountScrollWorld(container, config) {
   [sky, scrollbar, topbar, stage, copylayer, route, hint, track].forEach(n => container.appendChild(n));
 
   // segment scenes
+  const stillImg = src => {
+    const img = el('img', 'sw-scene__still'); img.alt = ''; img.decoding = 'async'; img.loading = 'lazy';
+    if (src) img.src = src;
+    return img;
+  };
   SEGMENTS.forEach(s => {
     const scene = el('div', 'sw-scene'); scene.style.setProperty('--sw-accent', s.accent || '');
-    const img = el('img', 'sw-scene__still'); img.alt = ''; img.decoding = 'async'; img.loading = 'lazy';
     const poster = (isMobile() && s.stillM) ? s.stillM : s.still;
-    if (poster) img.src = poster;
-    scene.appendChild(img); stage.appendChild(scene);
-    s.el = scene; s.img = img; s.video = null; s.hasClip = false;
+    if (s.kind === 'page') {
+      scene.classList.add('sw-page');
+      s.under = stillImg((isMobile() && s.nextStillM) ? s.nextStillM : s.nextStill);
+      s.cast = el('div', 'sw-page__shade');
+      s.leaf = el('div', 'sw-leaf');
+      const front = el('div', 'sw-leaf__front');
+      s.front = stillImg(poster);
+      s.frontShade = el('div', 'sw-leaf__shade');
+      front.append(s.front, s.frontShade);
+      s.leaf.append(front, el('div', 'sw-leaf__back'));
+      scene.append(s.under, s.cast, s.leaf);
+      s.img = null;
+    } else {
+      s.img = stillImg(poster);
+      scene.appendChild(s.img);
+    }
+    stage.appendChild(scene);
+    s.el = scene; s.video = null; s.hasClip = false;
     s.loading = false; s.ready = false; s.cur = 0; s.target = 0; s.visible = false;
   });
 
@@ -248,7 +278,9 @@ function mountScrollWorld(container, config) {
       const op = smooth(1 - outside / fade);
       s.el.style.opacity = op; s.visible = op > 0.001;
       s.el.style.zIndex = (i === ci) ? '120' : String(100 + Math.round(op * 10));
-      if (!s.hasClip || !s.ready) {
+      if (s.kind === 'page') {
+        turnPage(s, local);
+      } else if (!s.hasClip || !s.ready) {
         const sc = reduce ? 1 : 1.03 + local * 0.14;
         s.img.style.transform = `translateX(${stageX - 2}vw) scale(${sc.toFixed(3)})`;
       }
@@ -274,6 +306,7 @@ function mountScrollWorld(container, config) {
     if (near !== activeIndex) {
       activeIndex = near;
       dots.forEach((d, k) => d.classList.toggle('is-active', k === near));
+      copies.forEach((c, k) => c.classList.toggle('is-active', k === near));
       nav.querySelectorAll('.sw-nav__item').forEach((n, k) => n.classList.toggle('is-active', k === near));
       container.style.setProperty('--sw-accent', SECTIONS[near].accent || '');
     }
@@ -281,6 +314,25 @@ function mountScrollWorld(container, config) {
     hint.style.opacity = clamp(1 - y / (0.5 * vh));
     if (particles) particles.style.transform = `translate3d(0, ${-y * 0.05}px, 0)`;
     ticking = false;
+  }
+
+  // Page turn: the leaf lifts slowly, sweeps across and settles (ease in-out), its
+  // front darkening as it tilts away and its shadow on the next page fading as it
+  // clears. Reduced motion: no rotation, the leaf simply dissolves.
+  const easeInOut = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  function turnPage(s, local) {
+    const shift = `translateX(${stageX - 2}vw)`;
+    s.under.style.transform = `${shift} scale(${reduce ? 1 : 1.03})`;
+    s.front.style.transform = `${shift} scale(${reduce ? 1 : 1.17})`;
+    if (reduce) {
+      s.leaf.style.transform = 'none';
+      s.leaf.style.opacity = String(1 - local);
+      return;
+    }
+    const e = easeInOut(local);
+    s.leaf.style.transform = `rotateY(${(-180 * e).toFixed(2)}deg)`;
+    s.frontShade.style.opacity = (0.35 * Math.sin(Math.min(e, 0.5) * Math.PI)).toFixed(3);
+    s.cast.style.opacity = (0.28 * Math.sin(e * Math.PI)).toFixed(3);
   }
 
   function raf() {
@@ -408,6 +460,11 @@ function injectCSS() {
   .sw-scene{position:absolute;inset:0;opacity:0;overflow:hidden;will-change:opacity;}
   .sw-scene__video,.sw-scene__still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;}
   .sw-scene__still{will-change:transform;} .sw-scene.has-clip .sw-scene__still{opacity:0;} .sw-scene__video{z-index:1;}
+  .sw-page{perspective:2400px;perspective-origin:0 50%;}
+  .sw-page__shade,.sw-leaf__shade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;}
+  .sw-leaf{position:absolute;inset:0;transform-origin:0 50%;transform-style:preserve-3d;will-change:transform;}
+  .sw-leaf__front,.sw-leaf__back{position:absolute;inset:0;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+  .sw-leaf__back{transform:rotateY(180deg);background:var(--sw-bg);box-shadow:inset -48px 0 96px rgba(0,0,0,.10);}
   .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;}
   .sw-copylayer::before{content:"";position:absolute;inset:0;width:min(58vw,780px);background:linear-gradient(90deg,var(--sw-bg) 0%,color-mix(in srgb,var(--sw-bg) 82%,transparent) 34%,color-mix(in srgb,var(--sw-bg) 40%,transparent) 62%,transparent 100%);}
   .sw-copy{position:absolute;left:clamp(18px,5vw,64px);top:50%;transform:translateY(-50%);width:min(42vw,460px);opacity:0;will-change:opacity,transform;}
