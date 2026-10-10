@@ -22,6 +22,9 @@ type Run = {
 type Version = { id: string; status: string };
 type Config = {
   openai: boolean;
+  gemini: boolean;
+  canGenerate: boolean;
+  textProvider: "openai" | "gemini" | null;
   elevenlabs: boolean;
   voiceEs: boolean;
   voiceEn: boolean;
@@ -141,8 +144,11 @@ export function CreationWorkspace({
     ["QUEUED", "ANALYZING", "RENDER_QUEUED", "RENDERING"].includes(run.status);
   const assetUrl = (id: string) =>
     base + "/creations/" + run!.id + "/assets/" + id;
+  const imageProviderMissing =
+    run?.settings?.illustrate &&
+    !(run.settings.provider === "gemini" ? config?.gemini : config?.openai);
   const renderDisabled =
-    run?.settings?.kind === "MUSIC"
+    imageProviderMissing || run?.settings?.kind === "MUSIC"
       ? !config?.elevenlabs
       : run?.settings?.narrate &&
         (!config?.elevenlabs ||
@@ -173,10 +179,18 @@ export function CreationWorkspace({
           contexto que tenían sus fuentes al comenzar.
         </p>
       </div>
-      {config && !config.openai ? (
+      {config && !config.canGenerate ? (
         <p className="feedback">
-          La generación está pendiente de conectar OpenAI y ElevenLabs. Puedes
-          guardar álbumes, materiales y estilos mientras tanto.
+          La generación está pendiente de conectar OpenAI o Gemini. Para audio
+          también necesitarás ElevenLabs. Puedes guardar álbumes, materiales y
+          estilos mientras tanto.
+        </p>
+      ) : null}
+      {config?.textProvider ? (
+        <p className="form-hint">
+          Los nuevos borradores usarán{" "}
+          {config.textProvider === "gemini" ? "Gemini" : "OpenAI"} para
+          interpretar las fuentes y crear el texto y las ilustraciones.
         </p>
       ) : null}
       <p className="form-hint">
@@ -187,7 +201,9 @@ export function CreationWorkspace({
       </p>
       <button
         className="button primary"
-        disabled={busy || !!pending || !config?.openai || versions.length >= 3}
+        disabled={
+          busy || !!pending || !config?.canGenerate || versions.length >= 3
+        }
         onClick={begin}
       >
         {busy
@@ -431,7 +447,7 @@ export function CreationWorkspace({
               </label>
               {renderDisabled ? (
                 <p className="feedback">
-                  Falta conectar ElevenLabs
+                  Falta conectar el proveedor de esta versión
                   {kind === "stories"
                     ? " o configurar la voz del idioma elegido"
                     : " con acceso a Music"}

@@ -1,3 +1,4 @@
+import { modelSelection } from "../../src/lib/creations/config";
 type ApiState = "ok" | "not_configured" | "unavailable" | "unauthorized";
 async function probe(
   url: string,
@@ -17,12 +18,24 @@ async function probe(
   }
 }
 const openaiKey = process.env.OPENAI_API_KEY?.trim();
+const geminiKey = process.env.GEMINI_API_KEY?.trim();
+const selection = modelSelection();
 const elevenKey = process.env.ELEVENLABS_API_KEY?.trim();
 const openai = openaiKey
   ? await probe("https://api.openai.com/v1/models", {
       Authorization: `Bearer ${openaiKey}`,
     })
   : { state: "not_configured" as ApiState };
+const gemini =
+  !openaiKey && geminiKey
+    ? await probe("https://generativelanguage.googleapis.com/v1beta/models", {
+        "x-goog-api-key": geminiKey,
+      })
+    : { state: "not_configured" as ApiState };
+const creative = selection.provider === "gemini" ? gemini : openai;
+const geminiIds = ((gemini.data?.models || []) as { name: string }[]).map((m) =>
+  m.name.replace(/^models\//, ""),
+);
 const elevenlabs = elevenKey
   ? await probe("https://api.elevenlabs.io/v1/models", {
       "xi-api-key": elevenKey,
@@ -44,8 +57,8 @@ const voiceList = (voices.data?.voices || []) as {
   name: string;
 }[];
 const configuredModels = {
-  text: process.env.OPENAI_MODEL_TEXT || "gpt-6.1-sol",
-  image: process.env.OPENAI_MODEL_IMAGE || "gpt-image-2.5-flare",
+  text: selection.textModel,
+  image: selection.imageModel,
   transcription: process.env.ELEVENLABS_STT_MODEL || "scribe_v2",
   narration: process.env.ELEVENLABS_TTS_MODEL || "eleven_multilingual_v2",
 };
@@ -55,11 +68,13 @@ const modelAccess = Object.fromEntries(
     {
       id,
       catalog:
-        (kind === "text" || kind === "image" ? openai : elevenlabs).state !==
+        (kind === "text" || kind === "image" ? creative : elevenlabs).state !==
         "ok"
           ? "not_checked"
           : (kind === "text" || kind === "image"
-                ? openaiIds
+                ? selection.provider === "gemini"
+                  ? geminiIds
+                  : openaiIds
                 : elevenIds
               ).includes(id)
             ? "listed"
@@ -86,6 +101,8 @@ console.log(
   JSON.stringify(
     {
       openai: openai.state,
+      gemini: geminiKey && openaiKey ? "standby" : gemini.state,
+      creativeProvider: selection.provider,
       elevenlabs: elevenlabs.state,
       voices: voices.state,
       modelAccess,
@@ -104,18 +121,21 @@ console.log(
     2,
   ),
 );
-if (openai.state === "not_configured" || elevenlabs.state === "not_configured")
+if (
+  creative.state === "not_configured" ||
+  elevenlabs.state === "not_configured"
+)
   console.log(
     "Add missing API keys and voice IDs to .env.local; recreate app/worker to enable them.",
   );
 if (
-  [openai, elevenlabs, voices].some(
+  [creative, elevenlabs, voices].some(
     (value) => value.state === "unavailable" || value.state === "unauthorized",
   )
 )
   process.exitCode = 1;
 if (
   process.argv.includes("--require-keys") &&
-  [openai, elevenlabs].some((value) => value.state !== "ok")
+  [creative, elevenlabs].some((value) => value.state !== "ok")
 )
   process.exitCode = 1;

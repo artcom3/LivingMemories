@@ -1,5 +1,6 @@
 import "server-only";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
+import { geminiImage, geminiInteraction } from "./gemini";
 import { required } from "../infrastructure/config";
 import {
   narrativeStyles,
@@ -154,6 +155,35 @@ ${settings.kind === "STORY" ? `El recuerdo principal es ${settings.memoryId}; la
         detail: "low",
       });
     }
+    if (settings.provider === "gemini") {
+      const input: Array<Record<string, unknown>> = [
+        { type: "text", text: JSON.stringify({ settings, evidence }) },
+      ];
+      for (const image of images) {
+        input.push({
+          type: "text",
+          text: `Fuente ${image.sourceId}${image.seconds === undefined ? "" : `; fotograma a ${image.seconds} segundos`}. Observación visual, no identidad ni fecha confirmada.`,
+        });
+        input.push(geminiImage(image));
+      }
+      const parts = await geminiInteraction({
+        model: settings.textModel,
+        system_instruction: instructions,
+        input,
+        generation_config: { max_output_tokens: 10000 },
+        response_format: {
+          type: "text",
+          mime_type: "application/json",
+          schema: draftSchema,
+        },
+      });
+      const output = parts
+        .filter((p) => p.type === "text")
+        .map((p) => p.text || "")
+        .join("");
+      if (!output) throw new Error("Gemini returned no draft");
+      return JSON.parse(output);
+    }
     const response = await openai("responses", {
       model: settings.textModel,
       store: false,
@@ -195,6 +225,26 @@ ${settings.kind === "STORY" ? `El recuerdo principal es ${settings.memoryId}; la
   },
   async illustrate(prompt, settings, references) {
     const instruction = `${visualStyles[settings.visualStyle!].prompt}\n${prompt}\nUse the supplied reference photographs consistently for character appearance when relevant. Preserve visual identity across pages. No invented historical specifics. No text, no logos. ${settings.genericCharacters ? "If a person lacks a photographic reference, depict a generic illustrated character, not a real likeness." : "Do not introduce people without a supplied photographic reference."}`;
+    if (settings.provider === "gemini") {
+      const parts = await geminiInteraction({
+        model: settings.imageModel,
+        input: [
+          { type: "text", text: instruction },
+          ...references.slice(0, 3).map(geminiImage),
+        ],
+        response_format: {
+          type: "image",
+          mime_type: "image/png",
+          aspect_ratio: "1:1",
+          image_size: "1K",
+        },
+      });
+      const image = parts.find(
+        (p) => p.type === "image" && p.mime_type === "image/png" && p.data,
+      );
+      if (!image?.data) throw new Error("Gemini returned no PNG illustration");
+      return new Uint8Array(Buffer.from(image.data, "base64"));
+    }
     const options = {
       model: settings.imageModel,
       prompt: instruction,

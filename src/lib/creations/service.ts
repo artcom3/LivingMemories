@@ -19,6 +19,13 @@ import {
   type Artifact,
 } from "./shared";
 
+import {
+  modelSelection,
+  providerConfiguration,
+  type CreativeProvider,
+} from "./config";
+export { providerConfiguration } from "./config";
+
 type Tx = Prisma.TransactionClient;
 const scope = (actorId: string, role: string) =>
   role === "ADMIN" ? {} : { createdById: actorId };
@@ -139,17 +146,20 @@ export async function musicPreparation(
   if (!found) throw unavailable();
   return found;
 }
-export function providerConfiguration() {
-  return {
-    openai: Boolean(process.env.OPENAI_API_KEY?.trim()),
-    elevenlabs: Boolean(process.env.ELEVENLABS_API_KEY?.trim()),
-    voiceEs: Boolean(process.env.ELEVENLABS_VOICE_ID_ES?.trim()),
-    voiceEn: Boolean(process.env.ELEVENLABS_VOICE_ID_EN?.trim()),
-  };
-}
-function configured(openai: boolean, eleven: boolean, voice?: string) {
+function configured(
+  creative: boolean,
+  eleven: boolean,
+  voice?: string,
+  provider: CreativeProvider | null = providerConfiguration().textProvider,
+) {
   const config = providerConfiguration();
-  if ((openai && !config.openai) || (eleven && !config.elevenlabs))
+  if (
+    (creative &&
+      !(provider === "gemini"
+        ? config.gemini
+        : provider === "openai" && config.openai)) ||
+    (eleven && !config.elevenlabs)
+  )
     throw new AccessError(
       409,
       "PROVIDERS",
@@ -164,8 +174,7 @@ function configured(openai: boolean, eleven: boolean, voice?: string) {
 }
 function modelSettings(language: string) {
   return {
-    textModel: process.env.OPENAI_MODEL_TEXT || "gpt-6.1-sol",
-    imageModel: process.env.OPENAI_MODEL_IMAGE || "gpt-image-2.5-flare",
+    ...modelSelection(),
     sttModel: process.env.ELEVENLABS_STT_MODEL || "scribe_v2",
     ttsModel: process.env.ELEVENLABS_TTS_MODEL || "eleven_multilingual_v2",
     musicModel: process.env.ELEVENLABS_MUSIC_MODEL || "music_v2",
@@ -491,6 +500,7 @@ export async function approveCreation(
     settings.kind === "STORY" && settings.narrate
       ? renderingSettings.voiceId
       : undefined,
+    settings.provider || "openai",
   );
   return withFamily(actorId, familyId, async (tx, member) => {
     writable(member.role);

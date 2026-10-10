@@ -21,12 +21,18 @@ Guarda las claves en `.env.local`, que se excluye del repositorio y de las imág
 
 ```dotenv
 OPENAI_API_KEY=
+# Alternativa automática cuando la clave de OpenAI está vacía
+GEMINI_API_KEY=
+GEMINI_MODEL_TEXT=gemini-3.8-flash
+GEMINI_MODEL_IMAGE=gemini-nano-banana-2.1
 ELEVENLABS_API_KEY=
 ELEVENLABS_VOICE_ID_ES=
 ELEVENLABS_VOICE_ID_EN=
 ELEVENLABS_MUSIC_MODEL=music_v2
 ```
 
+- Selección: si hay `OPENAI_API_KEY`, se usa OpenAI; si está vacía y existe `GEMINI_API_KEY`, se usa Gemini para borradores, interpretación visual e ilustraciones. Se conservan prompts de fidelidad, esquema del borrador, citas y revisión. No se cambia de proveedor tras errores 401/429/timeouts. Las versiones anteriores conservan su proveedor (OpenAI si no lo registraban); crea una nueva versión para cambiar.
+- Gemini: crea la clave en [Google AI Studio](https://aistudio.google.com/apikey). Usa Interactions API con `store: false`, `gemini-3.8-flash` para texto y `gemini-nano-banana-2.1` para imágenes. Los modelos son configurables y el acceso depende de la cuenta. ElevenLabs sigue a cargo de transcripción, narración y música. [JSON estructurado](https://ai.google.dev/gemini-api/docs/structured-output), [imágenes](https://ai.google.dev/gemini-api/docs/image-generation).
 - OpenAI: acceso a Responses con `gpt-6.1-sol`; para ilustrar, acceso a `gpt-image-2.5-flare` mediante Images. Las ilustraciones se generan con calidad baja y una referencia de hasta tres fotografías seleccionadas para el primer test.
 - ElevenLabs: la API key debe habilitar **Speech to Text**, **Text to Speech**, **Voices** (consulta de catálogo) y **Music**. La cuenta necesita crédito y acceso a las funciones que se prueben. Un catálogo accesible no confirma que la generación musical esté habilitada.
 - Selecciona voces sintéticas de la cuenta y copia su ID para español/inglés. No hacen falta clonación de voz, agentes conversacionales, webhooks ni claves en el navegador. La música usa su modelo propio y no requiere un ID de voz.
@@ -34,7 +40,7 @@ ELEVENLABS_MUSIC_MODEL=music_v2
 
 Después de conectar o cambiar las variables, ejecuta `pnpm docker:up` para recrear app/worker con las variables actuales. `pnpm docker:check:apis` consulta modelos y voces sin generar contenido ni gastar créditos de generación. Reinicia también `pnpm dev` si lo usas fuera de Docker. Para evitar diferencias de herramientas, usa el worker de Docker, que ya incluye FFmpeg y HEIC.
 
-Primer ensayo sugerido: una memoria escrita de la abuela en Perú, una foto con contexto, cuento infantil de cuatro páginas sin ilustraciones al principio y pieza instrumental acústica de 30 segundos. Después prueba una grabación corta, un video corto y compara estilos visuales o canciones con letra. Las pruebas reales no se han ejecutado sin claves: todavía hay que evaluar fidelidad, calidad, latencia, voces y coste efectivo con la cuenta.
+Primer ensayo sugerido: una memoria escrita de la abuela en Perú, una foto con contexto, cuento infantil de cuatro páginas sin ilustraciones al principio y pieza instrumental acústica de 30 segundos. Después prueba una grabación corta, un video corto y compara estilos visuales o canciones con letra. Las pruebas reales no se han ejecutado sin claves de OpenAI/Gemini y ElevenLabs: todavía hay que evaluar fidelidad, calidad, latencia, voces y coste efectivo con la cuenta.
 
 ## Procesamiento y límites de desarrollo
 

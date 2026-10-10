@@ -99,6 +99,7 @@ export type CreationSettings = {
   style?: keyof typeof musicStyles;
   instrumental?: boolean;
   durationSeconds?: number;
+  provider?: "openai" | "gemini";
   textModel: string;
   imageModel: string;
   sttModel: string;

@@ -252,6 +252,8 @@ test("missing credentials leave preparations saved without queueing or reserving
     style: "PIANO",
     durationSeconds: 30,
   });
+  const savedGemini = process.env.GEMINI_API_KEY;
+  delete process.env.GEMINI_API_KEY;
   const saved = process.env.OPENAI_API_KEY;
   delete process.env.OPENAI_API_KEY;
   try {
@@ -262,6 +264,7 @@ test("missing credentials leave preparations saved without queueing or reserving
     assert.equal(await prisma.creation.count(), 0);
   } finally {
     if (saved) process.env.OPENAI_API_KEY = saved;
+    if (savedGemini) process.env.GEMINI_API_KEY = savedGemini;
   }
   process.env.OPENAI_API_KEY = "test-only-no-network";
   process.env.ELEVENLABS_API_KEY = "test-only-no-network";
@@ -276,10 +279,22 @@ test("album assets and context feed staged music generation, including video tra
     durationSeconds: 30,
     instrumental: false,
   });
-  const attempts = await Promise.allSettled([
-    beginCreation(adult, family, "MUSIC", prep.id),
-    beginCreation(adult, family, "MUSIC", prep.id),
-  ]);
+  const originalOpenai = process.env.OPENAI_API_KEY;
+  const originalGemini = process.env.GEMINI_API_KEY;
+  delete process.env.OPENAI_API_KEY;
+  process.env.GEMINI_API_KEY = "test-only-gemini-no-network";
+  let attempts: PromiseSettledResult<{ id: string }>[];
+  try {
+    attempts = await Promise.allSettled([
+      beginCreation(adult, family, "MUSIC", prep.id),
+      beginCreation(adult, family, "MUSIC", prep.id),
+    ]);
+  } finally {
+    if (originalOpenai === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = originalOpenai;
+    if (originalGemini === undefined) delete process.env.GEMINI_API_KEY;
+    else process.env.GEMINI_API_KEY = originalGemini;
+  }
   assert.equal(attempts.filter((r) => r.status === "fulfilled").length, 1);
   const started = attempts.find(
     (r) => r.status === "fulfilled",
@@ -290,6 +305,10 @@ test("album assets and context feed staged music generation, including video tra
   await processCreation(started.value.id, fakeProviders);
   let run = await creationView(adult, family, started.value.id);
   assert.equal(run.status, "REVIEW");
+  assert.equal(
+    (run.settings as unknown as { provider: string }).provider,
+    "gemini",
+  );
   assert.equal(musicCalls, 0);
   assert.equal(
     received.find((e) => e.sourceId === photoId)?.contextDescription,

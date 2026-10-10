@@ -30,7 +30,8 @@
     "docker:check": "docker compose -f docker-compose.dev.yml exec -T worker node --conditions=react-server --import=tsx scripts/docker/check.mts",
     "docker:check:apis": "docker compose -f docker-compose.dev.yml exec -T worker node --conditions=react-server --import=tsx scripts/docker/check-external.mts",
     "worker": "node --env-file=.env --env-file-if-exists=.env.local --conditions=react-server --import=tsx src/worker/index.ts",
-    "test:creations": "node --import=tsx scripts/test-access.mts tests/creations.integration.test.ts"
+    "test:creations": "node --import=tsx scripts/test-access.mts tests/creations.integration.test.ts",
+    "test:providers": "node --conditions=react-server --import=tsx --test tests/gemini.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1149.0",
