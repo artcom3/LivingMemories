@@ -22,9 +22,10 @@ const still = (id: string) => `/landing/scenes/${id}-wide.webp`;
 const clip = (id: string) => `/landing/video/${id}.mp4`;
 
 export const diaryWorld: ScrollWorldConfig = {
+  // The brand is the cover's tab (it steps back to the first scene), and the top
+  // bar's one action is signing in; the invitation lives on the last card.
   brand: { name: "LivingMemories", href: "#top" },
-  cta: { label: "Request an invitation", href: "#invitation" },
-  links: [{ label: "Sign in", href: "/login" }],
+  cta: { label: "Sign in", href: "/login" },
   // Cards carry their own calls to action; the side rail and "01 / 06" counters
   // only competed with them.
   route: false,
@@ -51,6 +52,7 @@ export const diaryWorld: ScrollWorldConfig = {
     {
       id: "portada",
       label: "Cover",
+      nav: false,
       still: still("portada"),
       clip: clip("portada"),
       accent: accent.terracota,

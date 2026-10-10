@@ -6,6 +6,8 @@ export interface ScrollWorldLink {
 export interface ScrollWorldSection {
   id: string;
   label?: string;
+  /** Set false to leave this scene out of the top nav. Default true. */
+  nav?: boolean;
   /** Poster image; shown alone (zoom + crossfade) until a clip exists. */
   still?: string;
   stillMobile?: string;
@@ -24,6 +26,7 @@ export interface ScrollWorldSection {
 }
 
 export interface ScrollWorldConfig {
+  /** A same-page href (`#top`) steps back to the first scene when clicked. */
   brand?: { name: string; href?: string };
   cta?: ScrollWorldLink;
   /** Secondary links in the top bar, before the CTA (e.g. sign in). */
