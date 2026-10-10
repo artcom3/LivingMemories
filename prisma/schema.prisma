@@ -8,15 +8,17 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String     @id
   name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
+  email         String     @unique
+  emailVerified Boolean    @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @default(now()) @updatedAt
   sessions      Session[]
   accounts      Account[]
+  albums        Album[]
+  creations     Creation[]
 
   @@map("user")
 }
@@ -67,3 +69,90 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
+
+model Album {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  assets      MediaAsset[]
+
+  @@index([userId])
+  @@map("album")
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+}
+
+enum ContextStatus {
+  NO_CONTEXT
+  CONTEXT_ADDED
+}
+
+model MediaAsset {
+  id                 String        @id @default(cuid())
+  albumId            String
+  album              Album         @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  fileKey            String        @unique
+  fileUrl            String
+  originalName       String
+  mimeType           String
+  mediaType          MediaType     @default(IMAGE)
+  size               Int?
+  contextStatus      ContextStatus @default(NO_CONTEXT)
+  contextDescription String?       @db.Text
+  peopleTags         String?
+  locationTag        String?
+  dateTag            String?
+  emotionTag         String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([albumId])
+  @@map("media_asset")
+}
+
+enum CreationType {
+  SONG
+  VIDEO
+  COMIC
+  MANGA
+  BOOK
+}
+
+enum CreationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Creation {
+  id             String         @id @default(cuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           CreationType
+  title          String
+  status         CreationStatus @default(COMPLETED)
+  prompt         String?        @db.Text
+  genreOrStyle   String?
+  resultUrl      String?
+  coverUrl       String?
+  waveformJson   String?        @db.Text
+  pagesJson      String?        @db.Text
+  sourceAssetIds String?        @db.Text
+  metadataJson   String?        @db.Text
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([userId])
+  @@map("creation")
+}
+
