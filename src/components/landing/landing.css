@@ -67,6 +67,12 @@
   /* Phosphor book-open (fill), MIT. */
   mask: url("/brand/book-open.svg")
     center / contain no-repeat;
+  transition: rotate 700ms var(--ease-fluid);
+}
+/* The brand is the cover's tab (diary-world.ts): the book tips open on hover,
+   as on the sign in page. */
+.sw-brand:hover .sw-brand__mark {
+  rotate: -8deg;
 }
 .sw-brand__name {
   font-size: 16px;
@@ -103,21 +109,6 @@
 .sw-topcta:hover {
   translate: 0 -2px;
 }
-/* Secondary top bar link (Sign in): quiet next to the CTA. */
-.sw-toplink {
-  padding: 8px 12px;
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 600;
-  color: var(--ink);
-  transition: background-color 700ms var(--ease-fluid);
-}
-.sw-toplink:hover {
-  background: color-mix(in srgb, var(--ink) 6%, transparent);
-}
-.sw-toplink:active {
-  scale: 0.98;
-}
 .sw-topcta:active,
 .sw-btn:active,
 .sw-nav__item:active {
@@ -153,10 +144,14 @@
   font-size: 12px;
   line-height: 16px;
 }
-.sw-copy__title {
+/* Scoped to the page so it outranks globals.css `h2:not([data-slot])`, which
+   would otherwise set the private app's 28px semibold headings here. */
+.landing-page .sw-copy__title {
   margin-top: 8px;
   font-size: 30px;
   line-height: 36px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
   text-shadow: none;
   text-wrap: balance;
 }
@@ -260,7 +255,6 @@
 }
 
 .sw-nav__item:focus-visible,
-.sw-toplink:focus-visible,
 .sw-topcta:focus-visible,
 .sw-btn:focus-visible,
 .sw-brand:focus-visible {
@@ -371,8 +365,7 @@
 .landing-page .sw-btn--primary {
   color: var(--paper);
 }
-.landing-page .sw-btn--ghost,
-.landing-page .sw-toplink {
+.landing-page .sw-btn--ghost {
   color: var(--ink);
 }
 
@@ -383,22 +376,3 @@
   }
 }
 
-@media (min-width: 861px) and (max-width: 1080px) {
-  /* Small laptops show the full section nav: tighten its pills to fit. */
-  .sw-nav__item {
-    padding: 8px 8px;
-  }
-}
-@media (max-width: 1080px) {
-  /* Icon-only brand below 1080px so the section nav (desktop) or Sign in and
-     the CTA (phones) fit the island nav. The name stays available to screen
-     readers. */
-  .sw-brand__name {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-}

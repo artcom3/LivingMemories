@@ -2,20 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { forcedMotion } from "./motion";
 import { mountScrollWorld, type ScrollWorldConfig } from "./scrub-engine";
 
 const MAX_TILT_DEG = 2;
 // Matches the veil's CSS transition in landing.css.
 const LEAVE_MS = 450;
-
-// Development only: `?motion=full` previews the animations on machines whose OS
-// reports prefers-reduced-motion (e.g. Windows with animation effects off).
-function forcedMotion() {
-  return (
-    process.env.NODE_ENV !== "production" &&
-    new URLSearchParams(window.location.search).get("motion") === "full"
-  );
-}
 
 export function ScrollWorld({ config }: { config: ScrollWorldConfig }) {
   const container = useRef<HTMLDivElement>(null);

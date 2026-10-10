@@ -191,12 +191,14 @@ Cada tarjeta lleva solo su botón de acción: sin contador `01 / 06`, sin etique
 
 | Tarjeta | Pestaña | Botón | Destino |
 | --- | --- | --- | --- |
-| Cover | Cover | Open your family diary | `/go/diary` → `/families/<id>` |
+| Cover | (la marca) | Open your family diary | `/go/diary` → `/families/<id>` |
 | Recordings | Recordings | Record a memory | `/go/record` → `memories/new` |
 | Memories | Memories | Organize your albums | `/go/albums` → `albums` |
 | Stories | Library | Write your own story | `/go/write` → `stories/new` |
 | The story | Storybook | Read your family's stories | `/go/stories` → `stories` |
 | Your diary | Your diary | Request an invitation · Sign in | `#invitation` · `/login` |
+
+Barra superior: la escena portada no tiene pestaña (`nav: false`); la marca LivingMemories hace de pestaña y vuelve a ella con el mismo recorrido animado. La única acción de la barra es **Sign in** (botón negro, a `/login`); la invitación se pide desde la última tarjeta.
 
 `src/app/go/[action]/page.tsx` resuelve cada acción, usando el mapa de `src/lib/landing/actions.ts`:
 - **Sin sesión:** manda al login con `next=/go/<acción>`, que `src/app/login/page.tsx` acepta.
