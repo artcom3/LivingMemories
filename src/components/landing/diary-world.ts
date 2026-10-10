@@ -97,5 +97,7 @@ export const diaryWorld: ScrollWorldConfig = {
       cta: { primary: { label: "Solicitar invitación", href: "#invitacion" } },
     },
   ],
-  connectors: [],
+  // Page-turn clips between consecutive scenes, rendered from the dives' real
+  // boundary frames (start = last frame of dive i, end = first frame of dive i+1).
+  connectors: [1, 2, 3, 4, 5].map((n) => `/landing/video/conn-${n}.mp4`),
 };

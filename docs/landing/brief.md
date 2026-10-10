@@ -167,7 +167,14 @@ Los PNG originales se guardan en `landing-src/`, que git ignora. Cada uno se con
 
 ## Estado del video
 
-La cuenta de ElevenLabs aún no puede generar video: todos los modelos responden *"video generation needs a paid plan"*. Los prompts están en [video-prompts.md](video-prompts.md).
+Terminado el 2026-10-10 con FLUX 3 Video en el plan Creator: 6 entradas de 8 s y 5 conexiones de paso de página de 5 s, a 720p (1280×704). Están codificadas en `public/landing/video/` (58 MB) y conectadas en `diary-world.ts`. Prompts, modelo y pruebas en [video-prompts.md](video-prompts.md).
+
+| Costura | Medida en la página (diferencia media, 0–255) |
+| --- | --- |
+| Entrada → conexión | 7,1 (portada) |
+| Conexión → entrada | 5,6 (historias) y 6,8 (cuento), las dos de PSNR más bajo |
+
+Créditos de video: 8.241 de la prueba más 41.204 de las 5 entradas y 25.752 de las 5 conexiones, 75.197 en total. El intento con Veo 3.1 Fast (estimado en 4.848) fue rechazado; no consta si se cobró.
 
 Scripts del proceso en `scripts/landing/` (necesitan ffmpeg):
 
@@ -176,8 +183,8 @@ Scripts del proceso en `scripts/landing/` (necesitan ffmpeg):
 | `frames.sh` | Extrae el primer y el último fotograma de un clip, para las costuras |
 | `seam-check.sh` | Mide el PSNR entre dos fotogramas, para calificar el modelo y revisar costuras |
 | `encode.sh` | Codifica el clip para el scroll |
+| `poster.sh` | Recorta el lienzo a la proporción del clip, para que el póster coincida con su fotograma 0 |
 
-Estimación (2026-10-10, con cifras públicas aproximadas): entre 55.000 y 135.000 créditos para las 3 escenas restantes, la prueba de modelos, los 11 clips y las repeticiones. El plan Starter (30.000 créditos) no alcanza; Creator (121.000) alcanza en 720p y Pro (600.000) en 1080p. El costo real se confirma con `estimate_only` cuando el plan esté activo.
 
 ## Pendiente
 
