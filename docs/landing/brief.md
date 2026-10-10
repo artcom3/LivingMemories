@@ -16,7 +16,7 @@ Los textos solo prometen funciones del [producto](../sdd/product.md). La landing
 | Decisión | Valor |
 | --- | --- |
 | Acción principal | **Solicitar invitación** (piloto privado por invitación) |
-| Idioma | Español primero; inglés después |
+| Idioma | Inglés (2026-10-10). Los textos publicados viven en `src/components/landing/diary-world.ts`; la tabla del recorrido conserva el borrador original en español |
 | Público | Adultos que organizan la memoria de su familia |
 
 ## Decisiones de la entrevista

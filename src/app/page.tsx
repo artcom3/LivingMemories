@@ -11,12 +11,12 @@ export default function Home() {
       <main className="relative z-[70] bg-paper">
         {/* Temporary target for the CTA until the invitation form is built. */}
         <section
-          id="invitacion"
+          id="invitation"
           className="mx-auto flex min-h-screen max-w-[680px] flex-col justify-center gap-4 px-4 py-24"
         >
-          <h2 className="text-4xl font-semibold text-balance">Solicitar invitación</h2>
+          <h2 className="text-4xl font-semibold text-balance">Request an invitation</h2>
           <p className="text-lg text-pretty text-ink-soft">
-            Aquí irá el formulario para que tu familia entre al piloto.
+            The form for your family to join the pilot will go here.
           </p>
         </section>
       </main>

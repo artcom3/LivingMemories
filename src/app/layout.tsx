@@ -8,14 +8,14 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "LivingMemories, el diario de tu familia",
+  title: "LivingMemories, your family diary",
   description:
-    "Guarda la voz de tus mayores y conviértela en cuentos ilustrados y narrados para tus hijos y nietos. Piloto privado por invitación.",
+    "Keep your elders' voices and turn them into illustrated, narrated stories for your children and grandchildren. Private pilot by invitation.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" className={`${manrope.variable} h-full antialiased`}>
+    <html lang="en" className={`${manrope.variable} h-full antialiased`}>
       <body className="min-h-full">{children}</body>
     </html>
   );
