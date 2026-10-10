@@ -1,19 +1,21 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { ViewTransition } from "react";
+import {
+  LoadingStatus,
+  SkeletonCardGrid,
+  SkeletonHeading,
+} from "@/components/private/skeletons";
 export default function LoadingFamilies() {
   return (
-    <div
-      role="status"
-      aria-label="Opening your family library"
-      className="family-loading"
-    >
-      <Skeleton className="h-10 w-2/3" />
-      <Skeleton className="h-5 w-1/2" />
-      <div className="dashboard-albums">
-        {[0, 1, 2].map((key) => (
-          <Skeleton className="h-64 w-full" key={key} />
-        ))}
+    <ViewTransition exit="skeleton-out" default="none">
+      <div
+        role="status"
+        aria-label="Opening your family library"
+        className="family-loading"
+      >
+        <SkeletonHeading action />
+        <SkeletonCardGrid />
+        <LoadingStatus label="Opening your family library…" />
       </div>
-      <span className="sr-only">Opening your family library…</span>
-    </div>
+    </ViewTransition>
   );
 }

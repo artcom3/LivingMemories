@@ -28,6 +28,13 @@
   --error-ink: #8e352d;
   --error-paper: #fcf0eb;
   --control-focus: var(--family-accent);
+
+  /* One motion language for the landing, sign in and private app: a spring
+     like curve with no overshoot, quick (450ms) for hand-offs and presses,
+     calm (700ms) for hovers and reveals. src/lib/motion.ts mirrors these. */
+  --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-quick: 450ms;
+  --duration-calm: 700ms;
   --background: var(--paper);
   --foreground: var(--ink);
   --card: var(--album);
@@ -1704,7 +1711,6 @@ summary {
 }
 .desktop-family-nav a[aria-current="page"] {
   color: var(--family-accent);
-  border-bottom-color: var(--family-accent);
   font-weight: 600;
 }
 .glass-header-actions {
@@ -2445,4 +2451,425 @@ html {
 }
 .preparation-dialog-scroll > * + * {
   margin-top: 24px;
+}
+
+/* ---- Motion language: presses, hovers, overlays ------------------------------
+   Curve and durations from :root (--ease-fluid, --duration-quick/calm); the
+   Motion side is src/lib/motion.ts and src/components/motion/motion-provider.tsx. */
+
+/* shadcn overlays (tw-animate-css) open on the fluid curve and close quickly. */
+[data-slot="dialog-content"],
+[data-slot="dialog-overlay"],
+[data-slot="alert-dialog-content"],
+[data-slot="alert-dialog-overlay"],
+[data-slot="sheet-content"],
+[data-slot="sheet-overlay"],
+[data-slot="dropdown-menu-content"],
+[data-slot="dropdown-menu-sub-content"] {
+  --tw-ease: var(--ease-fluid);
+}
+:is(
+    [data-slot="dialog-content"],
+    [data-slot="dialog-overlay"],
+    [data-slot="alert-dialog-content"],
+    [data-slot="alert-dialog-overlay"],
+    [data-slot="sheet-content"],
+    [data-slot="sheet-overlay"],
+    [data-slot="dropdown-menu-content"],
+    [data-slot="dropdown-menu-sub-content"]
+  )[data-state="open"] {
+  --tw-duration: var(--duration-quick);
+}
+:is(
+    [data-slot="dialog-content"],
+    [data-slot="dialog-overlay"],
+    [data-slot="alert-dialog-content"],
+    [data-slot="alert-dialog-overlay"],
+    [data-slot="sheet-content"],
+    [data-slot="sheet-overlay"],
+    [data-slot="dropdown-menu-content"],
+    [data-slot="dropdown-menu-sub-content"]
+  )[data-state="closed"] {
+  --tw-duration: 200ms;
+}
+
+/* Buttons: lift on hover, sink when pressed, arrows lean the way they lead. */
+[data-slot="button"] {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition-property: color, background-color, border-color, box-shadow, translate, scale;
+  transition-duration: var(--duration-quick);
+  transition-timing-function: var(--ease-fluid);
+}
+[data-slot="button"] > svg {
+  transition:
+    translate var(--duration-calm) var(--ease-fluid),
+    rotate var(--duration-calm) var(--ease-fluid),
+    scale var(--duration-calm) var(--ease-fluid);
+}
+@media (hover: hover) {
+  [data-slot="button"]:hover:not(:disabled) {
+    translate: 0 -1px;
+  }
+  [data-slot="button"]:hover > [data-icon="inline-end"] {
+    translate: 3px 0;
+  }
+  [data-slot="button"]:hover > [data-icon="inline-start"] {
+    rotate: -8deg;
+    scale: 1.08;
+  }
+}
+[data-slot="button"]:active:not(:disabled) {
+  translate: 0 0;
+  scale: 0.97;
+  transition-duration: 120ms;
+}
+
+/* Rows that are whole links: the arrow slides on hover, the row sinks a touch. */
+.dashboard-overview-row {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    background-color var(--duration-quick) var(--ease-fluid),
+    scale var(--duration-quick) var(--ease-fluid);
+}
+.dashboard-overview-row > svg:last-child,
+.dashboard-row-action svg {
+  transition: translate var(--duration-calm) var(--ease-fluid);
+}
+@media (hover: hover) {
+  .dashboard-overview-row:hover > svg:last-child,
+  .dashboard-overview-row:hover .dashboard-row-action svg {
+    translate: 4px 0;
+  }
+}
+.dashboard-overview-row:active {
+  scale: 0.99;
+  transition-duration: 120ms;
+}
+
+/* Section tabs: the underline is one element that glides between tabs
+   (glass-header.tsx, Motion layoutId). */
+.desktop-family-nav a {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: color var(--duration-quick) var(--ease-fluid);
+}
+.desktop-family-nav-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 9999px;
+  background: var(--family-accent);
+}
+
+/* The press ripple (motion-provider.tsx): a soft ink circle from the pointer. */
+.press-ripple {
+  position: absolute;
+  z-index: -1;
+  left: var(--press-x);
+  top: var(--press-y);
+  width: var(--press-size);
+  height: var(--press-size);
+  margin: calc(var(--press-size) / -2) 0 0 calc(var(--press-size) / -2);
+  border-radius: 9999px;
+  background: currentColor;
+  pointer-events: none;
+  opacity: 0;
+  animation: press-ripple 650ms var(--ease-fluid);
+}
+@keyframes press-ripple {
+  from {
+    opacity: 0.16;
+    scale: 0;
+  }
+  to {
+    opacity: 0;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="full"]) :is([data-slot="button"], [data-slot="button"] > svg, .dashboard-overview-row, .desktop-family-nav a) {
+    transition-duration: 0s;
+  }
+  html:not([data-motion="full"]) [data-slot="button"]:is(:hover, :active),
+  html:not([data-motion="full"]) .dashboard-overview-row:active {
+    translate: none;
+    scale: none;
+  }
+}
+
+/* ---- Page transitions inside a family (src/app/families/[familyId]/template.tsx)
+   Forward pages arrive from the right, back pages from the left. A short
+   travel over the calm duration, with the two pages crossfading for a moment,
+   so a tab change glides rather than cuts. */
+::view-transition-old(.nav-forward),
+::view-transition-old(.nav-back) {
+  animation:
+    350ms var(--ease-fluid) both page-fade reverse,
+    var(--duration-calm) var(--ease-fluid) both page-slide reverse;
+}
+::view-transition-new(.nav-forward),
+::view-transition-new(.nav-back) {
+  animation:
+    500ms var(--ease-fluid) 120ms both page-fade,
+    var(--duration-calm) var(--ease-fluid) both page-slide;
+}
+::view-transition-old(.nav-forward),
+::view-transition-new(.nav-back) {
+  --page-slide: -32px;
+}
+::view-transition-new(.nav-forward),
+::view-transition-old(.nav-back) {
+  --page-slide: 32px;
+}
+@keyframes page-fade {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+@keyframes page-slide {
+  from {
+    translate: var(--page-slide) 0;
+  }
+}
+
+/* The loading skeleton bows out when the page arrives (each loading.tsx). */
+::view-transition-old(.skeleton-out) {
+  animation: 200ms var(--ease-fluid) both skeleton-out;
+}
+@keyframes skeleton-out {
+  to {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+/* A cover that persists across the cut (memory card to memory, album to album
+   page) grows into place on the same curve. */
+::view-transition-group(.morph) {
+  animation-duration: var(--duration-calm);
+  animation-timing-function: var(--ease-fluid);
+}
+::view-transition-image-pair(.morph) {
+  animation-name: morph-soften;
+}
+@keyframes morph-soften {
+  30% {
+    filter: blur(2px);
+  }
+}
+
+/* The private header is the fixed reference while content moves. */
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="full"])::view-transition-old(*),
+  html:not([data-motion="full"])::view-transition-new(*),
+  html:not([data-motion="full"])::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/* Banner on an album's page: the album tile's cover grows into it. */
+.album-hero-cover {
+  position: relative;
+  aspect-ratio: 4 / 1;
+  margin-bottom: 24px;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--pressed);
+}
+.album-hero-cover img {
+  object-fit: cover;
+}
+@media (max-width: 700px) {
+  .album-hero-cover {
+    aspect-ratio: 16 / 7;
+    border-radius: 16px;
+  }
+}
+
+/* Celebration burst (src/components/motion/celebrate.tsx): hearts and small
+   papel picado squares, fixed above everything, never in the way of a click. */
+.celebrate-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  overflow: hidden;
+}
+.celebrate-piece {
+  position: absolute;
+  margin: -6px 0 0 -6px;
+  background: currentColor;
+}
+.celebrate-piece--paper {
+  border-radius: 2px;
+  /* A punched hole, like papel picado. */
+  mask: radial-gradient(circle at 50% 50%, transparent 22%, #000 24%);
+}
+.celebrate-piece--heart {
+  /* Phosphor heart (fill), MIT. */
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><path d='M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z'/></svg>")
+    center / contain no-repeat;
+}
+
+/* Live voice wave while recording (src/components/motion/live-wave.tsx). */
+.live-wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 48px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--accent-paper);
+}
+.live-wave span {
+  width: 4px;
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--family-accent);
+  scale: 1 0.12;
+  transition: scale 90ms linear;
+}
+
+/* Loading placeholders (src/components/ui/skeleton.tsx, private/skeletons.tsx):
+   warm paper with a soft sheen travelling across, never a spinner. */
+.skeleton-paper {
+  position: relative;
+  overflow: hidden;
+  background: var(--pressed);
+}
+.skeleton-paper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  translate: -100% 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--album) 72%, transparent),
+    transparent
+  );
+  animation: paper-sheen 1.8s var(--ease-fluid) infinite;
+}
+@keyframes paper-sheen {
+  to {
+    translate: 100% 0;
+  }
+}
+.skeleton-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+.skeleton-card {
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background: var(--album);
+}
+.skeleton-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+}
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 76px;
+  padding: 16px 20px;
+}
+.skeleton-row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+/* Cascade cells stretch their card to the row height. */
+.reveal-cell {
+  display: grid;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="full"]) .skeleton-paper::after {
+    animation: none;
+    display: none;
+  }
+}
+
+/* Pages arrive block by block (heading, then the main areas), about 0.8s in
+   all, every time a page mounts. A nested .reveal-blocks (a layout grid) hands
+   its own children the next steps instead of fading as one piece. Blocks that
+   hold a shared cover (.keep-visible) only slide, so the cover lands visible. */
+.reveal-blocks {
+  --block-step: 90ms;
+  --block-offset: 0ms;
+}
+.reveal-blocks > * {
+  animation: block-in 550ms var(--ease-fluid) both;
+  animation-delay: var(--block-offset);
+}
+.reveal-blocks > :nth-child(2) {
+  animation-delay: calc(var(--block-offset) + var(--block-step));
+}
+.reveal-blocks > :nth-child(3) {
+  animation-delay: calc(var(--block-offset) + var(--block-step) * 2);
+}
+.reveal-blocks > :nth-child(4) {
+  animation-delay: calc(var(--block-offset) + var(--block-step) * 3);
+}
+.reveal-blocks > :nth-child(5) {
+  animation-delay: calc(var(--block-offset) + var(--block-step) * 4);
+}
+.reveal-blocks > :nth-child(6) {
+  animation-delay: calc(var(--block-offset) + var(--block-step) * 5);
+}
+.reveal-blocks > :nth-child(n + 7) {
+  animation-delay: calc(var(--block-offset) + var(--block-step) * 6);
+}
+.reveal-blocks > .reveal-blocks {
+  animation: none;
+  --block-offset: var(--block-step);
+}
+.reveal-blocks > .keep-visible {
+  animation-name: block-slide;
+}
+@keyframes block-in {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+    filter: blur(4px);
+  }
+}
+@keyframes block-slide {
+  from {
+    translate: 0 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="full"]) .reveal-blocks > * {
+    animation: none;
+  }
 }

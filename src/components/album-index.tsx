@@ -1,8 +1,10 @@
 "use client";
+import { AnimatePresence } from "motion/react";
+import { RevealItem, RevealList } from "@/components/motion/reveal";
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, ViewTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -55,9 +57,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { FieldGroup } from "@/components/ui/field";
 import { mutate } from "@/lib/families/client";
 import type { MemoryOverview } from "@/lib/memories/service";
+import { memoryCoverSource } from "@/lib/memories/shared";
 
 type Album = MemoryOverview["collections"][number];
 type Memory = MemoryOverview["memories"][number];
+
+// An album's cover is the first viewable photo among its memories. The tile's
+// cover grows into the album page's banner when you open it.
+function albumCover(memories: Memory[], familyId: string) {
+  for (const memory of memories) {
+    const photo = memoryCoverSource(memory.sources);
+    if (photo)
+      return `/api/families/${familyId}/content/memories/${memory.id}/sources/${photo.id}`;
+  }
+  return null;
+}
 
 function AlbumTile({
   album,
@@ -73,45 +87,41 @@ function AlbumTile({
   familyId: string;
 }) {
   const [failedCover, setFailedCover] = useState<string | null>(null);
-  let cover: string | null = null;
-  for (const memory of memories) {
-    const photo = memory.sources.find(
-      (source) =>
-        source.type === "PHOTO" &&
-        ["image/jpeg", "image/png", "image/webp"].includes(
-          source.mimeType || "",
-        ),
-    );
-    if (photo) {
-      cover = `/api/families/${familyId}/content/memories/${memory.id}/sources/${photo.id}`;
-      break;
-    }
-  }
+  const cover = albumCover(memories, familyId);
   const showCover = cover && cover !== failedCover;
   return (
     <Card className="album-tile" data-cover={showCover ? "true" : undefined}>
       {showCover && cover ? (
-        <Link
-          className="album-tile-cover"
-          href={href}
-          tabIndex={-1}
-          aria-hidden="true"
+        <ViewTransition
+          name={`album-cover-${album.id}`}
+          share="morph"
+          default="none"
         >
-          <Image
-            src={cover}
-            alt=""
-            fill
-            unoptimized
-            loading="lazy"
-            sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
-            onError={() => setFailedCover(cover)}
-          />
-        </Link>
+          <Link
+            className="album-tile-cover"
+            href={href}
+            transitionTypes={["nav-forward"]}
+            tabIndex={-1}
+            aria-hidden="true"
+          >
+            <Image
+              src={cover}
+              alt=""
+              fill
+              unoptimized
+              loading="lazy"
+              sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
+              onError={() => setFailedCover(cover)}
+            />
+          </Link>
+        </ViewTransition>
       ) : null}
       <CardHeader>
         <CardTitle>
           <h2>
-            <Link href={href}>{album.name}</Link>
+            <Link href={href} transitionTypes={["nav-forward"]}>
+              {album.name}
+            </Link>
           </h2>
         </CardTitle>
         <CardAction>{actions}</CardAction>
@@ -128,7 +138,7 @@ function AlbumTile({
       </CardContent>
       <CardFooter>
         <Button asChild variant="outline">
-          <Link href={href}>
+          <Link href={href} transitionTypes={["nav-forward"]}>
             Open album
             <ArrowRight data-icon="inline-end" aria-hidden="true" />
           </Link>
@@ -164,6 +174,9 @@ export function AlbumIndex({
   const selectedMemories = selected
     ? data.memories.filter((memory) => memory.collectionId === selected.id)
     : [];
+  const selectedCover = selected
+    ? albumCover(selectedMemories, familyId)
+    : null;
   const normalizedQuery = query.trim().toLowerCase();
   const albums = data.collections.filter(
     (album) =>
@@ -264,12 +277,34 @@ export function AlbumIndex({
   }
 
   return (
-    <section className="albums-page">
+    <section className="albums-page reveal-blocks">
       {selected ? (
-        <Link className="memory-back-link" href={`${base}/albums`}>
+        <Link
+          className="memory-back-link"
+          href={`${base}/albums`}
+          transitionTypes={["nav-back"]}
+        >
           <ArrowLeft aria-hidden="true" />
           All albums
         </Link>
+      ) : null}
+      {selected && selectedCover ? (
+        <ViewTransition
+          name={`album-cover-${selected.id}`}
+          share="morph"
+          default="none"
+        >
+          <div className="album-hero-cover keep-visible">
+            <Image
+              src={selectedCover}
+              alt=""
+              fill
+              unoptimized
+              preload
+              sizes="(max-width: 1280px) 100vw, 1216px"
+            />
+          </div>
+        </ViewTransition>
       ) : null}
       <div className="albums-heading">
         <div>
@@ -350,15 +385,21 @@ export function AlbumIndex({
           </p>
           {selected ? (
             visibleMemories.length ? (
-              <div className="memory-card-grid">
-                {visibleMemories.map((memory) => (
-                  <MemoryCard
-                    key={memory.id}
-                    memory={memory}
-                    familyId={familyId}
-                  />
-                ))}
-              </div>
+              <RevealList as="div" className="memory-card-grid">
+                <AnimatePresence mode="popLayout">
+                  {visibleMemories.map((memory, index) => (
+                    <RevealItem
+                      as="div"
+                      presence
+                      className="reveal-cell"
+                      key={memory.id}
+                      index={index}
+                    >
+                      <MemoryCard memory={memory} familyId={familyId} />
+                    </RevealItem>
+                  ))}
+                </AnimatePresence>
+              </RevealList>
             ) : (
               <Empty>
                 <EmptyHeader>
@@ -381,20 +422,29 @@ export function AlbumIndex({
               </Empty>
             )
           ) : albums.length ? (
-            <div className="album-grid">
-              {albums.map((album) => (
-                <AlbumTile
-                  key={album.id}
-                  album={album}
-                  memories={data.memories.filter(
-                    (memory) => memory.collectionId === album.id,
-                  )}
-                  href={`${base}/albums?album=${album.id}`}
-                  familyId={familyId}
-                  actions={albumActions(album)}
-                />
-              ))}
-            </div>
+            <RevealList as="div" className="album-grid">
+              <AnimatePresence mode="popLayout">
+                {albums.map((album, index) => (
+                  <RevealItem
+                    as="div"
+                    presence
+                    className="reveal-cell"
+                    key={album.id}
+                    index={index}
+                  >
+                    <AlbumTile
+                      album={album}
+                      memories={data.memories.filter(
+                        (memory) => memory.collectionId === album.id,
+                      )}
+                      href={`${base}/albums?album=${album.id}`}
+                      familyId={familyId}
+                      actions={albumActions(album)}
+                    />
+                  </RevealItem>
+                ))}
+              </AnimatePresence>
+            </RevealList>
           ) : (
             <Empty>
               <EmptyHeader>

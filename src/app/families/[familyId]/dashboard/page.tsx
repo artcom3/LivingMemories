@@ -22,6 +22,10 @@ import {
 } from "@/components/ui/empty";
 import { AlbumCover } from "@/components/private/album-cover";
 import { DashboardRefresh } from "@/components/private/dashboard-refresh";
+import { RevealItem, RevealList } from "@/components/motion/reveal";
+
+// From the overview every link goes one level deeper (template.tsx).
+const forward = ["nav-forward"];
 
 export default async function DashboardPage({
   params,
@@ -82,7 +86,7 @@ export default async function DashboardPage({
   );
 
   return (
-    <div className="family-dashboard">
+    <div className="family-dashboard reveal-blocks">
       <DashboardRefresh active={data.hasActiveCreations} />
       <div className="dashboard-welcome">
         <div>
@@ -96,7 +100,7 @@ export default async function DashboardPage({
         </div>
         {!data.reader ? (
           <Button asChild>
-            <Link href={`${base}/memories/new`}>
+            <Link transitionTypes={forward} href={`${base}/memories/new`}>
               <Plus data-icon="inline-start" aria-hidden="true" />
               Save a memory
             </Link>
@@ -121,7 +125,7 @@ export default async function DashboardPage({
           </EmptyHeader>
         </Empty>
       ) : (
-        <div className="dashboard-overview">
+        <div className="dashboard-overview reveal-blocks">
           <section
             className="dashboard-recent-section"
             aria-labelledby="recent-memories-title"
@@ -129,17 +133,21 @@ export default async function DashboardPage({
             <div className="dashboard-section-heading">
               <h2 id="recent-memories-title">Recent memories</h2>
               <Button asChild variant="ghost">
-                <Link href={base}>
+                <Link transitionTypes={forward} href={base}>
                   View all
                   <ArrowRight data-icon="inline-end" aria-hidden="true" />
                 </Link>
               </Button>
             </div>
             {data.memories.length ? (
-              <ul className="dashboard-overview-list">
+              <RevealList className="dashboard-overview-list">
                 {data.memories.map((memory) => (
-                  <li key={memory.id}>
-                    <Link href={memory.href} className="dashboard-overview-row">
+                  <RevealItem key={memory.id}>
+                    <Link
+                      transitionTypes={forward}
+                      href={memory.href}
+                      className="dashboard-overview-row"
+                    >
                       <Avatar aria-hidden="true">
                         <AvatarFallback>
                           {memory.narrator?.slice(0, 1) ||
@@ -158,9 +166,9 @@ export default async function DashboardPage({
                       </div>
                       <ArrowRight aria-hidden="true" />
                     </Link>
-                  </li>
+                  </RevealItem>
                 ))}
-              </ul>
+              </RevealList>
             ) : (
               <Empty>
                 <EmptyHeader>
@@ -171,7 +179,10 @@ export default async function DashboardPage({
                 </EmptyHeader>
                 <EmptyContent>
                   <Button asChild variant="secondary">
-                    <Link href={`${base}/memories/new`}>
+                    <Link
+                      transitionTypes={forward}
+                      href={`${base}/memories/new`}
+                    >
                       Save my first memory
                     </Link>
                   </Button>
@@ -195,7 +206,7 @@ export default async function DashboardPage({
                     nextStep.kind === "error" ? "destructive" : "outline"
                   }
                 >
-                  <Link href={nextStep.href}>
+                  <Link transitionTypes={forward} href={nextStep.href}>
                     {nextStep.action}
                     <ArrowRight data-icon="inline-end" aria-hidden="true" />
                   </Link>
@@ -214,7 +225,7 @@ export default async function DashboardPage({
                           item.kind === "error" ? "destructive" : "ghost"
                         }
                       >
-                        <Link href={item.href}>
+                        <Link transitionTypes={forward} href={item.href}>
                           {item.action}
                           <ArrowRight
                             data-icon="inline-end"
@@ -230,7 +241,7 @@ export default async function DashboardPage({
                     (item) => item.href === preparation.href,
                   ) ? (
                     <Button asChild variant="ghost">
-                      <Link href={preparation.href}>
+                      <Link transitionTypes={forward} href={preparation.href}>
                         Continue{" "}
                         {preparation.kind === "stories"
                           ? "your story"
@@ -244,14 +255,14 @@ export default async function DashboardPage({
             </Card>
             <div className="dashboard-quicklinks">
               <Button asChild variant="outline">
-                <Link href={`${base}/stories/new`}>
+                <Link transitionTypes={forward} href={`${base}/stories/new`}>
                   <BookOpen data-icon="inline-start" aria-hidden="true" />
                   Create a story
                   <ArrowRight data-icon="inline-end" aria-hidden="true" />
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link href={`${base}/music/new`}>
+                <Link transitionTypes={forward} href={`${base}/music/new`}>
                   <Music data-icon="inline-start" aria-hidden="true" />
                   Create music
                   <ArrowRight data-icon="inline-end" aria-hidden="true" />
@@ -266,21 +277,26 @@ export default async function DashboardPage({
             <div className="dashboard-section-heading">
               <h2 id="albums-title">Your albums</h2>
               <Button asChild variant="ghost">
-                <Link href={`${base}/albums`}>
+                <Link transitionTypes={forward} href={`${base}/albums`}>
                   View albums
                   <ArrowRight data-icon="inline-end" aria-hidden="true" />
                 </Link>
               </Button>
             </div>
             {data.albums.length ? (
-              <ul className="dashboard-overview-list dashboard-compact-albums">
+              <RevealList className="dashboard-overview-list dashboard-compact-albums">
                 {data.albums.map((album) => (
-                  <li key={album.id}>
+                  <RevealItem key={album.id}>
                     <Link
+                      transitionTypes={forward}
                       href={album.href}
                       className="dashboard-overview-row dashboard-album-row"
                     >
-                      <AlbumCover src={album.cover} name={album.name} />
+                      <AlbumCover
+                        src={album.cover}
+                        name={album.name}
+                        transitionName={`album-cover-${album.id}`}
+                      />
                       <div className="dashboard-row-details">
                         <h3>{album.name}</h3>
                         <p className="muted">
@@ -294,9 +310,9 @@ export default async function DashboardPage({
                         <ArrowRight aria-hidden="true" />
                       </span>
                     </Link>
-                  </li>
+                  </RevealItem>
                 ))}
-              </ul>
+              </RevealList>
             ) : (
               <Empty>
                 <EmptyHeader>
@@ -308,7 +324,9 @@ export default async function DashboardPage({
                 </EmptyHeader>
                 <EmptyContent>
                   <Button asChild variant="secondary">
-                    <Link href={`${base}/albums`}>Create my first album</Link>
+                    <Link transitionTypes={forward} href={`${base}/albums`}>
+                      Create my first album
+                    </Link>
                   </Button>
                 </EmptyContent>
               </Empty>
@@ -321,17 +339,18 @@ export default async function DashboardPage({
             <div className="dashboard-section-heading">
               <h2 id="storytellers-title">Storytellers</h2>
               <Button asChild variant="ghost">
-                <Link href={`${base}/narrators`}>
+                <Link transitionTypes={forward} href={`${base}/narrators`}>
                   View all
                   <ArrowRight data-icon="inline-end" aria-hidden="true" />
                 </Link>
               </Button>
             </div>
             {data.narrators.length ? (
-              <ul className="dashboard-overview-list">
+              <RevealList className="dashboard-overview-list">
                 {data.narrators.map((person) => (
-                  <li key={person.id}>
+                  <RevealItem key={person.id}>
                     <Link
+                      transitionTypes={forward}
                       href={`${base}/narrators`}
                       className="dashboard-overview-row"
                     >
@@ -348,14 +367,14 @@ export default async function DashboardPage({
                       </div>
                       <ArrowRight aria-hidden="true" />
                     </Link>
-                  </li>
+                  </RevealItem>
                 ))}
-              </ul>
+              </RevealList>
             ) : (
               <div className="dashboard-storytellers-empty">
                 <p className="muted">Whose voice would you like to preserve?</p>
                 <Button asChild variant="ghost">
-                  <Link href={`${base}/narrators`}>
+                  <Link transitionTypes={forward} href={`${base}/narrators`}>
                     <Mic data-icon="inline-start" aria-hidden="true" />
                     Add a storyteller
                   </Link>
