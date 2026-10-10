@@ -23,12 +23,12 @@ missing("S3_ACCESS_KEY_ID", () => `lm-app-${crypto.randomBytes(8).toString("hex"
 missing("S3_SECRET_ACCESS_KEY", hex);
 missing("S3_BUCKET", "livingmemories");
 missing("S3_REGION", "us-east-1");
-missing("S3_ENDPOINT", "http://localhost:9000");
+missing("S3_ENDPOINT", "http://127.0.0.1:9000");
 missing("S3_FORCE_PATH_STYLE", "true");
-missing("SMTP_HOST", "localhost");
+missing("SMTP_HOST", "127.0.0.1");
 missing("SMTP_PORT", "1025");
 missing("MAIL_FROM", "LivingMemories <app@livingmemories.test>");
-missing("WORKER_HEALTH_URL", "http://localhost:3010");
+missing("WORKER_HEALTH_URL", "http://127.0.0.1:3010");
 missing("APP_PORT", "8081");
 const port = contents.match(/^APP_PORT=(.+)$/m)?.[1].trim() || "8081";
 missing("DOCKER_APP_URL", `http://localhost:${port}`);
