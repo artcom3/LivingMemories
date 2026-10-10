@@ -21,6 +21,8 @@ export function generationError(error: unknown) {
     return "El proveedor rechazó la clave o el acceso a esta función. Revisa los permisos y el plan de la cuenta.";
   if (status === 429)
     return "El proveedor alcanzó su límite de consumo o peticiones. No reintentamos automáticamente para evitar cargos duplicados.";
+  if (status === 503)
+    return "El proveedor está temporalmente saturado o no disponible. Conservamos tu preparación. Puedes intentar otra versión más tarde o configurar otro modelo disponible.";
   if (status === 400 || status === 404 || status === 422)
     return "El proveedor rechazó el modelo, la voz o los parámetros. Revisa la configuración de la integración.";
   const message = error instanceof Error ? error.message : "";

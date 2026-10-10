@@ -236,7 +236,7 @@ export async function beginCreation(
         : { musicPreparationId: preparationId };
     const versions = await tx.creation.findMany({
       where: relation,
-      select: { status: true },
+      select: { status: true, draft: true },
     });
     if (
       versions.some((v) =>
@@ -250,7 +250,7 @@ export async function beginCreation(
         "BUSY",
         "Ya hay una generación en curso para esta preparación.",
       );
-    if (versions.length >= 3)
+    if (versions.filter((v) => v.draft !== null).length >= 3)
       throw new AccessError(
         409,
         "VERSIONS",
@@ -389,11 +389,21 @@ export async function creationList(
       kind === "STORY"
         ? { storyPreparationId: preparationId }
         : { musicPreparationId: preparationId };
-    return tx.creation.findMany({
+    const records = await tx.creation.findMany({
       where: { familyId, ...scope(actorId, member.role), ...relation },
-      select: { id: true, status: true, createdAt: true, errorMessage: true },
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
+        errorMessage: true,
+        draft: true,
+      },
       orderBy: { createdAt: "desc" },
     });
+    return records.map(({ draft, ...record }) => ({
+      ...record,
+      hasDraft: draft !== null,
+    }));
   });
 }
 export function validateDraft(

@@ -423,6 +423,24 @@ test("failed providers are explicit, preserve drafts, and never replay an ambigu
   assert.equal(calls, 1);
   assert.match(result.errorMessage!, /clave o el acceso/);
   assert.doesNotMatch(result.errorMessage!, /Sensitive/);
+  // A rejected attempt without a draft is not a regenerated story. It remains in the allowance ledger.
+  await prisma.creation.createMany({
+    data: Array.from({ length: 2 }, () => ({
+      familyId: family,
+      createdById: adult,
+      kind: "MUSIC" as const,
+      status: "FAILED" as const,
+      musicPreparationId: prep.id,
+      settings: result.settings!,
+      reservedCents: 0,
+    })),
+  });
+  const retry = await beginCreation(adult, family, "MUSIC", prep.id);
+  assert.ok(retry.id);
+  await prisma.creation.update({
+    where: { id: retry.id },
+    data: { status: "FAILED", reservedCents: 0 },
+  });
 });
 test("concurrent requests obey the shared monthly family and adult allowance", async () => {
   const prep = await prepareMusic(adult, family, {

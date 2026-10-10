@@ -20,6 +20,10 @@ export function modelSelection() {
   const provider = providerConfiguration().textProvider || "openai";
   return {
     provider,
+    geminiApiMode:
+      process.env.GEMINI_API_MODE === "generate_content"
+        ? ("generate_content" as const)
+        : ("interactions" as const),
     textModel:
       provider === "gemini"
         ? process.env.GEMINI_MODEL_TEXT?.trim() || "gemini-3.8-flash"

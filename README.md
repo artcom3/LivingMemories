@@ -106,3 +106,5 @@ pnpm test:content
 - [Imagen oficial de PostgreSQL](https://hub.docker.com/_/postgres)
 
 La [guía de cuentos y música](docs/content-generation.md) explica cómo reutilizar álbumes, revisar borradores, conectar las claves y realizar las primeras pruebas.
+
+Para iterar en desarrollo, ejecuta `pnpm dev` y `pnpm worker` desde el código local. PostgreSQL, MinIO y Mailpit pueden seguir en Docker; no hace falta reconstruir app/worker por cada cambio. La app local está en `http://localhost:3000`. Reinicia el worker local después de cambiar su código o sus variables.

@@ -217,3 +217,9 @@ Para escribir código de Next.js se consultará primero la documentación de la 
 **Confirmado, 2026-10-10:** Gemini como alternativa cuando no esté configurada la clave de OpenAI. Si ambas están presentes, OpenAI tiene prioridad. Se conserva el proveedor/modelos en cada nueva versión; versiones previas siguen usando OpenAI. No se reintenta con otro proveedor ante errores, para evitar llamadas facturables duplicadas. ElevenLabs mantiene transcripción, narración y música.
 
 **Implementación:** Interactions API con respuesta JSON estructurada para borradores y salida PNG para ilustraciones, contexto y referencias seleccionadas, `store: false`. Modelos iniciales configurables: gemini-3.8-flash y gemini-nano-banana-2.1. Referencias: [modelos](https://ai.google.dev/gemini-api/docs/models), [JSON](https://ai.google.dev/gemini-api/docs/structured-output), [imágenes](https://ai.google.dev/gemini-api/docs/image-generation). Pruebas contractuales locales; calidad y acceso reales requieren la clave de la cuenta.
+
+### DEC-028
+
+**Prueba de desarrollo, 2026-10-10:** se permite seleccionar `GEMINI_API_MODE=generate_content` de forma explícita, además de Interactions. En la cuenta actual funcionó con gemini-3.5-flash-lite; los fallos anteriores no prueban que todo el nivel gratuito estuviera agotado. La selección queda en la versión y no cambia automáticamente tras errores. Los intentos fallidos sin borrador no son regeneraciones de contenido, pero conservan su reserva.
+
+**Petición del usuario:** probar ilustraciones mediante el MCP de ElevenLabs. Conexión y cuatro variaciones completadas; no se importaron ni se automatizó la API de imágenes. La clave API de la app es Creator y recibió `402 paid_plan_required`; la automatización sigue pendiente de un proveedor con acceso. [Evidencia](../testing/real-story-flow.md).

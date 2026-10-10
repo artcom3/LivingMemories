@@ -19,7 +19,7 @@ type Run = {
   errorMessage: string | null;
   reservedCents: number;
 };
-type Version = { id: string; status: string };
+type Version = { id: string; status: string; hasDraft?: boolean };
 type Config = {
   openai: boolean;
   gemini: boolean;
@@ -92,7 +92,11 @@ export function CreationWorkspace({
         setVersions((v) =>
           v.map((version) =>
             version.id === next.id
-              ? { ...version, status: next.status }
+              ? {
+                  ...version,
+                  status: next.status,
+                  hasDraft: Boolean(next.draft),
+                }
               : version,
           ),
         );
@@ -202,7 +206,10 @@ export function CreationWorkspace({
       <button
         className="button primary"
         disabled={
-          busy || !!pending || !config?.canGenerate || versions.length >= 3
+          busy ||
+          !!pending ||
+          !config?.canGenerate ||
+          versions.filter((v) => v.hasDraft).length >= 3
         }
         onClick={begin}
       >
@@ -280,6 +287,53 @@ export function CreationWorkspace({
                       onChange={(e) => pageEdit(index, "text", e.target.value)}
                     />
                   </label>
+                  <fieldset className="source-choices">
+                    <legend>
+                      Fuentes que respaldan el texto de esta página
+                    </legend>
+                    <p className="form-hint">
+                      Marca las fuentes que confirman lo contado. Una fotografía
+                      de referencia visual no confirma por sí sola nombres,
+                      lugares o acontecimientos.
+                    </p>
+                    {run.evidence.map((source) => (
+                      <label className="check-label" key={source.sourceId}>
+                        <input
+                          type="checkbox"
+                          checked={page.sourceIds.includes(source.sourceId)}
+                          onChange={() => {
+                            setDraft((d) =>
+                              d
+                                ? {
+                                    ...d,
+                                    pages: d.pages.map((p, i) =>
+                                      i === index
+                                        ? {
+                                            ...p,
+                                            sourceIds: p.sourceIds.includes(
+                                              source.sourceId,
+                                            )
+                                              ? p.sourceIds.filter(
+                                                  (id) =>
+                                                    id !== source.sourceId,
+                                                )
+                                              : [
+                                                  ...p.sourceIds,
+                                                  source.sourceId,
+                                                ],
+                                          }
+                                        : p,
+                                    ),
+                                  }
+                                : d,
+                            );
+                            setConfirmed(false);
+                          }}
+                        />
+                        {source.originalName}
+                      </label>
+                    ))}
+                  </fieldset>
                   {run.settings.illustrate ? (
                     <label>
                       Escena de la ilustración

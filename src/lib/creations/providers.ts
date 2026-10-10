@@ -166,17 +166,20 @@ ${settings.kind === "STORY" ? `El recuerdo principal es ${settings.memoryId}; la
         });
         input.push(geminiImage(image));
       }
-      const parts = await geminiInteraction({
-        model: settings.textModel,
-        system_instruction: instructions,
-        input,
-        generation_config: { max_output_tokens: 10000 },
-        response_format: {
-          type: "text",
-          mime_type: "application/json",
-          schema: draftSchema,
+      const parts = await geminiInteraction(
+        {
+          model: settings.textModel,
+          system_instruction: instructions,
+          input,
+          generation_config: { max_output_tokens: 10000 },
+          response_format: {
+            type: "text",
+            mime_type: "application/json",
+            schema: draftSchema,
+          },
         },
-      });
+        settings.geminiApiMode,
+      );
       const output = parts
         .filter((p) => p.type === "text")
         .map((p) => p.text || "")
@@ -226,19 +229,22 @@ ${settings.kind === "STORY" ? `El recuerdo principal es ${settings.memoryId}; la
   async illustrate(prompt, settings, references) {
     const instruction = `${visualStyles[settings.visualStyle!].prompt}\n${prompt}\nUse the supplied reference photographs consistently for character appearance when relevant. Preserve visual identity across pages. No invented historical specifics. No text, no logos. ${settings.genericCharacters ? "If a person lacks a photographic reference, depict a generic illustrated character, not a real likeness." : "Do not introduce people without a supplied photographic reference."}`;
     if (settings.provider === "gemini") {
-      const parts = await geminiInteraction({
-        model: settings.imageModel,
-        input: [
-          { type: "text", text: instruction },
-          ...references.slice(0, 3).map(geminiImage),
-        ],
-        response_format: {
-          type: "image",
-          mime_type: "image/png",
-          aspect_ratio: "1:1",
-          image_size: "1K",
+      const parts = await geminiInteraction(
+        {
+          model: settings.imageModel,
+          input: [
+            { type: "text", text: instruction },
+            ...references.slice(0, 3).map(geminiImage),
+          ],
+          response_format: {
+            type: "image",
+            mime_type: "image/png",
+            aspect_ratio: "1:1",
+            image_size: "1K",
+          },
         },
-      });
+        settings.geminiApiMode,
+      );
       const image = parts.find(
         (p) => p.type === "image" && p.mime_type === "image/png" && p.data,
       );

@@ -156,3 +156,55 @@ test("OpenAI failures never trigger a second request to Gemini", async () => {
     else process.env.OPENAI_API_KEY = originalKey;
   }
 });
+
+test("generateContent preserves structured drafts and inline photo inputs", async () => {
+  const savedFetch = globalThis.fetch,
+    savedKey = process.env.GEMINI_API_KEY;
+  process.env.GEMINI_API_KEY = "test-gemini";
+  globalThis.fetch = async (url, init) => {
+    assert.equal(
+      String(url),
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+    );
+    const body = JSON.parse(init!.body as string);
+    assert.equal(body.generationConfig.responseMimeType, "application/json");
+    assert.ok(body.generationConfig.responseJsonSchema.properties.pages);
+    assert.ok(
+      body.systemInstruction.parts[0].text.includes(
+        "No inventes hechos familiares",
+      ),
+    );
+    assert.ok(
+      body.contents[0].parts.some(
+        (p: { inlineData?: { mimeType: string } }) =>
+          p.inlineData?.mimeType === "image/jpeg",
+      ),
+    );
+    return Response.json({
+      candidates: [
+        {
+          finishReason: "STOP",
+          content: { parts: [{ text: JSON.stringify(draft) }] },
+        },
+      ],
+    });
+  };
+  try {
+    assert.deepEqual(
+      await generationProviders.draft(
+        {
+          ...settings,
+          textModel: "gemini-3.5-flash-lite",
+          geminiApiMode: "generate_content",
+        },
+        [],
+        [{ sourceId: "photo", dataUrl: "data:image/jpeg;base64,aGVsbG8=" }],
+      ),
+      draft,
+    );
+  } finally {
+    globalThis.fetch = savedFetch;
+    if (savedKey === undefined) delete process.env.GEMINI_API_KEY;
+    else process.env.GEMINI_API_KEY = savedKey;
+  }
+});

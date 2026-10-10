@@ -100,6 +100,7 @@ export type CreationSettings = {
   instrumental?: boolean;
   durationSeconds?: number;
   provider?: "openai" | "gemini";
+  geminiApiMode?: "interactions" | "generate_content";
   textModel: string;
   imageModel: string;
   sttModel: string;

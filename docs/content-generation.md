@@ -23,6 +23,8 @@ Guarda las claves en `.env.local`, que se excluye del repositorio y de las imág
 OPENAI_API_KEY=
 # Alternativa automática cuando la clave de OpenAI está vacía
 GEMINI_API_KEY=
+# interactions (por defecto) o generate_content
+GEMINI_API_MODE=interactions
 GEMINI_MODEL_TEXT=gemini-3.8-flash
 GEMINI_MODEL_IMAGE=gemini-nano-banana-2.1
 ELEVENLABS_API_KEY=
@@ -38,7 +40,7 @@ ELEVENLABS_MUSIC_MODEL=music_v2
 - Selecciona voces sintéticas de la cuenta y copia su ID para español/inglés. No hacen falta clonación de voz, agentes conversacionales, webhooks ni claves en el navegador. La música usa su modelo propio y no requiere un ID de voz.
 - Los modelos siguen configurables en `.env.local`. Scribe v2 transcribe grabaciones; Multilingual v2 narra. El modo canción usa un plan de composición v2 con la letra revisada; instrumental usa `force_instrumental`.
 
-Después de conectar o cambiar las variables, ejecuta `pnpm docker:up` para recrear app/worker con las variables actuales. `pnpm docker:check:apis` consulta modelos y voces sin generar contenido ni gastar créditos de generación. Reinicia también `pnpm dev` si lo usas fuera de Docker. Para evitar diferencias de herramientas, usa el worker de Docker, que ya incluye FFmpeg y HEIC.
+En el recorrido Docker completo, después de conectar o cambiar las variables, ejecuta `pnpm docker:up` para recrear app/worker. Para las iteraciones actuales usamos `pnpm dev` y `pnpm worker` locales; reinicia esos procesos al cambiar variables, sin reconstruir Docker. `pnpm docker:check:apis` consulta modelos y voces sin generar contenido ni gastar créditos de generación. Reinicia también `pnpm dev` si lo usas fuera de Docker. El worker local necesita FFmpeg y `heif-convert` si se prueban archivos HEIC. El worker de Docker los incluye para quien utilice ese recorrido.
 
 Primer ensayo sugerido: una memoria escrita de la abuela en Perú, una foto con contexto, cuento infantil de cuatro páginas sin ilustraciones al principio y pieza instrumental acústica de 30 segundos. Después prueba una grabación corta, un video corto y compara estilos visuales o canciones con letra. Las pruebas reales no se han ejecutado sin claves de OpenAI/Gemini y ElevenLabs: todavía hay que evaluar fidelidad, calidad, latencia, voces y coste efectivo con la cuenta.
 
@@ -62,3 +64,9 @@ Un error produce `FAILED`, preservando resultados parciales. No se repite autom�
 `pnpm test:creations` usa una base temporal y objetos sintéticos; comprueba reutilización y contexto, video y transcripción, revisión, aislamiento, retirada, fallos sin repetición y reserva concurrente. Los proveedores están simulados en esta suite; el procesamiento de archivos y MinIO son reales. `pnpm test:content` conserva los recorridos de captura anteriores.
 
 Referencias oficiales consultadas el 10 de octubre de 2026: [OpenAI Responses estructuradas](https://developers.openai.com/api/docs/guides/structured-outputs), [visión](https://developers.openai.com/api/docs/guides/images-vision), [edición de imágenes](https://developers.openai.com/api/reference/resources/images/methods/edit), [ElevenLabs Scribe](https://elevenlabs.io/docs/api-reference/speech-to-text/convert), [narración](https://elevenlabs.io/docs/api-reference/text-to-speech/convert), [Music](https://elevenlabs.io/docs/api-reference/music/compose) y [planes de composición](https://elevenlabs.io/docs/eleven-api/guides/how-to/music/composition-plans).
+
+## Primera prueba real
+
+El [registro de prueba](testing/real-story-flow.md) conserva el resultado de texto + fotografía → cuatro páginas → revisión de citas → cuatro narraciones. En la cuenta de desarrollo funcionó `GEMINI_MODEL_TEXT=gemini-3.5-flash-lite` con `GEMINI_API_MODE=generate_content`. No hay cambio automático de endpoint tras errores; queda registrado en cada versión. Los intentos fallidos sin borrador no consumen las regeneraciones de contenido, aunque su reserva sigue contando.
+
+La demostración de imágenes se hizo separadamente mediante MCP de ElevenLabs. Su API automática de imágenes requiere Pro o superior; la clave de desarrollo es Creator. No se presenta el resultado del MCP como integración automática del worker.

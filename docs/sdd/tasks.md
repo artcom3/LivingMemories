@@ -149,7 +149,9 @@ Cada requisito tiene una tarea principal responsable y escenarios de aceptación
 
 - [x] Reutilizar materiales de álbumes en cuentos y música, conservando su contexto, estilos y permisos.
 - [x] Implementar Music v2 y generación por etapas en el worker; revisar antes de generar audio/ilustraciones.
-- [ ] Validar las generaciones reales con claves, voz disponible y acceso a Music; evaluar fidelidad y consumo.
+- [ ] Completar validación real de ilustración automática y Music, calidad y consumo.
+
+Avance real: borrador de cuatro páginas a partir de texto/fotografía y cuatro narraciones completadas. Ilustraciones por MCP demostradas separadamente; API de imagen de ElevenLabs bloqueada por plan Creator. [Registro](../testing/real-story-flow.md).
 
 Requisitos: [REQ-CRE-001](specs/album-creations.md#req-cre-001), [REQ-CRE-002](specs/album-creations.md#req-cre-002), [REQ-CRE-003](specs/album-creations.md#req-cre-003). Escenarios y evidencia: tests/creations.integration.test.ts y [guía](../content-generation.md). La publicación final sigue en TASK-010.
 
