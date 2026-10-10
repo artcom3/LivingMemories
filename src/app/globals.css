@@ -845,6 +845,9 @@ button:disabled {
 .memory-panel-body .form-columns {
   grid-template-columns: 1fr;
 }
+.memory-panel-body textarea {
+  min-height: 160px;
+}
 .memory-danger-action {
   margin-top: 32px;
   padding-top: 24px;
