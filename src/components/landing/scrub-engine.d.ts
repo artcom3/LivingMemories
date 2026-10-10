@@ -26,6 +26,12 @@ export interface ScrollWorldSection {
 export interface ScrollWorldConfig {
   brand?: { name: string; href?: string };
   cta?: ScrollWorldLink;
+  /** Secondary links in the top bar, before the CTA (e.g. sign in). */
+  links?: ScrollWorldLink[];
+  /** Show the side route rail of section dots. Default true. */
+  route?: boolean;
+  /** Show the "01 / 06" counter on each copy card. Default true. */
+  copyNumbers?: boolean;
   hint?: string;
   nav?: boolean;
   atmosphere?: boolean;
@@ -39,6 +45,8 @@ export interface ScrollWorldConfig {
    * its own dive.
    */
   copyFade?: number;
+  /** Pixels of leftward drift as copy fades out, and of entry from the left as it fades in. */
+  copySlide?: number;
   /** Seams with no connector clip: dissolve (default) or a 3D page turn. */
   stillTransition?: "crossfade" | "page";
   /** Viewport heights of scroll per page turn. Default 0.9. */
