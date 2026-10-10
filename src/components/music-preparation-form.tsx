@@ -1,4 +1,15 @@
 "use client";
+import { Button } from "@/components/ui/button";
+import { EmptyState, Feedback } from "@/components/private/content-primitives";
+import { FieldLegend, FieldSet, FieldGroup } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/private/form-field";
+import {
+  NativeSelectOption,
+  NativeSelect,
+} from "@/components/ui/native-select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,7 +25,9 @@ type Preparation = {
   durationSeconds: number;
   instrumental: boolean;
   instructions: string | null;
-  sources: { sourceId: string }[];
+  sources: {
+    sourceId: string;
+  }[];
 };
 export function MusicPreparationForm({
   familyId,
@@ -52,29 +65,28 @@ export function MusicPreparationForm({
   const base = `/families/${familyId}`;
   if (!memories.length)
     return (
-      <section className="empty-state">
-        <h2>La música empieza con tus recuerdos</h2>
-        <p>Guarda primero una memoria y sus materiales.</p>
-        <Link className="button primary" href={base + "/memories/new"}>
-          Guardar un recuerdo
-        </Link>
-      </section>
+      <EmptyState className="empty-state">
+        <h2>Music starts with your memories</h2>
+        <p>Save a memory and its materials first.</p>
+        <Button asChild variant="default">
+          <Link href={base + "/memories/new"}>Save a memory</Link>
+        </Button>
+      </EmptyState>
     );
   return (
     <>
       <div className="section-heading">
-        <span className="eyebrow">RECUERDOS QUE SUENAN</span>
-        <h2>{preparation ? "Retomar propuesta musical" : "Preparar música"}</h2>
+        <span className="eyebrow">MEMORIES IN MUSIC</span>
+        <h2>{preparation ? "Resume music proposal" : "Prepare music"}</h2>
         <p className="muted">
-          Convierte el ambiente y el contexto de tus recuerdos en una pieza
-          original.
+          Turn the atmosphere and context of your memories into an original
+          piece.
         </p>
       </div>
       {preparation?.sources.some((s) => !available.has(s.sourceId)) ? (
-        <p className="feedback error">
-          Algunos materiales fueron retirados. Revisa y guarda la selección
-          actual.
-        </p>
+        <Feedback className="feedback error">
+          Some materials were removed. Review and save your current selection.
+        </Feedback>
       ) : null}
       <form
         className="form-stack story-preparation"
@@ -92,115 +104,142 @@ export function MusicPreparationForm({
             if (!preparation) router.push(base + "/music/" + result.id);
             else
               setFeedback(
-                "Propuesta guardada. Los cambios se usarán en el próximo borrador.",
+                "Proposal saved. Your changes will be used in the next draft.",
               );
             router.refresh();
           } catch (error) {
             setFeedback(
               error instanceof Error
                 ? error.message
-                : "No pudimos guardar la propuesta.",
+                : "We could not save the proposal.",
             );
           } finally {
             setBusy(false);
           }
         }}
       >
-        <fieldset className="preparation-step">
-          <legend>1 · Tus álbumes y materiales</legend>
-          <AlbumSourcePicker
-            familyId={familyId}
-            memories={memories}
-            selected={selected}
-            onChange={setSelected}
-            initialAlbum={initialAlbum}
-          />
-        </fieldset>
-        <fieldset className="preparation-step">
-          <legend>2 · Cómo quieres que suene</legend>
-          <label>
-            Título de la pieza
-            <input
-              name="title"
-              required
-              maxLength={160}
-              defaultValue={preparation?.title || starting?.title || ""}
+        <FieldGroup>
+          <FieldSet className="preparation-step">
+            <FieldLegend>1 · Your albums and materials</FieldLegend>
+            <AlbumSourcePicker
+              familyId={familyId}
+              memories={memories}
+              selected={selected}
+              onChange={setSelected}
+              initialAlbum={initialAlbum}
             />
-          </label>
-          <div className="form-columns">
-            <label>
-              Estilo musical
-              <select
-                name="style"
-                defaultValue={preparation?.style || "ACOUSTIC"}
+          </FieldSet>
+          <FieldSet className="preparation-step">
+            <FieldLegend>2 · How you want it to sound</FieldLegend>
+            <FormField
+              control={
+                <Input
+                  name="title"
+                  required
+                  maxLength={160}
+                  defaultValue={preparation?.title || starting?.title || ""}
+                />
+              }
+            >
+              Piece title
+            </FormField>
+            <FieldGroup className="form-columns">
+              <FormField
+                control={
+                  <NativeSelect
+                    name="style"
+                    defaultValue={preparation?.style || "ACOUSTIC"}
+                  >
+                    {Object.entries(musicStyles).map(([id, s]) => (
+                      <NativeSelectOption key={id} value={id}>
+                        {s.label}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                }
               >
-                {Object.entries(musicStyles).map(([id, s]) => (
-                  <option key={id} value={id}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Idioma de la propuesta y la letra
-              <select
-                name="language"
-                defaultValue={preparation?.language || "es"}
+                Music style
+              </FormField>
+              <FormField
+                control={
+                  <NativeSelect
+                    name="language"
+                    defaultValue={preparation?.language || "es"}
+                  >
+                    <NativeSelectOption value="es">Spanish</NativeSelectOption>
+                    <NativeSelectOption value="en">English</NativeSelectOption>
+                  </NativeSelect>
+                }
               >
-                <option value="es">Español</option>
-                <option value="en">Inglés</option>
-              </select>
-            </label>
-            <label>
-              Duración
-              <select
-                name="durationSeconds"
-                defaultValue={preparation?.durationSeconds || 30}
+                Proposal and lyrics language
+              </FormField>
+              <FormField
+                control={
+                  <NativeSelect
+                    name="durationSeconds"
+                    defaultValue={preparation?.durationSeconds || 30}
+                  >
+                    <NativeSelectOption value="30">
+                      30 seconds
+                    </NativeSelectOption>
+                    <NativeSelectOption value="60">1 minute</NativeSelectOption>
+                    <NativeSelectOption value="90">
+                      90 seconds
+                    </NativeSelectOption>
+                  </NativeSelect>
+                }
               >
-                <option value="30">30 segundos</option>
-                <option value="60">1 minuto</option>
-                <option value="90">1 minuto y medio</option>
-              </select>
-            </label>
-          </div>
-          <label className="check-label">
-            <input
-              type="checkbox"
-              checked={instrumental}
-              onChange={(e) => setInstrumental(e.target.checked)}
-            />
-            Instrumental, sin letra
-          </label>
-          <p className="form-hint">
-            {instrumental
-              ? "La pieza evocará el ambiente del recuerdo."
-              : "Revisarás la letra antes de crear la canción."}{" "}
-            La música será una interpretación creativa. No reconstruye los
-            sonidos originales ni clona voces familiares.
+                Duration
+              </FormField>
+            </FieldGroup>
+            <FormField
+              className="check-label"
+              control={
+                <Checkbox
+                  checked={instrumental}
+                  onCheckedChange={(checked) =>
+                    setInstrumental(checked === true)
+                  }
+                />
+              }
+              checkbox
+            >
+              Instrumental, no lyrics
+            </FormField>
+            <p className="form-hint">
+              {instrumental
+                ? "The piece will evoke the atmosphere of the memory."
+                : "You will review the lyrics before creating the song."}{" "}
+              The music will be a creative interpretation. It does not recreate
+              original sounds or clone family voices.
+            </p>
+            <FormField
+              control={
+                <Textarea
+                  name="instructions"
+                  maxLength={4000}
+                  rows={4}
+                  defaultValue={preparation?.instructions || ""}
+                  placeholder="For example: the warmth of an afternoon cooking with Grandma."
+                />
+              }
+            >
+              What feeling or detail would you like to capture?
+            </FormField>
+          </FieldSet>
+          {feedback ? (
+            <Feedback role="status" className="feedback">
+              {feedback}
+            </Feedback>
+          ) : null}
+          <Button disabled={busy} variant="default">
+            {busy ? "Saving\u2026" : "Save music proposal"}
+          </Button>
+          <p className="muted">
+            Save your changes before creating a draft. Review the proposal and
+            lyrics before generating audio.
           </p>
-          <label>
-            ¿Qué emoción o detalle te gustaría transmitir?
-            <textarea
-              name="instructions"
-              maxLength={4000}
-              rows={4}
-              defaultValue={preparation?.instructions || ""}
-              placeholder="Por ejemplo: la calidez de una tarde cocinando con la abuela."
-            />
-          </label>
-        </fieldset>
-        {feedback ? (
-          <p role="status" className="feedback">
-            {feedback}
-          </p>
-        ) : null}
-        <button className="button primary" disabled={busy}>
-          {busy ? "Guardando…" : "Guardar propuesta musical"}
-        </button>
-        <p className="muted">
-          Guarda los cambios antes de crear un borrador. La propuesta y la letra
-          se revisan antes de generar el audio.
-        </p>
+        </FieldGroup>
       </form>
     </>
   );

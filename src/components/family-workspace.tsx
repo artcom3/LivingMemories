@@ -1,11 +1,24 @@
 "use client";
+import { InitialAvatar } from "@/components/private/initial-avatar";
+import { Feedback, EmptyState } from "@/components/private/content-primitives";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/private/form-field";
+import { FieldGroup } from "@/components/ui/field";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  NativeSelectOption,
+  NativeSelect,
+} from "@/components/ui/native-select";
+import { Disclosure } from "@/components/private/disclosure";
+import { useConfirmation } from "@/components/private/confirmation-provider";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FamilyView } from "@/lib/families/service";
 import { roleLabels, type Role } from "@/lib/families/validation";
 import { mutate } from "@/lib/families/client";
-
 export function FamilyWorkspace({
   view,
   userId,
@@ -15,6 +28,7 @@ export function FamilyWorkspace({
   userId: string;
   section?: "narrators" | "settings";
 }) {
+  const confirm = useConfirmation();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -41,7 +55,7 @@ export function FamilyWorkspace({
         error: result.invitation?.deliveryStatus === "FAILED",
         text:
           result.invitation?.deliveryStatus === "FAILED"
-            ? "La invitación está creada, pero no se pudo enviar el correo. Copia el enlace privado o vuelve a enviarla."
+            ? "The invitation was created, but its email could not be sent. Copy the private link or send it again."
             : message,
       });
       router.refresh();
@@ -49,7 +63,7 @@ export function FamilyWorkspace({
     } catch (error) {
       setFeedback({
         error: true,
-        text: error instanceof Error ? error.message : "Inténtalo de nuevo.",
+        text: error instanceof Error ? error.message : "Try again.",
       });
       return false;
     } finally {
@@ -62,41 +76,39 @@ export function FamilyWorkspace({
       {!section ? (
         <>
           <Link href="/families" className="back-link">
-            ← Mis familias
+            ← My families
           </Link>
           <div className="page-heading family-heading">
             <div>
-              <span className="eyebrow">ESPACIO FAMILIAR PRIVADO</span>
+              <span className="eyebrow">PRIVATE FAMILY SPACE</span>
               <h1>{view.family.name}</h1>
               <p className="muted">
-                Tu lugar para las personas y las historias que te conectan con
-                los tuyos.
+                Your home for the people and stories that connect you with your
+                family.
               </p>
             </div>
-            <span className="role-badge">{roleLabels[view.role]}</span>
+            <Badge variant="secondary">{roleLabels[view.role]}</Badge>
           </div>
         </>
       ) : null}
       {feedback ? (
-        <p
+        <Feedback
           className={feedback.error ? "feedback error" : "feedback"}
           role={feedback.error ? "alert" : "status"}
         >
           {feedback.text}
-        </p>
+        </Feedback>
       ) : null}
       <div className={section ? "workspace-section" : "workspace-grid"}>
         {section !== "settings" ? (
           <section className="people-section" aria-labelledby="narrators-title">
             <div className="section-heading">
-              <span className="eyebrow">
-                QUIÉNES CUENTAN NUESTRAS HISTORIAS
-              </span>
-              <h2 id="narrators-title">Voces de la familia</h2>
+              <span className="eyebrow">THE PEOPLE WHO TELL OUR STORIES</span>
+              <h2 id="narrators-title">Our storytellers</h2>
               <p className="muted">
                 {canWrite
-                  ? "Un narrador puede tener un perfil sin registrarse en la app. Tú registras el perfil; su historia lleva su nombre."
-                  : "Como lector podrás disfrutar de los cuentos y fragmentos que tu familia publique. La gestión de narradores está reservada a quienes aportan historias."}
+                  ? "A storyteller can have a profile without an account. You add the profile; their story carries their name."
+                  : "As a reader, you can enjoy the stories and excerpts your family publishes. Storyteller management is reserved for people who contribute stories."}
               </p>
             </div>
             {canWrite ? (
@@ -105,16 +117,14 @@ export function FamilyWorkspace({
                   {view.profiles.length ? (
                     view.profiles.map((item) => (
                       <article className="person-entry" key={item.id}>
-                        <span className="person-initial" aria-hidden="true">
-                          {item.name.slice(0, 1)}
-                        </span>
+                        <InitialAvatar>{item.name.slice(0, 1)}</InitialAvatar>
                         <div className="person-details">
                           <h3>{item.name}</h3>
                           <span className="person-relation">
-                            {item.relationship || "Narrador de la familia"}
+                            {item.relationship || "Family storyteller"}
                           </span>
                           <span className="profile-caption">
-                            Perfil sin cuenta
+                            Profile without an account
                           </span>
                           {item.biography ? (
                             <p className="profile-biography">
@@ -122,24 +132,24 @@ export function FamilyWorkspace({
                             </p>
                           ) : null}
                           <p className="form-hint">
-                            Registrado por {item.createdBy.name}
+                            Added by {item.createdBy.name}
                           </p>
                           {isAdmin || item.createdById === userId ? (
                             <div className="row-actions">
-                              <button
-                                className="button quiet"
+                              <Button
                                 disabled={busy}
                                 onClick={() => setEditingProfile(item.id)}
+                                variant="ghost"
+                                type="button"
                               >
-                                Editar perfil
-                              </button>
-                              <button
-                                className="button quiet destructive"
+                                Edit profile
+                              </Button>
+                              <Button
                                 disabled={busy}
-                                onClick={() => {
+                                onClick={async () => {
                                   if (
-                                    window.confirm(
-                                      "¿Archivar este perfil? Se conservará su atribución en las historias.",
+                                    await confirm(
+                                      "Archive this profile? Its attribution in stories will be preserved.",
                                     )
                                   )
                                     void run(
@@ -149,22 +159,24 @@ export function FamilyWorkspace({
                                       "Perfil archivado.",
                                     );
                                 }}
+                                variant="destructive"
+                                type="button"
                               >
-                                Archivar
-                              </button>
+                                Archive
+                              </Button>
                             </div>
                           ) : null}
                         </div>
                       </article>
                     ))
                   ) : (
-                    <div className="empty-state">
-                      <h3>¿De quién quieres conservar la voz?</h3>
+                    <EmptyState className="empty-state">
+                      <h3>Whose voice would you like to preserve?</h3>
                       <p>
-                        Empieza con una persona de tu familia, como tu abuela.
-                        No necesita una cuenta.
+                        Start with someone in your family, such as your
+                        grandmother. They do not need an account.
                       </p>
-                    </div>
+                    </EmptyState>
                   )}
                 </div>
                 <section
@@ -172,9 +184,7 @@ export function FamilyWorkspace({
                   aria-labelledby="profile-form-title"
                 >
                   <h3 id="profile-form-title">
-                    {profile
-                      ? "Editar a " + profile.name
-                      : "Añadir un narrador"}
+                    {profile ? "Edit " + profile.name : "Add a storyteller"}
                   </h3>
                   <form
                     className="form-stack"
@@ -190,7 +200,7 @@ export function FamilyWorkspace({
                           Object.fromEntries(data),
                           profile
                             ? "Perfil actualizado."
-                            : "Narrador añadido. No se ha creado una cuenta.",
+                            : "Storyteller added. No account was created.",
                         )
                       ) {
                         setEditingProfile(null);
@@ -198,68 +208,79 @@ export function FamilyWorkspace({
                       }
                     }}
                   >
-                    <div className="form-columns">
-                      <label>
-                        Nombre del narrador
-                        <input
-                          name="name"
-                          defaultValue={profile?.name}
-                          placeholder="Elena García"
-                          required
-                          maxLength={100}
-                        />
-                      </label>
-                      <label>
-                        Parentesco o vínculo
-                        <input
-                          name="relationship"
-                          defaultValue={profile?.relationship || ""}
-                          placeholder="Abuela materna"
-                          maxLength={100}
-                        />
-                      </label>
-                    </div>
-                    <label>
-                      Una breve presentación{" "}
-                      <span className="optional">(opcional)</span>
-                      <textarea
-                        name="biography"
-                        defaultValue={profile?.biography || ""}
-                        rows={3}
-                        placeholder="Lo que quieres recordar de esta persona…"
-                        maxLength={2000}
-                      />
-                    </label>
-                    <div className="row-actions">
-                      <button className="button primary" disabled={busy}>
-                        {busy
-                          ? "Guardando…"
-                          : profile
-                            ? "Guardar perfil"
-                            : "Añadir narrador"}
-                      </button>
-                      {profile ? (
-                        <button
-                          type="button"
-                          className="button quiet"
-                          disabled={busy}
-                          onClick={() => setEditingProfile(null)}
+                    <FieldGroup>
+                      <FieldGroup className="form-columns">
+                        <FormField
+                          control={
+                            <Input
+                              name="name"
+                              defaultValue={profile?.name}
+                              placeholder="Elena García"
+                              required
+                              maxLength={100}
+                            />
+                          }
                         >
-                          Cancelar
-                        </button>
-                      ) : null}
-                    </div>
+                          Storyteller&apos;s name
+                        </FormField>
+                        <FormField
+                          control={
+                            <Input
+                              name="relationship"
+                              defaultValue={profile?.relationship || ""}
+                              placeholder="Maternal grandmother"
+                              maxLength={100}
+                            />
+                          }
+                        >
+                          Relationship or connection
+                        </FormField>
+                      </FieldGroup>
+                      <FormField
+                        control={
+                          <Textarea
+                            name="biography"
+                            defaultValue={profile?.biography || ""}
+                            rows={3}
+                            placeholder="What you want to remember about this person…"
+                            maxLength={2000}
+                          />
+                        }
+                      >
+                        A short introduction{" "}
+                        <span className="optional">(optional)</span>
+                      </FormField>
+                      <div className="row-actions">
+                        <Button disabled={busy} variant="default">
+                          {busy
+                            ? "Saving\u2026"
+                            : profile
+                              ? "Save profile"
+                              : "Add storyteller"}
+                        </Button>
+                        {profile ? (
+                          <Button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => setEditingProfile(null)}
+                            variant="ghost"
+                          >
+                            Cancel
+                          </Button>
+                        ) : null}
+                      </div>
+                    </FieldGroup>
                   </form>
                 </section>
               </>
             ) : (
-              <div className="empty-state">
-                <h3>La biblioteca de tu familia irá creciendo</h3>
+              <EmptyState className="empty-state">
+                <h3>Your family library will grow</h3>
                 <p>
-                  Cuando tu familia comparta su primera historia, podrás
-                  disfrutarla aquí.
+                  When your family shares its first story, you can enjoy it
+                  here.
                 </p>
-              </div>
+              </EmptyState>
             )}
           </section>
         ) : null}
@@ -271,10 +292,10 @@ export function FamilyWorkspace({
                   className="side-section"
                   aria-labelledby="invite-title"
                 >
-                  <span className="eyebrow">COMPARTIR EN FAMILIA</span>
-                  <h2 id="invite-title">Invitar a un adulto</h2>
+                  <span className="eyebrow">SHARE WITH FAMILY</span>
+                  <h2 id="invite-title">Invite an adult</h2>
                   <p className="muted">
-                    El enlace llega por correo y dura siete días.
+                    The link arrives by email and is valid for seven days.
                   </p>
                   <form
                     className="form-stack"
@@ -286,69 +307,87 @@ export function FamilyWorkspace({
                           "/invitations",
                           "POST",
                           Object.fromEntries(new FormData(form)),
-                          "Invitación enviada al correo del adulto.",
+                          "Invitation sent to the adult's email address.",
                         )
                       )
                         form.reset();
                     }}
                   >
-                    <label>
-                      Correo del invitado
-                      <input
-                        name="email"
-                        type="email"
-                        required
-                        autoComplete="email"
-                        placeholder="persona@example.com"
-                        maxLength={254}
-                      />
-                    </label>
-                    <label>
-                      Su acceso
-                      <select name="role" defaultValue="CONTRIBUTOR">
-                        <option value="ADMIN">Administrador</option>
-                        <option value="CONTRIBUTOR">Colaborador</option>
-                        <option value="READER">Lector</option>
-                      </select>
-                    </label>
-                    <p className="form-hint">
-                      Administrador: gestiona la familia. Colaborador: aporta
-                      sus historias. Lector: disfruta del contenido publicado.
-                    </p>
-                    <button className="button secondary" disabled={busy}>
-                      {busy ? "Enviando…" : "Enviar invitación"}
-                    </button>
+                    <FieldGroup>
+                      <FormField
+                        control={
+                          <Input
+                            name="email"
+                            type="email"
+                            required
+                            autoComplete="email"
+                            placeholder="person@example.com"
+                            maxLength={254}
+                          />
+                        }
+                      >
+                        Guest email
+                      </FormField>
+                      <FormField
+                        control={
+                          <NativeSelect name="role" defaultValue="CONTRIBUTOR">
+                            <NativeSelectOption value="ADMIN">
+                              Administrator
+                            </NativeSelectOption>
+                            <NativeSelectOption value="CONTRIBUTOR">
+                              Contributor
+                            </NativeSelectOption>
+                            <NativeSelectOption value="READER">
+                              Reader
+                            </NativeSelectOption>
+                          </NativeSelect>
+                        }
+                      >
+                        Their role
+                      </FormField>
+                      <p className="form-hint">
+                        Administrator: manages the family. Contributor: adds
+                        their own stories. Reader: enjoys published content.
+                      </p>
+                      <Button disabled={busy} variant="outline">
+                        {busy ? "Sending\u2026" : "Send invitation"}
+                      </Button>
+                    </FieldGroup>
                   </form>
                   {invitationUrl ? (
                     <div className="invitation-link">
-                      <label>
-                        Enlace privado de la última invitación
-                        <input
-                          readOnly
-                          value={invitationUrl}
-                          onFocus={(event) => event.target.select()}
-                        />
-                      </label>
-                      <button
-                        className="button quiet"
+                      <FormField
+                        control={
+                          <Input
+                            readOnly
+                            value={invitationUrl}
+                            onFocus={(event) => event.target.select()}
+                          />
+                        }
+                      >
+                        Private link for the latest invitation
+                      </FormField>
+                      <Button
                         disabled={busy}
                         onClick={async () => {
                           try {
                             await navigator.clipboard.writeText(invitationUrl);
                             setFeedback({
                               error: false,
-                              text: "Enlace copiado. Compártelo solo con su destinatario.",
+                              text: "Link copied. Share it only with its intended recipient.",
                             });
                           } catch {
                             setFeedback({
                               error: true,
-                              text: "Selecciona el enlace para copiarlo manualmente.",
+                              text: "Select the link to copy it manually.",
                             });
                           }
                         }}
+                        variant="ghost"
+                        type="button"
                       >
-                        Copiar enlace
-                      </button>
+                        Copy link
+                      </Button>
                     </div>
                   ) : null}
                 </section>
@@ -356,9 +395,9 @@ export function FamilyWorkspace({
                   className="side-section"
                   aria-labelledby="members-title"
                 >
-                  <h2 id="members-title">Adultos con acceso</h2>
+                  <h2 id="members-title">Adults with access</h2>
                   <p className="form-hint">
-                    Debe quedar al menos un administrador.
+                    At least one administrator must remain.
                   </p>
                   <ul className="member-list">
                     {view.members.map((member) => (
@@ -366,15 +405,15 @@ export function FamilyWorkspace({
                         <div>
                           <strong>
                             {member.user.name}
-                            {member.userId === userId ? " (tú)" : ""}
+                            {member.userId === userId ? " (you)" : ""}
                           </strong>
                           <span className="member-email">
                             {member.user.email}
                           </span>
                         </div>
                         <div className="member-controls">
-                          <select
-                            aria-label={"Rol de " + member.user.name}
+                          <NativeSelect
+                            aria-label={"Role for " + member.user.name}
                             value={member.role}
                             disabled={busy}
                             onChange={(event) =>
@@ -386,31 +425,36 @@ export function FamilyWorkspace({
                               )
                             }
                           >
-                            <option value="ADMIN">Administrador</option>
-                            <option value="CONTRIBUTOR">Colaborador</option>
-                            <option value="READER">Lector</option>
-                          </select>
-                          <button
-                            className="button quiet destructive"
+                            <NativeSelectOption value="ADMIN">
+                              Administrator
+                            </NativeSelectOption>
+                            <NativeSelectOption value="CONTRIBUTOR">
+                              Contributor
+                            </NativeSelectOption>
+                            <NativeSelectOption value="READER">
+                              Reader
+                            </NativeSelectOption>
+                          </NativeSelect>
+                          <Button
                             disabled={busy}
-                            onClick={() => {
+                            onClick={async () => {
                               if (
-                                window.confirm(
-                                  "¿Retirar el acceso de " +
-                                    member.user.name +
-                                    "?",
+                                await confirm(
+                                  "Remove access for " + member.user.name + "?",
                                 )
                               )
                                 void run(
                                   "/members/" + member.id,
                                   "DELETE",
                                   {},
-                                  "Acceso retirado.",
+                                  "Access removed.",
                                 );
                             }}
+                            variant="destructive"
+                            type="button"
                           >
-                            Retirar acceso
-                          </button>
+                            Remove access
+                          </Button>
                         </div>
                       </li>
                     ))}
@@ -420,7 +464,7 @@ export function FamilyWorkspace({
                   className="side-section"
                   aria-labelledby="pending-title"
                 >
-                  <h2 id="pending-title">Invitaciones</h2>
+                  <h2 id="pending-title">Invitations</h2>
                   {view.invitations.length ? (
                     <ul className="invitation-list">
                       {view.invitations.map((invite) => (
@@ -431,55 +475,57 @@ export function FamilyWorkspace({
                             {
                               (
                                 {
-                                  PENDING: "Pendiente",
-                                  ACCEPTED: "Aceptada",
-                                  REVOKED: "Retirada",
-                                  EXPIRED: "Vencida",
+                                  PENDING: "Pending",
+                                  ACCEPTED: "Accepted",
+                                  REVOKED: "Revoked",
+                                  EXPIRED: "Expired",
                                 } as Record<string, string>
                               )[invite.status]
                             }
                           </span>
                           <span className="form-hint">
-                            Vence el{" "}
+                            Expires on{" "}
                             {new Date(invite.expiresAt).toLocaleDateString(
-                              "es",
+                              "en-US",
                             )}
                             {invite.deliveryStatus === "FAILED"
-                              ? " · Correo no enviado"
+                              ? " \u00B7 Email not sent"
                               : ""}
                           </span>
                           {invite.status === "PENDING" ||
                           invite.status === "EXPIRED" ? (
                             <div className="row-actions">
-                              <button
-                                className="button quiet"
+                              <Button
                                 disabled={busy}
                                 onClick={() =>
                                   void run(
                                     "/invitations",
                                     "POST",
                                     { email: invite.email, role: invite.role },
-                                    "Se envió una nueva invitación. El enlace anterior ya no funciona.",
+                                    "A new invitation was sent. The previous link no longer works.",
                                   )
                                 }
+                                variant="ghost"
+                                type="button"
                               >
-                                Reenviar
-                              </button>
+                                Resend
+                              </Button>
                               {invite.status === "PENDING" ? (
-                                <button
-                                  className="button quiet destructive"
+                                <Button
                                   disabled={busy}
                                   onClick={() =>
                                     void run(
                                       "/invitations/" + invite.id,
                                       "DELETE",
                                       {},
-                                      "Invitación retirada.",
+                                      "Invitation revoked.",
                                     )
                                   }
+                                  variant="destructive"
+                                  type="button"
                                 >
-                                  Retirar
-                                </button>
+                                  Revoke
+                                </Button>
                               ) : null}
                             </div>
                           ) : null}
@@ -488,26 +534,25 @@ export function FamilyWorkspace({
                     </ul>
                   ) : (
                     <p className="muted">
-                      Todavía no has enviado invitaciones.
+                      You have not sent any invitations yet.
                     </p>
                   )}
                 </section>
               </>
             ) : (
               <section className="side-section">
-                <span className="eyebrow">TU PARTICIPACIÓN</span>
+                <span className="eyebrow">YOUR PARTICIPATION</span>
                 <h2>{roleLabels[view.role]}</h2>
                 <p className="muted">
                   {canWrite
-                    ? "Puedes registrar narradores y editar los perfiles que hayas creado. Un administrador puede ayudarte a gestionar el acceso."
-                    : "Tu acceso está pensado para disfrutar de los cuentos y fragmentos publicados con tu familia."}
+                    ? "You can add storytellers and edit profiles you created. An administrator can help you manage access."
+                    : "Your access lets you enjoy the stories and excerpts published for your family."}
                 </p>
               </section>
             )}
             <section className="side-section family-settings">
               {isAdmin ? (
-                <details>
-                  <summary>Cambiar nombre de la familia</summary>
+                <Disclosure title={<>Rename family</>}>
                   <form
                     className="form-stack"
                     onSubmit={async (event) => {
@@ -520,28 +565,32 @@ export function FamilyWorkspace({
                       );
                     }}
                   >
-                    <label>
-                      Nombre
-                      <input
-                        name="name"
-                        defaultValue={view.family.name}
-                        required
-                        maxLength={100}
-                      />
-                    </label>
-                    <button className="button secondary" disabled={busy}>
-                      Guardar nombre
-                    </button>
+                    <FieldGroup>
+                      <FormField
+                        control={
+                          <Input
+                            name="name"
+                            defaultValue={view.family.name}
+                            required
+                            maxLength={100}
+                          />
+                        }
+                      >
+                        Name
+                      </FormField>
+                      <Button disabled={busy} variant="outline">
+                        Save name
+                      </Button>
+                    </FieldGroup>
                   </form>
-                </details>
+                </Disclosure>
               ) : null}
-              <button
-                className="button quiet destructive"
+              <Button
                 disabled={busy}
                 onClick={async () => {
                   if (
-                    window.confirm(
-                      "¿Salir de esta familia? Necesitarás otra invitación para volver.",
+                    await confirm(
+                      "Leave this family? You will need another invitation to return.",
                     )
                   ) {
                     if (
@@ -549,7 +598,7 @@ export function FamilyWorkspace({
                         "/leave",
                         "POST",
                         {},
-                        "Has salido de la familia.",
+                        "You have left the family.",
                       )
                     ) {
                       router.push("/families");
@@ -557,9 +606,11 @@ export function FamilyWorkspace({
                     }
                   }
                 }}
+                variant="destructive"
+                type="button"
               >
-                Salir de esta familia
-              </button>
+                Leave this family
+              </Button>
             </section>
           </aside>
         ) : null}

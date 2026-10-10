@@ -38,7 +38,7 @@ export default async function GoPage({
 
   const path =
     membership.role === "READER" && contributorActions.has(action)
-      ? ""
+      ? "/dashboard"
       : landingActions[action];
   redirect(`/families/${membership.family.id}${path}`);
 }

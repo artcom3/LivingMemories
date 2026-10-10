@@ -1,4 +1,11 @@
 "use client";
+import { Feedback } from "@/components/private/content-primitives";
+import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/private/form-field";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FieldGroup } from "@/components/ui/field";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
@@ -20,10 +27,10 @@ export function InvitationForm({
   if (signedInEmail && signedInEmail.toLowerCase() !== email)
     return (
       <div className="form-stack">
-        <p className="form-error" role="alert">
-          La invitación es para otro correo. Cierra la sesión y entra con{" "}
-          {email}.
-        </p>
+        <Feedback className="error" role="alert">
+          This invitation is for another email address. Sign out and sign in
+          with {email}.
+        </Feedback>
         <SignOut next={"/invite/" + token} />
       </div>
     );
@@ -39,8 +46,7 @@ export function InvitationForm({
         try {
           if (existing && !signedInEmail) {
             const login = await authClient.signIn.email({ email, password });
-            if (login.error)
-              throw new Error("Revisa la contraseña de tu cuenta.");
+            if (login.error) throw new Error("Check your account password.");
           }
           const result = await mutate("/api/invitations/accept", "POST", {
             token,
@@ -54,88 +60,105 @@ export function InvitationForm({
             if (login.error) {
               router.push(
                 "/login?next=" +
-                  encodeURIComponent("/families/" + result.familyId),
+                  encodeURIComponent(
+                    "/families/" + result.familyId + "/dashboard",
+                  ),
               );
               return;
             }
           }
-          router.push("/families/" + result.familyId);
+          router.push("/families/" + result.familyId + "/dashboard");
           router.refresh();
         } catch (error) {
-          setError(
-            error instanceof Error ? error.message : "Inténtalo de nuevo.",
-          );
+          setError(error instanceof Error ? error.message : "Try again.");
         } finally {
           setBusy(false);
         }
       }}
     >
-      <label>
-        Correo de la invitación
-        <input type="email" value={email} readOnly autoComplete="email" />
-      </label>
-      {!signedInEmail ? (
-        <>
-          <div className="segmented" aria-label="Tipo de cuenta">
-            <button
-              type="button"
-              aria-pressed={!existing}
-              onClick={() => setExisting(false)}
+      <FieldGroup>
+        <FormField
+          control={
+            <Input type="email" value={email} readOnly autoComplete="email" />
+          }
+        >
+          Invitation email
+        </FormField>
+        {!signedInEmail ? (
+          <>
+            <ToggleGroup
+              type="single"
+              value={existing ? "existing" : "new"}
+              onValueChange={(value) => {
+                if (value) setExisting(value === "existing");
+              }}
               disabled={busy}
+              aria-label="Account type"
             >
-              Crear mi cuenta
-            </button>
-            <button
-              type="button"
-              aria-pressed={existing}
-              onClick={() => setExisting(true)}
-              disabled={busy}
+              <ToggleGroupItem value="new">Create my account</ToggleGroupItem>
+              <ToggleGroupItem value="existing">
+                I already have an account
+              </ToggleGroupItem>
+            </ToggleGroup>
+            {!existing ? (
+              <FormField
+                control={
+                  <Input
+                    name="name"
+                    autoComplete="name"
+                    required
+                    maxLength={100}
+                  />
+                }
+              >
+                Your name
+              </FormField>
+            ) : null}
+            <FormField
+              control={
+                <Input
+                  name="password"
+                  type="password"
+                  autoComplete={existing ? "current-password" : "new-password"}
+                  required
+                  minLength={existing ? 1 : 12}
+                  maxLength={128}
+                />
+              }
             >
-              Ya tengo cuenta
-            </button>
-          </div>
-          {!existing ? (
-            <label>
-              Tu nombre
-              <input name="name" autoComplete="name" required maxLength={100} />
-            </label>
-          ) : null}
-          <label>
-            {existing ? "Tu contraseña" : "Elige una contraseña"}
-            <input
-              name="password"
-              type="password"
-              autoComplete={existing ? "current-password" : "new-password"}
-              required
-              minLength={existing ? 1 : 12}
-              maxLength={128}
-            />
-          </label>
-          {!existing ? (
-            <p className="form-hint">
-              Al menos 12 caracteres. Puedes usar una frase que recuerdes.
-            </p>
-          ) : null}
-        </>
-      ) : (
-        <p className="muted">Entrarás con tu cuenta de {signedInEmail}.</p>
-      )}
-      <label className="check-label">
-        <input name="adult" type="checkbox" required />
-        Confirmo que soy una persona adulta.
-      </label>
-      {error ? (
-        <p className="form-error" role="alert">
-          {error}
+              {existing ? "Your password" : "Choose a password"}
+            </FormField>
+            {!existing ? (
+              <p className="form-hint">
+                At least 12 characters. You can use a phrase you will remember.
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p className="muted">
+            You will use your account for {signedInEmail}.
+          </p>
+        )}
+        <FormField
+          className="check-label"
+          control={<Checkbox name="adult" required />}
+          checkbox
+        >
+          I confirm that I am an adult.
+        </FormField>
+        {error ? (
+          <Feedback className="error" role="alert">
+            {error}
+          </Feedback>
+        ) : null}
+        <Button disabled={busy} variant="default">
+          {busy ? "Setting up your access\u2026" : "Accept invitation"}
+        </Button>
+        <p className="form-hint">
+          This link is personal, valid for seven days, and can only be used
+          once.
         </p>
-      ) : null}
-      <button className="button primary" disabled={busy}>
-        {busy ? "Preparando tu acceso…" : "Aceptar invitación"}
-      </button>
-      <p className="form-hint">
-        El enlace es personal, válido durante siete días y se utiliza una sola
-        vez.
-      </p>
+      </FieldGroup>
     </form>
   );
 }

@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { diaryWorld } from "@/components/landing/diary-world";
 import { ScrollWorld } from "@/components/landing/scroll-world";
-import { manrope } from "@/components/landing/fonts";
 import "@/components/landing/landing.css";
 
 export const metadata: Metadata = {
@@ -17,7 +16,7 @@ export default async function Home() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (session) redirect("/families");
   return (
-    <div className={`${manrope.variable} landing-page`} lang="en">
+    <div className="landing-page" lang="en">
       <div id="top" />
       <ScrollWorld config={diaryWorld} />
       <main className="landing-invitation" id="invitation">

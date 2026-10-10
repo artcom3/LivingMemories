@@ -1,3 +1,6 @@
+import { InitialAvatar } from "@/components/private/initial-avatar";
+import { EmptyState } from "@/components/private/content-primitives";
+import { Disclosure } from "@/components/private/disclosure";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -20,14 +23,14 @@ export default async function FamiliesPage({
   const { go } = await searchParams;
   const action = isLandingAction(go) ? go : null;
   return (
-    <AppShell userName={session.user.name}>
+    <AppShell userName={session.user.name} families={families}>
       <div className="page-heading">
-        <span className="eyebrow">NUESTROS VÍNCULOS</span>
-        <h1>Tus familias</h1>
+        <span className="eyebrow">OUR CONNECTIONS</span>
+        <h1>Your families</h1>
         <p className="muted">
           {action
-            ? "Elige la familia con la que quieres continuar."
-            : "Cada familia tiene su propio espacio privado."}
+            ? "Choose the family you want to continue with."
+            : "Every family has its own private space."}
         </p>
       </div>
       {families.length ? (
@@ -38,40 +41,40 @@ export default async function FamiliesPage({
               href={
                 action
                   ? `/go/${action}?family=${family.id}`
-                  : "/families/" + family.id
+                  : `/families/${family.id}/dashboard`
               }
               className="family-entry"
             >
-              <span className="family-initial" aria-hidden="true">
-                {family.name.slice(0, 1)}
-              </span>
+              <InitialAvatar>{family.name.slice(0, 1)}</InitialAvatar>
               <span>
                 <h2>{family.name}</h2>
                 <span className="muted">{roleLabels[role]}</span>
               </span>
               <span className="family-open">
-                Abrir <span aria-hidden="true">↗</span>
+                Open <span aria-hidden="true">↗</span>
               </span>
             </Link>
           ))}
         </div>
       ) : (
-        <section className="empty-state">
-          <h2>Tu próximo recuerdo empieza con una invitación</h2>
+        <EmptyState className="empty-state">
+          <h2>Your next memory starts with an invitation</h2>
           <p>
-            Abre el enlace que te envió un administrador. Si tu acceso fue
-            retirado, necesitarás una nueva invitación.
+            Open the link your administrator sent you. If your access was
+            removed, you will need a new invitation.
           </p>
-        </section>
+        </EmptyState>
       )}
       {families.length ? (
-        <details className="create-family">
-          <summary>Crear otro espacio familiar</summary>
+        <Disclosure
+          className="create-family"
+          title={<>Create another family space</>}
+        >
           <p className="muted">
-            Serás su primer administrador y podrás invitar a otros adultos.
+            You will be its first administrator and can invite other adults.
           </p>
           <FamilyCreateForm />
-        </details>
+        </Disclosure>
       ) : null}
     </AppShell>
   );

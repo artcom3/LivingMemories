@@ -29,7 +29,12 @@ import {
 } from "@/lib/memories/service";
 import { AccessError, unavailable } from "@/lib/families/validation";
 export const runtime = "nodejs";
-type Context = { params: Promise<{ familyId: string; action: string[] }> };
+type Context = {
+  params: Promise<{
+    familyId: string;
+    action: string[];
+  }>;
+};
 async function handle(request: Request, context: Context) {
   return endpoint(async (req) => {
     const actorId = await actor(req);
@@ -103,7 +108,7 @@ async function handle(request: Request, context: Context) {
         throw new AccessError(
           400,
           "FILE_REQUIRED",
-          "Elige un archivo para añadirlo a la memoria.",
+          "Choose a file to add to the memory.",
         );
       return json(await uploadSource(actorId, familyId, id, file), 201);
     }

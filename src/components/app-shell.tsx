@@ -1,36 +1,25 @@
-import Link from "next/link";
-import { SignOut } from "./sign-out";
+import { GlassHeader, type GlassHeaderProps } from "./private/glass-header";
+import { ConfirmationProvider } from "./private/confirmation-provider";
 export function AppShell({
   children,
-  userName,
-}: {
+  ...header
+}: GlassHeaderProps & {
   children: React.ReactNode;
-  userName?: string;
 }) {
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <Link href="/" className="wordmark">
-          <span className="brand-mark" aria-hidden="true">
-            lm
-          </span>
-          LivingMemories
-        </Link>
-        {userName ? (
-          <div className="header-account">
-            <span>{userName}</span>
-            <SignOut />
-          </div>
-        ) : (
-          <span className="pilot-label">Un lugar para nuestras historias</span>
-        )}
-      </header>
-      <main id="main" className="main-content">
-        {children}
-      </main>
-      <footer className="app-footer">
-        Historias reales. Voces que nos conectan.
-      </footer>
-    </div>
+    <ConfirmationProvider>
+      <div className="app-shell">
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
+        <GlassHeader {...header} />
+        <main id="main" className="main-content">
+          {children}
+        </main>
+        <footer className="app-footer">
+          Real stories. Voices that bring us together.
+        </footer>
+      </div>
+    </ConfirmationProvider>
   );
 }

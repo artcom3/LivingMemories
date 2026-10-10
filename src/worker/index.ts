@@ -8,7 +8,6 @@ import {
   closeConnections,
   localConnections,
 } from "../lib/infrastructure/connections";
-
 const boss = new PgBoss({ connectionString: databaseUrl(), schema: "pgboss" });
 boss.on("error", () => console.error("Worker queue connection error."));
 await boss.start();
@@ -23,13 +22,14 @@ await boss.work(
     return { status: "ok", connections };
   },
 );
-
 await boss.createQueue(CREATION_QUEUE, {
   policy: "short",
   retryLimit: 0,
   expireInSeconds: 1800,
 });
-await boss.work<{ creationId: string }>(
+await boss.work<{
+  creationId: string;
+}>(
   CREATION_QUEUE,
   { batchSize: 1, pollingIntervalSeconds: 2 },
   async (jobs) => {
@@ -50,7 +50,7 @@ async function dispatchCreations() {
       data: {
         status: "FAILED",
         errorMessage:
-          "La generación quedó interrumpida. Revisa los resultados parciales antes de crear otra versión.",
+          "Generation was interrupted. Review the partial results before creating another version.",
       },
     });
     const queued = await prisma.creation.findMany({
@@ -77,7 +77,6 @@ async function dispatchCreations() {
 }
 await dispatchCreations();
 const creationDispatch = setInterval(() => void dispatchCreations(), 10000);
-
 const server = createServer(async (request, response) => {
   if (request.url !== "/health/live" && request.url !== "/health/ready") {
     response.writeHead(404);
@@ -98,7 +97,6 @@ const server = createServer(async (request, response) => {
 server.listen(Number(process.env.WORKER_HEALTH_PORT || 3010), "0.0.0.0", () =>
   console.log("Worker started; infrastructure queue is processing."),
 );
-
 let closing = false;
 async function shutdown() {
   if (closing) return;

@@ -1,15 +1,10 @@
 /* Sign in page in the landing's art direction: the same paper, palette, Manrope
    type, book-open mark and tinted glass card (src/components/landing/landing.css),
-   with the clay family diorama standing in for the film. Palette from
-   docs/landing/brief.md. Every value snaps to the landing-page-design scale. */
+   with the clay family diorama standing in for the film. Every value snaps to
+   the landing-page-design scale. */
 .login-page {
-  --paper: #f9eddd;
-  --ink: #2b2a33;
-  --ink-soft: #6b6560;
-  --terracota: #c8735a;
-  --ocre: #d9a45b;
-  --azul: #6e8fb5;
-  --salvia: #8fa98a;
+  /* Paper, ink and the other accents come from globals.css; these two scene
+     accents (diary-world.ts) are only used here. */
   --morado: #7b5ba6;
   --rosa: #d9577a;
   --accent: var(--terracota);
@@ -87,7 +82,7 @@
   height: 24px;
   background: var(--terracota);
   /* Phosphor book-open (fill), MIT. Same mark as the landing's top bar. */
-  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><path d='M240,56V200a8,8,0,0,1-8,8H160a24,24,0,0,0-24,23.94,7.9,7.9,0,0,1-5.12,7.55A8,8,0,0,1,120,232a24,24,0,0,0-24-24H24a8,8,0,0,1-8-8V56a8,8,0,0,1,8-8H88a32,32,0,0,1,32,32v87.73a8.17,8.17,0,0,0,7.47,8.25,8,8,0,0,0,8.53-8V80a32,32,0,0,1,32-32h64A8,8,0,0,1,240,56Z'/></svg>")
+  mask: url("/brand/book-open.svg")
     center / contain no-repeat;
   transition: rotate 700ms var(--ease-fluid);
 }
@@ -485,8 +480,9 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
-/* Hero heading: the one sanctioned text gradient (landing-page-design B5). */
-.login-card__title {
+/* Hero heading: the one sanctioned text gradient (landing-page-design B5).
+   Scoped to the card to outrank globals.css `h1:not([data-slot])`. */
+.login-card .login-card__title {
   margin-top: 8px;
   font-size: 36px;
   line-height: 40px;
@@ -506,20 +502,26 @@
   text-wrap: pretty;
 }
 
-/* LoginForm (src/components/login-form.tsx) in the landing's style. */
+/* LoginForm (src/components/login-form.tsx) in the landing's style. Its
+   shadcn controls are styled by Tailwind utilities (a cascade layer), so these
+   unlayered rules win without extra specificity. */
 .login-card .form-stack {
-  gap: 16px;
   margin-top: 24px;
 }
-.login-card label {
+.login-card [data-slot="field-group"] {
+  gap: 16px;
+}
+.login-card [data-slot="field"] {
   gap: 8px;
+}
+.login-card [data-slot="field-label"] {
   color: var(--ink);
   font-size: 14px;
   line-height: 20px;
   font-weight: 600;
 }
-.login-card input:not([type="checkbox"]) {
-  min-height: 48px;
+.login-card [data-slot="input"] {
+  height: 48px;
   padding: 12px 16px;
   border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
   border-radius: 12px;
@@ -531,17 +533,18 @@
     box-shadow 700ms var(--ease-fluid),
     background-color 700ms var(--ease-fluid);
 }
-.login-card input:not([type="checkbox"]):hover {
+.login-card [data-slot="input"]:hover {
   border-color: color-mix(in srgb, var(--ink) 24%, transparent);
 }
-.login-card input:not([type="checkbox"]):focus {
+.login-card [data-slot="input"]:focus,
+.login-card [data-slot="input"]:focus-visible {
   outline: none;
   border-color: var(--accent);
   background: #ffffff;
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 24%, transparent);
 }
-.login-card .button.primary {
-  min-height: 0;
+.login-card [data-slot="button"] {
+  height: auto;
   gap: 8px;
   margin-top: 8px;
   padding: 12px 16px;
@@ -558,7 +561,7 @@
     opacity 700ms var(--ease-fluid);
 }
 /* The landing's call to action arrow, in the accent. */
-.login-card .button.primary::after {
+.login-card [data-slot="button"]::after {
   content: "";
   width: 16px;
   height: 16px;
@@ -568,22 +571,22 @@
     center / contain no-repeat;
   transition: translate 700ms var(--ease-fluid);
 }
-.login-card .button.primary:hover {
+.login-card [data-slot="button"]:hover {
   background: var(--ink);
   translate: 0 -2px;
 }
-.login-card .button.primary:hover::after {
+.login-card [data-slot="button"]:hover::after {
   translate: 2px 0;
 }
-.login-card .button.primary:active {
+.login-card [data-slot="button"]:active {
   scale: 0.98;
 }
-.login-card .button.primary:disabled {
+.login-card [data-slot="button"]:disabled {
   opacity: 0.72;
   translate: none;
 }
 /* While signing in the arrow keeps walking, instead of a spinner. */
-.login-card .button.primary:disabled::after {
+.login-card [data-slot="button"]:disabled::after {
   animation: login-walk 900ms var(--ease-fluid) infinite;
 }
 @keyframes login-walk {
@@ -591,7 +594,7 @@
     translate: 4px 0;
   }
 }
-.login-card .form-error {
+.login-card [data-slot="alert"] {
   padding: 12px 16px;
   border: 1px solid color-mix(in srgb, var(--rosa) 30%, transparent);
   border-radius: 12px;
@@ -600,6 +603,9 @@
   font-size: 14px;
   line-height: 20px;
   font-weight: 600;
+}
+.login-card [data-slot="alert"] [data-slot="alert-description"] {
+  color: inherit;
 }
 .login-card .form-hint {
   color: var(--ink-soft);
@@ -639,7 +645,7 @@
     font-size: 12px;
     line-height: 16px;
   }
-  .login-card__title {
+  .login-card .login-card__title {
     font-size: 30px;
     line-height: 36px;
   }

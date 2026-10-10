@@ -1,9 +1,9 @@
 export const readerProfiles = {
-  AGE_2_5: { label: "2–5 años", pages: 4, words: "80–140 palabras" },
-  AGE_5_8: { label: "5–8 años", pages: 6, words: "200–350 palabras" },
-  AGE_9_12: { label: "9–12 años", pages: 8, words: "450–650 palabras" },
-  YOUNG: { label: "Jóvenes", pages: 8, words: "600–900 palabras" },
-  ADULT: { label: "Adultos", pages: 8, words: "800–1.200 palabras" },
+  AGE_2_5: { label: "Ages 2\u20135", pages: 4, words: "80\u2013140 words" },
+  AGE_5_8: { label: "Ages 5\u20138", pages: 6, words: "200\u2013350 words" },
+  AGE_9_12: { label: "Ages 9\u201312", pages: 8, words: "450\u2013650 words" },
+  YOUNG: { label: "Young adults", pages: 8, words: "600\u2013900 words" },
+  ADULT: { label: "Adults", pages: 8, words: "800\u20131,200 words" },
 } as const;
 export type ReaderProfile = keyof typeof readerProfiles;
 export function hasContext(source: {
@@ -22,8 +22,8 @@ export function hasContext(source: {
   );
 }
 export const sourceLabels = {
-  PHOTO: "Fotografía",
+  PHOTO: "Photo",
   VIDEO: "Video",
   AUDIO: "Audio",
-  TEXT: "Relato escrito",
+  TEXT: "Written account",
 } as const;

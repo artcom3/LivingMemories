@@ -8,16 +8,16 @@ export async function mutate(url: string, method: string, value: unknown = {}) {
     });
   } catch {
     throw new Error(
-      "No pudimos conectar. Revisa tu conexión y vuelve a intentarlo.",
+      "We could not connect. Check your connection and try again.",
     );
   }
   let result;
   try {
     result = await response.json();
   } catch {
-    throw new Error("No pudimos completar la acción. Vuelve a intentarlo.");
+    throw new Error("We could not complete this action. Please try again.");
   }
   if (!response.ok)
-    throw new Error(result.message || "No pudimos completar la acción.");
+    throw new Error(result.message || "We could not complete this action.");
   return result;
 }

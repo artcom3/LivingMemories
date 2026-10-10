@@ -10,9 +10,9 @@ export class AccessError extends Error {
 export type Input = Record<string, unknown>;
 export type Role = "ADMIN" | "CONTRIBUTOR" | "READER";
 export const roleLabels: Record<Role, string> = {
-  ADMIN: "Administrador",
-  CONTRIBUTOR: "Colaborador",
-  READER: "Lector",
+  ADMIN: "Administrator",
+  CONTRIBUTOR: "Contributor",
+  READER: "Reader",
 };
 export function text(value: unknown, label: string, max = 100): string {
   if (
@@ -21,7 +21,7 @@ export function text(value: unknown, label: string, max = 100): string {
     value.trim().length > max ||
     /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value)
   )
-    throw new AccessError(400, "INVALID_INPUT", label + " no es válido.");
+    throw new AccessError(400, "INVALID_INPUT", label + " is invalid.");
   return value.trim();
 }
 export function optionalText(
@@ -34,14 +34,14 @@ export function optionalText(
     : text(value, label, max);
 }
 export function email(value: unknown): string {
-  const result = text(value, "El correo", 254).toLowerCase();
+  const result = text(value, "The email address", 254).toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(result))
-    throw new AccessError(400, "INVALID_INPUT", "Introduce un correo válido.");
+    throw new AccessError(400, "INVALID_INPUT", "Enter a valid email address.");
   return result;
 }
 export function role(value: unknown): Role {
   if (value !== "ADMIN" && value !== "CONTRIBUTOR" && value !== "READER")
-    throw new AccessError(400, "INVALID_INPUT", "Elige un rol válido.");
+    throw new AccessError(400, "INVALID_INPUT", "Choose a valid role.");
   return value;
 }
 export function password(value: unknown): string {
@@ -49,15 +49,15 @@ export function password(value: unknown): string {
     throw new AccessError(
       400,
       "INVALID_INPUT",
-      "La contraseña debe tener entre 12 y 128 caracteres.",
+      "Your password must be between 12 and 128 characters.",
     );
   return value;
 }
 export const unavailable = () =>
-  new AccessError(404, "NOT_AVAILABLE", "Este recurso no está disponible.");
+  new AccessError(404, "NOT_AVAILABLE", "This resource is unavailable.");
 export const invalidInvitation = () =>
   new AccessError(
     400,
     "INVALID_INVITATION",
-    "La invitación no es válida o ya no está disponible. Solicita un nuevo enlace.",
+    "This invitation is invalid or no longer available. Ask for a new link.",
   );

@@ -1,4 +1,17 @@
 "use client";
+import { sourceDisplayName } from "@/lib/ui/english-system-message";
+import { Button } from "@/components/ui/button";
+import { Feedback, EmptyState } from "@/components/private/content-primitives";
+import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/private/form-field";
+import { Disclosure } from "@/components/private/disclosure";
+import { Textarea } from "@/components/ui/textarea";
+import { FieldGroup } from "@/components/ui/field";
+import {
+  NativeSelectOption,
+  NativeSelect,
+} from "@/components/ui/native-select";
+import { useConfirmation } from "@/components/private/confirmation-provider";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,9 +27,16 @@ export function MemoryEditor({
 }: {
   familyId: string;
   memory: MemoryDetail;
-  profiles: { id: string; name: string }[];
-  collections: { id: string; name: string }[];
+  profiles: {
+    id: string;
+    name: string;
+  }[];
+  collections: {
+    id: string;
+    name: string;
+  }[];
 }) {
+  const confirm = useConfirmation();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
@@ -45,7 +65,11 @@ export function MemoryEditor({
       router.refresh();
       return true;
     } catch (error) {
-      setError(error instanceof Error ? error.message : "No se pudo guardar.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "We could not save your changes.",
+      );
       return false;
     } finally {
       setBusy(false);
@@ -61,7 +85,7 @@ export function MemoryEditor({
       });
       const data = await response.json();
       if (!response.ok)
-        throw new Error(data.message || "No se pudo subir el archivo.");
+        throw new Error(data.message || "We could not upload the file.");
       return true;
     } catch (error) {
       throw new Error(
@@ -69,7 +93,7 @@ export function MemoryEditor({
           ": " +
           (error instanceof Error
             ? error.message
-            : "No se pudo subir el archivo."),
+            : "We could not upload the file."),
       );
     }
   }
@@ -80,9 +104,9 @@ export function MemoryEditor({
     let count = 0;
     for (const file of files) {
       setFeedback(
-        "Guardando material " +
+        "Saving material " +
           (count + failed.length + 1) +
-          " de " +
+          " of " +
           files.length +
           "…",
       );
@@ -93,7 +117,11 @@ export function MemoryEditor({
         failed.push(error instanceof Error ? error.message : file.name);
       }
     }
-    setFeedback(count ? count + " materiales guardados." : "");
+    setFeedback(
+      count
+        ? count + (count === 1 ? " material saved." : " materials saved.")
+        : "",
+    );
     setError(failed.join(" "));
     setBusy(false);
     router.refresh();
@@ -108,77 +136,81 @@ export function MemoryEditor({
   return (
     <>
       <Link className="back-link" href={familyBase}>
-        ← Volver a memorias
+        ← Back to memories
       </Link>
       <div className="content-toolbar">
         <div>
-          <span className="eyebrow">RECUERDO ORIGINAL</span>
+          <span className="eyebrow">ORIGINAL MEMORY</span>
           <h2>{memory.title}</h2>
           <p className="muted">
-            {memory.narrator?.name || "Narrador por completar"} · Registrado por{" "}
+            {memory.narrator?.name || "Storyteller to be added"} · Added by{" "}
             {memory.createdBy.name}
           </p>
         </div>
         {memory.sources.length ? (
-          <Link
-            className="button primary"
-            href={familyBase + "/stories/new?memory=" + memory.id}
-          >
-            Preparar un cuento
-          </Link>
+          <Button asChild variant="default">
+            <Link href={familyBase + "/stories/new?memory=" + memory.id}>
+              Prepare a story
+            </Link>
+          </Button>
         ) : null}
         {memory.sources.length ? (
-          <Link
-            className="button secondary"
-            href={familyBase + "/music/new?memory=" + memory.id}
-          >
-            Preparar música
-          </Link>
+          <Button asChild variant="outline">
+            <Link href={familyBase + "/music/new?memory=" + memory.id}>
+              Prepare music
+            </Link>
+          </Button>
         ) : null}
       </div>
-      <ol className="journey-steps" aria-label="Recorrido de la memoria">
-        <li>Guarda tus materiales</li>
-        <li>Añade lo que sabes</li>
-        <li>Prepara el cuento</li>
+      <ol className="journey-steps" aria-label="Memory journey">
+        <li>Save your materials</li>
+        <li>Add what you know</li>
+        <li>Prepare the story</li>
       </ol>
       {feedback ? (
-        <p className="feedback" role="status">
+        <Feedback className="feedback" role="status">
           {feedback}
-        </p>
+        </Feedback>
       ) : null}
       {error ? (
-        <p className="feedback error" role="alert">
+        <Feedback className="feedback error" role="alert">
           {error}
-        </p>
+        </Feedback>
       ) : null}
       <section className="side-section">
-        <h3>Añadir materiales</h3>
+        <h3>Add materials</h3>
         <p className="form-hint">
-          Fotos hasta 15 MB; audios y videos hasta 100 MB. Puedes reunir hasta
-          20 materiales en esta memoria.
+          Photos up to 15 MB; audio and video up to 100 MB. You can add up to 20
+          materials to this memory.
         </p>
         <div className="capture-options">
-          <label>
-            Fotografías, audios o videos
-            <input
-              type="file"
-              multiple
-              disabled={busy || memory.sources.length >= 20}
-              accept=".jpg,.jpeg,.png,.webp,.heic,.heif,.mp3,.wav,.m4a,.webm,.ogg,.flac,.mp4,.mov"
-              onChange={async (event) => {
-                const input = event.currentTarget;
-                const files = Array.from(input.files || []);
-                if (files.length && (await uploadMany(files))) input.value = "";
-              }}
-            />
-          </label>
+          <FormField
+            control={
+              <Input
+                type="file"
+                multiple
+                disabled={busy || memory.sources.length >= 20}
+                accept=".jpg,.jpeg,.png,.webp,.heic,.heif,.mp3,.wav,.m4a,.webm,.ogg,.flac,.mp4,.mov"
+                onChange={async (event) => {
+                  const input = event.currentTarget;
+                  const files = Array.from(input.files || []);
+                  if (files.length && (await uploadMany(files)))
+                    input.value = "";
+                }}
+              />
+            }
+          >
+            Photos, audio, or video
+          </FormField>
           <AudioRecorder
             disabled={busy || memory.sources.length >= 20}
             onSave={(file) => uploadMany([file])}
           />
         </div>
-        <details className="create-family">
-          <summary>Añadir un relato escrito</summary>
+        <Disclosure
+          className="create-family"
+          title={<>Add a written account</>}
+        >
           <form
             className="form-stack"
             onSubmit={async (event) => {
@@ -189,55 +221,72 @@ export function MemoryEditor({
                   "/text",
                   "POST",
                   Object.fromEntries(new FormData(form)),
-                  "Relato guardado como material original.",
+                  "Written account saved as original material.",
                 )
               )
                 form.reset();
             }}
           >
-            <label>
-              Título del texto
-              <input
-                name="originalName"
-                maxLength={160}
-                placeholder="Lo que me contó mi abuela"
-              />
-            </label>
-            <label>
-              Relato
-              <textarea
-                name="originalText"
-                required
-                rows={5}
-                maxLength={10000}
-              />
-            </label>
-            <button
-              className="button secondary"
-              disabled={busy || memory.sources.length >= 20}
-            >
-              Guardar relato
-            </button>
+            <FieldGroup>
+              <FormField
+                control={
+                  <Input
+                    name="originalName"
+                    maxLength={160}
+                    placeholder="What my grandmother told me"
+                  />
+                }
+              >
+                Text title
+              </FormField>
+              <FormField
+                control={
+                  <Textarea
+                    name="originalText"
+                    required
+                    rows={5}
+                    maxLength={10000}
+                  />
+                }
+              >
+                Written account
+              </FormField>
+              <Button
+                disabled={busy || memory.sources.length >= 20}
+                variant="outline"
+              >
+                Save written account
+              </Button>
+            </FieldGroup>
           </form>
-        </details>
+        </Disclosure>
       </section>
       <section className="side-section" aria-labelledby="materials-title">
         <div className="content-toolbar">
-          <h3 id="materials-title">Materiales de este recuerdo</h3>
-          <label>
-            Mostrar
-            <select
-              value={filter}
-              onChange={(event) => setFilter(event.target.value)}
-            >
-              <option value="all">Todos</option>
-              <option value="pending">Por describir</option>
-              <option value="PHOTO">Fotografías</option>
-              <option value="AUDIO">Audios</option>
-              <option value="VIDEO">Videos</option>
-              <option value="TEXT">Textos</option>
-            </select>
-          </label>
+          <h3 id="materials-title">Materials from this memory</h3>
+          <FormField
+            control={
+              <NativeSelect
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+              >
+                <NativeSelectOption value="all">All</NativeSelectOption>
+                <NativeSelectOption value="pending">
+                  To be described
+                </NativeSelectOption>
+                <NativeSelectOption value="PHOTO">Photos</NativeSelectOption>
+                <NativeSelectOption value="AUDIO">
+                  Audio recordings
+                </NativeSelectOption>
+                <NativeSelectOption value="VIDEO">Videos</NativeSelectOption>
+                <NativeSelectOption value="TEXT">
+                  Written accounts
+                </NativeSelectOption>
+              </NativeSelect>
+            }
+          >
+            Show
+          </FormField>
         </div>
         <div className="source-list">
           {filtered.length ? (
@@ -252,7 +301,7 @@ export function MemoryEditor({
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={base + "/sources/" + item.id}
-                      alt={item.originalName}
+                      alt={sourceDisplayName(item.originalName)}
                       loading="lazy"
                     />
                   ) : item.type === "AUDIO" ? (
@@ -271,24 +320,22 @@ export function MemoryEditor({
                     <blockquote>{item.originalText}</blockquote>
                   ) : (
                     <p className="muted">
-                      Fotografía original disponible para descargar.
+                      The original photo is available to download.
                     </p>
                   )}
                 </div>
                 <div className="source-details">
                   <span className="eyebrow">{sourceLabels[item.type]}</span>
-                  <h3>{item.originalName}</h3>
+                  <h3>{sourceDisplayName(item.originalName)}</h3>
                   <span className="profile-caption">
-                    {hasContext(item)
-                      ? "Contexto aportado"
-                      : "Contexto por completar"}
+                    {hasContext(item) ? "Context added" : "Context to be added"}
                   </span>
                   {item.contextDescription ? (
                     <p>{item.contextDescription}</p>
                   ) : (
                     <p className="muted">
-                      ¿Qué ocurre aquí? Puedes describirlo sin conocer todos los
-                      detalles.
+                      What is happening here? You can describe it even if you do
+                      not know every detail.
                     </p>
                   )}
                   <p className="form-hint">
@@ -302,57 +349,60 @@ export function MemoryEditor({
                       .join(" · ")}
                   </p>
                   <div className="row-actions">
-                    <button
-                      className="button secondary"
+                    <Button
                       disabled={busy}
                       onClick={() => setEditingSource(item.id)}
+                      variant="outline"
+                      type="button"
                     >
-                      {hasContext(item) ? "Editar contexto" : "Añadir contexto"}
-                    </button>
+                      {hasContext(item) ? "Edit context" : "Add context"}
+                    </Button>
                     {item.type !== "TEXT" ? (
-                      <a
-                        className="button quiet"
-                        href={base + "/sources/" + item.id}
-                        download={item.originalName}
-                      >
-                        Abrir original
-                      </a>
+                      <Button asChild variant="ghost">
+                        <a
+                          href={base + "/sources/" + item.id}
+                          download={item.originalName}
+                        >
+                          Open original
+                        </a>
+                      </Button>
                     ) : null}
-                    <button
-                      className="button quiet destructive"
+                    <Button
                       disabled={busy}
-                      onClick={() => {
+                      onClick={async () => {
                         if (
-                          window.confirm(
-                            "¿Retirar este material del recuerdo? El original se conservará.",
+                          await confirm(
+                            "Remove this material from the memory? The original will be preserved.",
                           )
                         )
                           void save(
                             "/sources/" + item.id,
                             "DELETE",
                             {},
-                            "Material retirado. Las preparaciones que lo usen deben revisar su selección.",
+                            "Material removed. Preparations that use it need their selection reviewed.",
                           );
                       }}
+                      variant="destructive"
+                      type="button"
                     >
-                      Retirar material
-                    </button>
+                      Remove material
+                    </Button>
                   </div>
                 </div>
               </article>
             ))
           ) : (
-            <div className="empty-state">
+            <EmptyState className="empty-state">
               <h3>
                 {memory.sources.length
-                  ? "No hay materiales con ese filtro"
-                  : "Empieza con lo que tengas a mano"}
+                  ? "No materials match this filter"
+                  : "Start with what you have"}
               </h3>
               <p>
-                Una foto, unas palabras o la voz de alguien son suficientes para
-                comenzar.
+                A photo, a few words, or someone&apos;s voice is enough to get
+                started.
               </p>
-            </div>
+            </EmptyState>
           )}
         </div>
       </section>
@@ -363,14 +413,17 @@ export function MemoryEditor({
           aria-labelledby="context-title"
         >
           <div className="content-toolbar">
-            <h3 id="context-title">Lo que sabes de {source.originalName}</h3>
-            <button
-              className="button quiet"
+            <h3 id="context-title">
+              What you know about {sourceDisplayName(source.originalName)}
+            </h3>
+            <Button
               disabled={busy}
               onClick={() => setEditingSource(null)}
+              variant="ghost"
+              type="button"
             >
-              Cerrar
-            </button>
+              Close
+            </Button>
           </div>
           <form
             className="form-stack"
@@ -382,68 +435,85 @@ export function MemoryEditor({
                   "/sources/" + source.id + "/context",
                   "PATCH",
                   Object.fromEntries(new FormData(event.currentTarget)),
-                  "Contexto guardado. El original permanece intacto.",
+                  "Context saved. The original remains unchanged.",
                 )
               )
                 setEditingSource(null);
             }}
           >
-            <label>
-              ¿Qué ocurre o qué cuenta este material?
-              <textarea
-                name="contextDescription"
-                defaultValue={source.contextDescription || ""}
-                maxLength={4000}
-                rows={4}
-              />
-            </label>
-            <div className="form-columns">
-              <label>
-                Personas mencionadas o presentes
-                <input
-                  name="peopleContext"
-                  defaultValue={source.peopleContext || ""}
-                  maxLength={500}
-                />
-              </label>
-              <label>
-                Lugar
-                <input
-                  name="locationContext"
-                  defaultValue={source.locationContext || ""}
-                  maxLength={300}
-                />
-              </label>
-              <label>
-                Fecha o época aproximada
-                <input
-                  name="dateContext"
-                  defaultValue={source.dateContext || ""}
-                  maxLength={200}
-                  placeholder="No es necesario saber una fecha exacta"
-                />
-              </label>
-              <label>
-                ¿Qué significa para la familia?
-                <input
-                  name="emotionContext"
-                  defaultValue={source.emotionContext || ""}
-                  maxLength={300}
-                />
-              </label>
-            </div>
-            <p className="form-hint">
-              Deja en blanco lo que no sepas. Este contexto es tu aportación;
-              los hechos se revisarán antes de generar y publicar.
-            </p>
-            <button className="button primary" disabled={busy}>
-              Guardar contexto
-            </button>
+            <FieldGroup>
+              <FormField
+                control={
+                  <Textarea
+                    name="contextDescription"
+                    defaultValue={source.contextDescription || ""}
+                    maxLength={4000}
+                    rows={4}
+                  />
+                }
+              >
+                What does this material show or tell us?
+              </FormField>
+              <FieldGroup className="form-columns">
+                <FormField
+                  control={
+                    <Input
+                      name="peopleContext"
+                      defaultValue={source.peopleContext || ""}
+                      maxLength={500}
+                    />
+                  }
+                >
+                  People mentioned or pictured
+                </FormField>
+                <FormField
+                  control={
+                    <Input
+                      name="locationContext"
+                      defaultValue={source.locationContext || ""}
+                      maxLength={300}
+                    />
+                  }
+                >
+                  Location
+                </FormField>
+                <FormField
+                  control={
+                    <Input
+                      name="dateContext"
+                      defaultValue={source.dateContext || ""}
+                      maxLength={200}
+                      placeholder="You do not need to know the exact date"
+                    />
+                  }
+                >
+                  Approximate date or period
+                </FormField>
+                <FormField
+                  control={
+                    <Input
+                      name="emotionContext"
+                      defaultValue={source.emotionContext || ""}
+                      maxLength={300}
+                    />
+                  }
+                >
+                  What does it mean to your family?
+                </FormField>
+              </FieldGroup>
+              <p className="form-hint">
+                Leave anything you do not know blank. This context is your
+                contribution; the facts will be reviewed before generation and
+                publication.
+              </p>
+              <Button disabled={busy} variant="default">
+                Save context
+              </Button>
+            </FieldGroup>
           </form>
         </section>
       ) : null}
-      <details className="side-section">
-        <summary>Editar los datos de la memoria</summary>
+      <Disclosure className="side-section" title={<>Edit memory details</>}>
         <form
           className="form-stack"
           onSubmit={async (event) => {
@@ -452,87 +522,104 @@ export function MemoryEditor({
               "",
               "PATCH",
               Object.fromEntries(new FormData(event.currentTarget)),
-              "Memoria actualizada.",
+              "Memory updated.",
             );
           }}
         >
-          <label>
-            Título
-            <input
-              name="title"
-              required
-              maxLength={160}
-              defaultValue={memory.title}
-            />
-          </label>
-          <div className="form-columns">
-            <label>
-              Narrador
-              <select
-                name="narratorProfileId"
-                defaultValue={memory.narratorProfileId || ""}
+          <FieldGroup>
+            <FormField
+              control={
+                <Input
+                  name="title"
+                  required
+                  maxLength={160}
+                  defaultValue={memory.title}
+                />
+              }
+            >
+              Title
+            </FormField>
+            <FieldGroup className="form-columns">
+              <FormField
+                control={
+                  <NativeSelect
+                    name="narratorProfileId"
+                    defaultValue={memory.narratorProfileId || ""}
+                  >
+                    <NativeSelectOption value="">
+                      To be completed
+                    </NativeSelectOption>
+                    {memory.narrator &&
+                    !profiles.some((p) => p.id === memory.narrator?.id) ? (
+                      <NativeSelectOption value={memory.narrator.id}>
+                        {memory.narrator.name} (archived)
+                      </NativeSelectOption>
+                    ) : null}
+                    {profiles.map((p) => (
+                      <NativeSelectOption key={p.id} value={p.id}>
+                        {p.name}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                }
               >
-                <option value="">Por completar</option>
-                {memory.narrator &&
-                !profiles.some((p) => p.id === memory.narrator?.id) ? (
-                  <option value={memory.narrator.id}>
-                    {memory.narrator.name} (archivado)
-                  </option>
-                ) : null}
-                {profiles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Álbum
-              <select
-                name="collectionId"
-                defaultValue={memory.collectionId || ""}
+                Storyteller
+              </FormField>
+              <FormField
+                control={
+                  <NativeSelect
+                    name="collectionId"
+                    defaultValue={memory.collectionId || ""}
+                  >
+                    <NativeSelectOption value="">No album</NativeSelectOption>
+                    {collections.map((c) => (
+                      <NativeSelectOption key={c.id} value={c.id}>
+                        {c.name}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                }
               >
-                <option value="">Sin álbum</option>
-                {collections.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <label>
-            Nota sobre la memoria
-            <textarea
-              name="description"
-              defaultValue={memory.description || ""}
-              maxLength={4000}
-            />
-          </label>
-          <button className="button secondary" disabled={busy}>
-            Guardar datos
-          </button>
+                Album
+              </FormField>
+            </FieldGroup>
+            <FormField
+              control={
+                <Textarea
+                  name="description"
+                  defaultValue={memory.description || ""}
+                  maxLength={4000}
+                />
+              }
+            >
+              A note about this memory
+            </FormField>
+            <Button disabled={busy} variant="outline">
+              Save details
+            </Button>
+          </FieldGroup>
         </form>
-      </details>
+      </Disclosure>
       <section className="side-section">
-        <button
-          className="button quiet destructive"
+        <Button
           disabled={busy}
           onClick={async () => {
             if (
-              window.confirm(
-                "¿Mover la memoria a la papelera? Podrás recuperarla durante 30 días.",
+              await confirm(
+                "Move this memory to the trash? You can restore it within 30 days.",
               )
             ) {
-              if (await save("", "DELETE", {}, "Memoria retirada.")) {
+              if (await save("", "DELETE", {}, "Memory moved to the trash.")) {
                 router.push(familyBase);
                 router.refresh();
               }
             }
           }}
+          variant="destructive"
+          type="button"
         >
-          Mover a la papelera
-        </button>
+          Move to trash
+        </Button>
       </section>
     </>
   );

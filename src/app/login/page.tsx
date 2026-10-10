@@ -3,8 +3,8 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { loginDestination } from "@/lib/auth-redirect";
 import { LoginForm } from "@/components/login-form";
-import { manrope } from "@/components/landing/fonts";
 import { LoginScene } from "@/components/login/login-scene";
 import "@/components/login/login.css";
 
@@ -16,20 +16,15 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{
+    next?: string;
+  }>;
 }) {
-  const candidate = (await searchParams).next || "/";
-  // /go/<action> is the landing's call-to-action resolver (src/app/go).
-  const next =
-    /^\/(?:families(?:\/[A-Za-z0-9_-]+)?|invite\/[A-Za-z0-9_-]{43}|go\/(?:diary|record|albums|write|stories))$/.test(
-      candidate,
-    )
-      ? candidate
-      : "/";
+  const next = loginDestination((await searchParams).next);
   if (await auth.api.getSession({ headers: await headers() }))
     redirect(next === "/" ? "/families" : next);
   return (
-    <div className={`${manrope.variable} login-page`} lang="en">
+    <div className="login-page">
       <a className="login-skip" href="#login-title">
         Skip to the form
       </a>

@@ -1,4 +1,14 @@
 "use client";
+import { Input } from "@/components/ui/input";
+import { FormField } from "@/components/private/form-field";
+import {
+  NativeSelectOption,
+  NativeSelect,
+} from "@/components/ui/native-select";
+import { FieldGroup } from "@/components/ui/field";
+import { Textarea } from "@/components/ui/textarea";
+import { Feedback } from "@/components/private/content-primitives";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { mutate } from "@/lib/families/client";
@@ -9,8 +19,14 @@ export function MemoryCreateForm({
   collectionId = "",
 }: {
   familyId: string;
-  profiles: { id: string; name: string }[];
-  collections: { id: string; name: string }[];
+  profiles: {
+    id: string;
+    name: string;
+  }[];
+  collections: {
+    id: string;
+    name: string;
+  }[];
   collectionId?: string;
 }) {
   const router = useRouter();
@@ -40,87 +56,113 @@ export function MemoryCreateForm({
           setError(
             error instanceof Error
               ? error.message
-              : "No pudimos guardar la memoria.",
+              : "We could not save the memory.",
           );
         } finally {
           setBusy(false);
         }
       }}
     >
-      <label>
-        ¿Cómo quieres llamar a este recuerdo?
-        <input
-          name="title"
-          required
-          maxLength={160}
-          placeholder="La infancia de mi abuela en Perú"
-        />
-      </label>
-      <div className="form-columns">
-        <label>
-          ¿Quién cuenta la historia?
-          <select
-            value={narrator}
-            onChange={(event) => setNarrator(event.target.value)}
-          >
-            <option value="">Lo completaré después</option>
-            {profiles.map((profile) => (
-              <option key={profile.id} value={profile.id}>
-                {profile.name}
-              </option>
-            ))}
-            <option value="new">Añadir un narrador sin salir</option>
-          </select>
-        </label>
-        <label>
-          Álbum
-          <select name="collectionId" defaultValue={collectionId}>
-            <option value="">Sin álbum por ahora</option>
-            {collections.map((collection) => (
-              <option key={collection.id} value={collection.id}>
-                {collection.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      {narrator === "new" ? (
-        <div className="form-columns">
-          <label>
-            Nombre del narrador
-            <input name="newNarratorName" required maxLength={100} />
-          </label>
-          <label>
-            Parentesco o vínculo
-            <input
-              name="newNarratorRelationship"
-              maxLength={100}
-              placeholder="Abuela materna"
+      <FieldGroup>
+        <FormField
+          control={
+            <Input
+              name="title"
+              required
+              maxLength={160}
+              placeholder="My grandmother's childhood in Peru"
             />
-          </label>
-        </div>
-      ) : null}
-      <label>
-        Lo que recuerdas <span className="optional">(opcional)</span>
-        <textarea
-          name="originalText"
-          rows={6}
-          maxLength={10000}
-          placeholder="Puedes empezar con unas palabras. Después podrás añadir fotografías o grabaciones."
-        />
-      </label>
-      <p className="form-hint">
-        El texto se conservará como un material original. Puedes guardar la
-        memoria aunque todavía te falten detalles.
-      </p>
-      {error ? (
-        <p className="form-error" role="alert">
-          {error}
+          }
+        >
+          What would you like to call this memory?
+        </FormField>
+        <FieldGroup className="form-columns">
+          <FormField
+            control={
+              <NativeSelect
+                value={narrator}
+                onChange={(event) => setNarrator(event.target.value)}
+              >
+                <NativeSelectOption value="">
+                  I&apos;ll add this later
+                </NativeSelectOption>
+                {profiles.map((profile) => (
+                  <NativeSelectOption key={profile.id} value={profile.id}>
+                    {profile.name}
+                  </NativeSelectOption>
+                ))}
+                <NativeSelectOption value="new">
+                  Add a storyteller here
+                </NativeSelectOption>
+              </NativeSelect>
+            }
+          >
+            Who is telling the story?
+          </FormField>
+          <FormField
+            control={
+              <NativeSelect name="collectionId" defaultValue={collectionId}>
+                <NativeSelectOption value="">
+                  No album for now
+                </NativeSelectOption>
+                {collections.map((collection) => (
+                  <NativeSelectOption key={collection.id} value={collection.id}>
+                    {collection.name}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            }
+          >
+            Album
+          </FormField>
+        </FieldGroup>
+        {narrator === "new" ? (
+          <FieldGroup className="form-columns">
+            <FormField
+              control={
+                <Input name="newNarratorName" required maxLength={100} />
+              }
+            >
+              Storyteller&apos;s name
+            </FormField>
+            <FormField
+              control={
+                <Input
+                  name="newNarratorRelationship"
+                  maxLength={100}
+                  placeholder="Maternal grandmother"
+                />
+              }
+            >
+              Relationship or connection
+            </FormField>
+          </FieldGroup>
+        ) : null}
+        <FormField
+          control={
+            <Textarea
+              name="originalText"
+              rows={6}
+              maxLength={10000}
+              placeholder="You can start with a few words. Add photos or recordings later."
+            />
+          }
+        >
+          What you remember <span className="optional">(optional)</span>
+        </FormField>
+        <p className="form-hint">
+          The text will be preserved as original material. You can save the
+          memory even if some details are still missing.
         </p>
-      ) : null}
-      <button className="button primary" disabled={busy}>
-        {busy ? "Guardando…" : "Guardar y añadir materiales"}
-      </button>
+        {error ? (
+          <Feedback className="error" role="alert">
+            {error}
+          </Feedback>
+        ) : null}
+        <Button disabled={busy} variant="default">
+          {busy ? "Saving\u2026" : "Save and add materials"}
+        </Button>
+      </FieldGroup>
     </form>
   );
 }

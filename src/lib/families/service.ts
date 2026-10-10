@@ -14,7 +14,6 @@ import {
   unavailable,
   type Input,
 } from "./validation";
-
 type Tx = Prisma.TransactionClient;
 const sevenDays = 7 * 24 * 60 * 60 * 1000;
 const hashToken = (token: string) =>
@@ -29,11 +28,12 @@ const inviteSelection = {
   expiresAt: true,
   createdAt: true,
 } as const;
-
 async function lockFamily(tx: Tx, familyId: string) {
-  const rows = await tx.$queryRaw<Array<{ id: string }>>(
-    Prisma.sql`SELECT id FROM family WHERE id = ${familyId} FOR UPDATE`,
-  );
+  const rows = await tx.$queryRaw<
+    Array<{
+      id: string;
+    }>
+  >(Prisma.sql`SELECT id FROM family WHERE id = ${familyId} FOR UPDATE`);
   if (!rows.length) throw unavailable();
 }
 export async function withFamily<T>(
@@ -62,7 +62,7 @@ function admin(member: { role: string }) {
     throw new AccessError(
       403,
       "FORBIDDEN",
-      "Solo un administrador puede realizar esta acción.",
+      "Only an administrator can perform this action.",
     );
 }
 function contributor(member: { role: string }) {
@@ -70,12 +70,19 @@ function contributor(member: { role: string }) {
     throw new AccessError(
       403,
       "FORBIDDEN",
-      "Tu acceso de lector no permite editar perfiles.",
+      "Your reader role does not allow you to edit profiles.",
     );
 }
-function publicInvitation<T extends { status: string; expiresAt: Date }>(
+function publicInvitation<
+  T extends {
+    status: string;
+    expiresAt: Date;
+  },
+>(
   invitation: T,
-): Omit<T, "status"> & { status: string } {
+): Omit<T, "status"> & {
+  status: string;
+} {
   return {
     ...invitation,
     status:
@@ -84,7 +91,6 @@ function publicInvitation<T extends { status: string; expiresAt: Date }>(
         : invitation.status,
   };
 }
-
 export async function listFamilies(actorId: string) {
   return prisma.membership.findMany({
     where: { userId: actorId, status: "ACTIVE" },
@@ -93,7 +99,7 @@ export async function listFamilies(actorId: string) {
   });
 }
 export async function createFamily(actorId: string, input: Input) {
-  const name = text(input.name, "El nombre de la familia");
+  const name = text(input.name, "The family name");
   return prisma.$transaction(async (tx) => {
     const admission = await tx.membership.findFirst({
       where: { userId: actorId, status: "ACTIVE" },
@@ -102,7 +108,7 @@ export async function createFamily(actorId: string, input: Input) {
       throw new AccessError(
         403,
         "INVITATION_REQUIRED",
-        "Necesitas aceptar una invitación para participar en el piloto.",
+        "Accept an invitation to join the pilot.",
       );
     return tx.family.create({
       data: {
@@ -175,7 +181,7 @@ export async function renameFamily(
   familyId: string,
   input: Input,
 ) {
-  const name = text(input.name, "El nombre de la familia");
+  const name = text(input.name, "The family name");
   return withFamily(actorId, familyId, async (tx, member) => {
     admin(member);
     return tx.family.update({
@@ -206,7 +212,7 @@ export async function createInvitation(
       throw new AccessError(
         409,
         "ALREADY_MEMBER",
-        "Esta persona ya pertenece a la familia.",
+        "This person already belongs to the family.",
       );
     await tx.invitation.updateMany({
       where: { familyId, email: recipient, status: "PENDING" },
@@ -265,7 +271,7 @@ export async function previewInvitation(token: string) {
   };
 }
 export async function bootstrapFamily(input: Input) {
-  const name = text(input.name, "El nombre de la familia");
+  const name = text(input.name, "The family name");
   const recipient = email(input.email);
   const token = newToken();
   const family = await prisma.family.create({
@@ -293,7 +299,7 @@ export async function acceptInvitation(actorId: string | null, input: Input) {
     throw new AccessError(
       400,
       "ADULT_REQUIRED",
-      "Confirma que eres una persona adulta para participar.",
+      "Confirm that you are an adult to participate.",
     );
   if (
     typeof input.token !== "string" ||
@@ -313,7 +319,7 @@ export async function acceptInvitation(actorId: string | null, input: Input) {
     found.email !== recipient
   )
     throw invalidInvitation();
-  const name = actorId ? null : text(input.name, "Tu nombre");
+  const name = actorId ? null : text(input.name, "Your name");
   // Use Better Auth's default hasher; account and membership are committed together.
   const passwordHash = actorId
     ? null
@@ -337,14 +343,14 @@ export async function acceptInvitation(actorId: string | null, input: Input) {
           throw new AccessError(
             403,
             "EMAIL_MISMATCH",
-            "Inicia sesión con el correo al que se envió la invitación.",
+            "Sign in with the email address that received the invitation.",
           );
       } else {
         if (user)
           throw new AccessError(
             409,
             "SIGN_IN_REQUIRED",
-            "Ya tienes una cuenta. Inicia sesión para aceptar la invitación.",
+            "You already have an account. Sign in to accept the invitation.",
           );
         user = await tx.user.create({
           data: {
@@ -434,7 +440,7 @@ export async function changeMember(
         throw new AccessError(
           409,
           "LAST_ADMIN",
-          "La familia debe conservar al menos un administrador. Asigna otro antes de salir o cambiar este rol.",
+          "The family must keep at least one administrator. Assign another before leaving or changing this role.",
         );
     }
     if (!nextRole)
@@ -471,9 +477,9 @@ export async function createProfile(
 }
 function profileFields(input: Input) {
   return {
-    name: text(input.name, "El nombre del narrador"),
-    relationship: optionalText(input.relationship, "El parentesco", 100),
-    biography: optionalText(input.biography, "La presentación", 2000),
+    name: text(input.name, "The storyteller's name"),
+    relationship: optionalText(input.relationship, "The relationship", 100),
+    biography: optionalText(input.biography, "The introduction", 2000),
   };
 }
 export async function updateProfile(
@@ -487,15 +493,15 @@ export async function updateProfile(
         name:
           input.name === undefined
             ? undefined
-            : text(input.name, "El nombre del narrador"),
+            : text(input.name, "The storyteller's name"),
         relationship:
           input.relationship === undefined
             ? undefined
-            : optionalText(input.relationship, "El parentesco", 100),
+            : optionalText(input.relationship, "The relationship", 100),
         biography:
           input.biography === undefined
             ? undefined
-            : optionalText(input.biography, "La presentación", 2000),
+            : optionalText(input.biography, "The introduction", 2000),
       }
     : null;
   return withFamily(actorId, familyId, async (tx, member) => {
@@ -508,7 +514,7 @@ export async function updateProfile(
       throw new AccessError(
         403,
         "FORBIDDEN",
-        "Solo quien creó el perfil o un administrador puede editarlo.",
+        "Only the profile's creator or an administrator can edit it.",
       );
     await tx.personProfile.update({
       where: { id: found.id },
