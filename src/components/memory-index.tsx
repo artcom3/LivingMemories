@@ -1,4 +1,6 @@
 "use client";
+import { MemoryCard } from "@/components/private/memory-card";
+import { Plus, Trash2 } from "lucide-react";
 import { InitialAvatar } from "@/components/private/initial-avatar";
 import { EmptyState, Feedback } from "@/components/private/content-primitives";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,7 @@ import {
 import { mutate } from "@/lib/families/client";
 export function MemoryIndex({
   familyId,
+  familyName,
   role,
   data,
   section = "memories",
@@ -31,6 +34,7 @@ export function MemoryIndex({
   initialAlbum = "",
 }: {
   familyId: string;
+  familyName?: string;
   role: string;
   data: MemoryOverview;
   section?: "memories" | "albums" | "stories";
@@ -46,6 +50,7 @@ export function MemoryIndex({
   const confirm = useConfirmation();
   const router = useRouter();
   const base = "/families/" + familyId;
+  const showCards = section === "memories" && !trash;
   const visible = data.memories.filter(
     (memory) =>
       (!album || memory.collectionId === album) &&
@@ -56,16 +61,26 @@ export function MemoryIndex({
       (contextFilter !== "pending" ||
         memory.sources.some((s) => !hasContext(s))),
   );
+  const filtersActive = Boolean(query || album || contextFilter !== "all");
   const currentAlbum = data.collections.find((a) => a.id === editingAlbum);
   if (role === "READER")
     return (
-      <EmptyState className="empty-state">
-        <h2>Shared stories will live here</h2>
-        <p>
-          Your family can share stories after reviewing them. Original memories
-          and drafts remain private.
-        </p>
-      </EmptyState>
+      <section>
+        {showCards ? (
+          <div className="memories-heading">
+            <div>
+              <h1>Your memories</h1>
+            </div>
+          </div>
+        ) : null}
+        <EmptyState className="empty-state">
+          <h2>Shared stories will live here</h2>
+          <p>
+            Your family can share stories after reviewing them. Original
+            memories and drafts remain private.
+          </p>
+        </EmptyState>
+      </section>
     );
   if (section === "stories")
     return (
@@ -122,24 +137,42 @@ export function MemoryIndex({
     );
   return (
     <section>
-      <div className="content-toolbar">
-        <div>
-          <p className="muted">
-            {section === "albums"
-              ? "Bring together memories of a person, a time, or a place."
-              : "Every memory preserves its storyteller and original materials."}
-          </p>
+      {showCards ? (
+        <div className="memories-heading">
+          <div>
+            {familyName ? (
+              <span className="eyebrow">{familyName} · Private group</span>
+            ) : null}
+            <h1>Your memories</h1>
+            <p className="muted">Photos, voices and moments worth keeping.</p>
+          </div>
+          <Button asChild>
+            <Link href={base + "/memories/new"}>
+              <Plus data-icon="inline-start" aria-hidden="true" />
+              Save a memory
+            </Link>
+          </Button>
         </div>
-        {!trash ? (
-          <Button asChild variant="default">
-            <Link href={base + "/memories/new"}>Save a memory</Link>
-          </Button>
-        ) : (
-          <Button asChild variant="outline">
-            <Link href={base}>Back to memories</Link>
-          </Button>
-        )}
-      </div>
+      ) : (
+        <div className="content-toolbar">
+          <div>
+            <p className="muted">
+              {section === "albums"
+                ? "Bring together memories of a person, a time, or a place."
+                : "Every memory preserves its storyteller and original materials."}
+            </p>
+          </div>
+          {!trash ? (
+            <Button asChild variant="default">
+              <Link href={base + "/memories/new"}>Save a memory</Link>
+            </Button>
+          ) : (
+            <Button asChild variant="outline">
+              <Link href={base}>Back to memories</Link>
+            </Button>
+          )}
+        </div>
+      )}
       {section === "albums" ? (
         <>
           <div className="family-list">
@@ -365,93 +398,139 @@ export function MemoryIndex({
                 </NativeSelect>
               }
             >
-              Context
+              {showCards ? "Details" : "Context"}
             </FormField>
           </div>
-          <div className="memory-list">
+          {showCards ? (
+            <div className="memory-results-heading">
+              <p aria-live="polite">
+                {visible.length} {visible.length === 1 ? "memory" : "memories"}
+                {query || album || contextFilter !== "all"
+                  ? ` of ${data.memories.length}`
+                  : ""}
+              </p>
+              <Button asChild variant="ghost">
+                <Link href={base + "/trash"}>
+                  <Trash2 data-icon="inline-start" aria-hidden="true" />
+                  View trash
+                </Link>
+              </Button>
+            </div>
+          ) : null}
+          <div
+            className={
+              showCards && visible.length ? "memory-card-grid" : "memory-list"
+            }
+          >
             {visible.length ? (
-              visible.map((memory) => (
-                <article className="family-entry" key={memory.id}>
-                  <InitialAvatar>{memory.title.slice(0, 1)}</InitialAvatar>
-                  <div className="memory-entry-body">
-                    <h3>{memory.title}</h3>
-                    <p className="muted">
-                      {memory.narrator?.name || "Storyteller to be added"}
-                      {memory.collection ? " · " + memory.collection.name : ""}
-                    </p>
-                    <span className="form-hint">
-                      {memory.sources.length}{" "}
-                      {memory.sources.length === 1 ? "material" : "materials"} ·{" "}
-                      {memory.sources.filter(hasContext).length} with context
-                    </span>
-                    <div className="row-actions">
-                      {trash ? (
-                        <Button
-                          disabled={busy}
-                          onClick={async () => {
-                            setBusy(true);
-                            try {
-                              await mutate(
-                                "/api/families/" +
-                                  familyId +
-                                  "/content/memories/" +
-                                  memory.id +
-                                  "/restore",
-                                "POST",
-                              );
-                              router.refresh();
-                            } catch (error) {
-                              setFeedback(
-                                error instanceof Error
-                                  ? error.message
-                                  : "We could not restore this memory.",
-                              );
-                            } finally {
-                              setBusy(false);
-                            }
-                          }}
-                          variant="outline"
-                          type="button"
-                        >
-                          Restore memory
-                        </Button>
-                      ) : (
-                        <>
-                          <Button asChild variant="ghost">
-                            <Link href={base + "/memories/" + memory.id}>
-                              Continue memory
-                            </Link>
+              visible.map((memory) =>
+                showCards ? (
+                  <MemoryCard
+                    key={memory.id}
+                    memory={memory}
+                    familyId={familyId}
+                  />
+                ) : (
+                  <article className="family-entry" key={memory.id}>
+                    <InitialAvatar>{memory.title.slice(0, 1)}</InitialAvatar>
+                    <div className="memory-entry-body">
+                      <h3>{memory.title}</h3>
+                      <p className="muted">
+                        {memory.narrator?.name || "Storyteller to be added"}
+                        {memory.collection
+                          ? " · " + memory.collection.name
+                          : ""}
+                      </p>
+                      <span className="form-hint">
+                        {memory.sources.length}{" "}
+                        {memory.sources.length === 1 ? "material" : "materials"}{" "}
+                        · {memory.sources.filter(hasContext).length} with
+                        context
+                      </span>
+                      <div className="row-actions">
+                        {trash ? (
+                          <Button
+                            disabled={busy}
+                            onClick={async () => {
+                              setBusy(true);
+                              try {
+                                await mutate(
+                                  "/api/families/" +
+                                    familyId +
+                                    "/content/memories/" +
+                                    memory.id +
+                                    "/restore",
+                                  "POST",
+                                );
+                                router.refresh();
+                              } catch (error) {
+                                setFeedback(
+                                  error instanceof Error
+                                    ? error.message
+                                    : "We could not restore this memory.",
+                                );
+                              } finally {
+                                setBusy(false);
+                              }
+                            }}
+                            variant="outline"
+                            type="button"
+                          >
+                            Restore memory
                           </Button>
-                          {memory.sources.length ? (
+                        ) : (
+                          <>
                             <Button asChild variant="ghost">
-                              <Link
-                                href={base + "/stories/new?memory=" + memory.id}
-                              >
-                                Prepare story
+                              <Link href={base + "/memories/" + memory.id}>
+                                Continue memory
                               </Link>
                             </Button>
-                          ) : null}
-                        </>
-                      )}
+                            {memory.sources.length ? (
+                              <Button asChild variant="ghost">
+                                <Link
+                                  href={
+                                    base + "/stories/new?memory=" + memory.id
+                                  }
+                                >
+                                  Prepare story
+                                </Link>
+                              </Button>
+                            ) : null}
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))
+                  </article>
+                ),
+              )
             ) : (
               <EmptyState className="empty-state">
                 <h3>
                   {trash
                     ? "There are no memories in the trash"
-                    : query || album
+                    : query || album || contextFilter !== "all"
                       ? "No memories match this filter"
                       : "What story would you like to preserve?"}
                 </h3>
                 <p>
                   {trash
                     ? "Deleted memories can be restored within 30 days."
-                    : "Start with a written account, a photo, or a recording. You can add context later."}
+                    : showCards && filtersActive
+                      ? "Try a different search or clear the filters."
+                      : "Start with a written account, a photo, or a recording. You can add context later."}
                 </p>
-                {!trash ? (
+                {showCards && filtersActive ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setQuery("");
+                      setAlbum("");
+                      setContextFilter("all");
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                ) : !trash ? (
                   <Button asChild variant="outline">
                     <Link href={base + "/memories/new"}>Save a memory</Link>
                   </Button>
@@ -465,11 +544,6 @@ export function MemoryIndex({
             </Feedback>
           ) : null}
         </>
-      ) : null}
-      {section === "memories" && !trash ? (
-        <Link className="back-link" href={base + "/trash"}>
-          View trash
-        </Link>
       ) : null}
     </section>
   );

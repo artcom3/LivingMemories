@@ -43,7 +43,7 @@ export function FamilyCreateForm() {
             />
           }
         >
-          Family space name
+          Group name
         </FormField>
         {error ? (
           <Feedback className="error" role="alert">
@@ -51,7 +51,7 @@ export function FamilyCreateForm() {
           </Feedback>
         ) : null}
         <Button disabled={busy} variant="outline">
-          {busy ? "Creating\u2026" : "Create family space"}
+          {busy ? "Creating\u2026" : "Create group"}
         </Button>
       </FieldGroup>
     </form>

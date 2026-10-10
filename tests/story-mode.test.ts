@@ -47,18 +47,22 @@ test("bounds first/last pages and resets on closing, including one-page books", 
 });
 
 
-test("turning surface keeps both directions aligned with their resting pages", async () => {
-  const { pageTurnPoint } = await import("../src/components/story-mode/page-turn");
-  for (const x of [0, 0.5, 1.38, 2.76]) {
-    assert.ok(Math.abs(pageTurnPoint(x, 0, 1).x - x) < 1e-9);
-    assert.ok(Math.abs(pageTurnPoint(x, 1, 1).x + x) < 1e-9);
-    assert.ok(Math.abs(pageTurnPoint(x, 1, 1).z) < 1e-9);
-    for (const t of [0, .2, .5, .8, 1]) {
-      const forward = pageTurnPoint(x, t, 1);
-      const backward = pageTurnPoint(x, 1 - t, -1);
-      assert.ok(Math.abs(forward.x - backward.x) < 1e-9);
-      assert.ok(Math.abs(forward.z - backward.z) < 1e-9);
-      assert.ok(forward.stretch >= 1);
+test("Turn.js maps covers and spreads to the same story on desktop and mobile", async () => {
+  const { physicalPage, storyPage } = await import("../src/components/story-mode/turn-layout");
+  for (const single of [true, false]) {
+    assert.equal(storyPage(1, 4, single), -1);
+    for (let page = 0; page < 4; page++) {
+      assert.equal(storyPage(physicalPage(page, single), 4, single), page);
+      if (!single) assert.equal(storyPage(physicalPage(page, single) + 1, 4, single), page);
     }
   }
+});
+
+test("chapter selection respects bounds and animation lock", () => {
+  const reading = bookNavigation(bookNavigation(initialNavigation, { type: "open" }), { type: "settle" });
+  const jump = bookNavigation(reading, { type: "go", page: 3, count: 4 });
+  assert.equal(jump.page, 3);
+  assert.equal(jump.phase, "turning");
+  assert.equal(bookNavigation(jump, { type: "go", page: 1, count: 4 }), jump);
+  assert.equal(bookNavigation(reading, { type: "go", page: 4, count: 4 }), reading);
 });

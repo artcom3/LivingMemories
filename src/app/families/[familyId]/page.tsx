@@ -11,7 +11,12 @@ export default async function FamilyPage({
   const data = await memoryOverview(user.id, familyId);
   return (
     <>
-      <MemoryIndex familyId={familyId} role={view.role} data={data} />
+      <MemoryIndex
+        familyId={familyId}
+        familyName={view.family.name}
+        role={view.role}
+        data={data}
+      />
     </>
   );
 }

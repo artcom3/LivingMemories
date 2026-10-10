@@ -58,7 +58,7 @@ export function GlassHeader({
   const links = family
     ? [
         {
-          label: "Home",
+          label: "Overview",
           href: `${base}/dashboard`,
           active: pathname === `${base}/dashboard`,
         },
@@ -98,16 +98,16 @@ export function GlassHeader({
     families.length > 1 ? (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" aria-label="Switch family">
+          <Button variant="ghost" aria-label="Switch group">
             <Users data-icon="inline-start" />
             <span className="family-picker-name">
-              {family?.name || "My families"}
+              {family?.name || "My groups"}
             </span>
             <ChevronDown data-icon="inline-end" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Your families</DropdownMenuLabel>
+          <DropdownMenuLabel>Your groups</DropdownMenuLabel>
           <DropdownMenuGroup>
             {families.map((item) => (
               <DropdownMenuItem key={item.family.id} asChild>
@@ -122,7 +122,7 @@ export function GlassHeader({
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link href="/families">View my families</Link>
+            <Link href="/families">View my groups</Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -149,7 +149,7 @@ export function GlassHeader({
           <DropdownMenuItem asChild>
             <Link href="/families">
               <Users />
-              My families
+              My groups
             </Link>
           </DropdownMenuItem>
           {family ? (
@@ -255,7 +255,7 @@ export function GlassHeader({
                   <Button asChild variant="ghost">
                     <Link href="/families" onClick={() => setOpen(false)}>
                       <BookOpen data-icon="inline-start" />
-                      My families
+                      My groups
                     </Link>
                   </Button>
                 </div>
@@ -281,7 +281,12 @@ export function GlassHeader({
 export function FamilyPageHeading({ family }: { family: Family }) {
   const pathname = usePathname();
   const base = `/families/${family.id}`;
-  if (pathname === `${base}/dashboard`) return null;
+  if (
+    pathname === base ||
+    pathname === `${base}/dashboard` ||
+    (pathname.startsWith(`${base}/memories/`) && !pathname.endsWith("/new"))
+  )
+    return null;
   let title = "Your memories";
   if (pathname.includes("/albums")) title = "Family albums";
   else if (pathname.includes("/narrators")) title = "Your family's voices";

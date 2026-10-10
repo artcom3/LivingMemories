@@ -1,4 +1,4 @@
-# Modo historia 3D
+# Libro de relatos · Turn.js
 
 Validación local: 10 de octubre de 2026. No desplegado.
 
@@ -8,45 +8,39 @@ Validación local: 10 de octubre de 2026. No desplegado.
 
 [Preparación y versión](http://localhost:3000/families/cmv21ou7o0000h9scmysjgezu/stories/cmv266md90003nqscgai38n2s).
 
-Es una demostración inventada, identificada como tal en el material original, el título y las notas de revisión. Tiene cuatro páginas y cuatro narraciones generadas con los proveedores de la aplicación, en estado `READY`. No está publicada para lectores. Se reutilizó la familia local de pruebas con permisos del administrador de desarrollo.
+Demostración inventada, identificada como tal en el material original, título y notas de revisión. Tiene cuatro páginas y cuatro narraciones existentes, en estado `READY`. No está publicada para lectores. No tiene ilustraciones generadas; se utiliza el motivo editorial neutro cuando faltan. El pendiente de generación de imágenes sigue documentado en `real-story-flow.md`.
 
-Esta demostración no solicitó ilustraciones al proveedor. El acceso/cuota para la generación automática de imágenes sigue siendo el pendiente documentado en `real-story-flow.md`. El lector muestra las ilustraciones asociadas a cada página cuando existen y ofrece una presentación neutra cuando faltan.
+## Rediseño
 
-## Comprobaciones realizadas
+- Identidad compartida con la landing: fondo crema, portada terracota, acentos salvia, tipografía Manrope y controles redondeados.
+- Turn.js mueve el HTML completo de cada hoja. Texto seleccionable y desplazable; ilustración izquierda y relato derecho en escritorio, una página combinada en móvil.
+- Navegación anterior/siguiente, selector de página y voz en una barra. Repetir, avance automático y cerrar quedan en el menú. Ampliación de texto e imagen también en móvil.
+- Apertura y giros de aproximadamente 700 ms; movimiento reducido sin giro prolongado. Lector plano si el motor no puede inicializarse. No requiere WebGL.
+- La ruta privada, proyección `creationView`, archivos autenticados y narración única se conservan. No hay migraciones, nuevos proveedores ni cambios en generación.
 
-- `pnpm typecheck`; lint sin errores (advertencias anteriores en los motores de la landing).
-- `pnpm test:story-mode`: tres pruebas de proyección privada y navegación.
-- Seis pruebas de creaciones en una base PostgreSQL desechable, incluidos los permisos y la retirada de fuentes; proveedores simulados en esta suite.
-- Next.js MCP: compilación y errores de ejecución. Navegador con sesión restaurada y diagnóstico React.
-- Apertura y cierre, lectura manual, reproducción real, cambio de página que detiene la voz y avance automático que termina en la última página.
-- Imágenes de muestra, vista ampliada, reintento tras un fallo, página sin voz y texto de 4.880 caracteres con desplazamiento y ampliación. Se utilizó una ruta autenticada temporal con medios simulados solo en el navegador; se eliminó tras la verificación y no se guardaron esos medios en la base.
-- Tres clics simultáneos avanzan una sola página; un evento `ended` tardío no avanza la página nueva.
-- Diálogos con foco y Escape, restitución del foco al botón y ampliación dentro de pantalla completa.
-- Vista móvil de 390 × 844, controles de ampliación accesibles y ausencia de desbordamiento horizontal.
-- Ausencia simulada de WebGL: lector plano con los mismos contenidos y controles. Movimiento reducido: apertura medida en aproximadamente 86 ms.
-- Respuesta de acceso retirado simulada: se detiene el audio y se eliminan del DOM las páginas y la escena. La suite de integración comprueba además la retirada real de fuentes en su base desechable.
-- Archivos privados sin sesión: HTTP 401. La página sin sesión redirige al inicio de sesión mediante el protocolo de Next.js; una versión inexistente muestra contenido no disponible.
+## Integración y licencia
 
-## Implementación
+Turn.js v3 procede del [repositorio oficial de blasten en GitHub](https://github.com/blasten/turn.js), fijado al commit `08c1f6599a1412b145c7bf645a1f28c14db12742`. Se conserva su licencia en `src/vendor/turnjs/LICENSE.txt`: **la edición pública restringe el uso comercial**. No se ha adquirido una licencia comercial; cualquier uso comercial requiere resolver esa autorización con el autor.
 
-Ruta independiente `/story-mode/[familyId]/[creationId]`, sin el layout administrativo. Usa la proyección de `creationView` y los endpoints privados existentes; no necesita migraciones ni modifica el pipeline de generación.
+El adaptador carga dinámicamente jQuery 3.7.1 y Turn.js sin globals. React conserva la propiedad del contenido mediante portales a las hojas; Turn.js mueve sus nodos y wrappers. El desmontaje detiene animaciones, desconecta ResizeObserver, elimina listeners documentales de la instancia y separa las hojas antes de eliminar wrappers. Los parches están enumerados en `src/vendor/turnjs/README.md`.
 
-Three.js y React Three Fiber construyen la geometría y animan las hojas; Drei proporciona las superficies de tapas y papel. El HTML de las páginas permanece en la raíz React de la aplicación y se proyecta con las matrices de la cámara. Esto evita el conflicto observado entre las raíces DOM de `Drei Html` y la limpieza de efectos de React 19.3.
+Los controles, la selección y el desplazamiento del texto no inician gestos de esquina. Cada giro solicitado por gesto pasa por la autorización y el bloqueo de navegación de la aplicación. El evento `turned` permite continuar la narración al terminar el movimiento. Las imágenes vecinas se precargan y la imagen saliente se conserva durante un salto; las URLs blob se revocan al dejar de usarse. Three.js, React Three Fiber y Drei se retiraron porque ya no tienen consumidores.
 
-La escena se carga dinámicamente y dibuja bajo demanda; las texturas, geometrías y URLs de los medios se liberan al desmontar o cambiar de página. El audio se reproduce con un único elemento y se verifica nuevamente el acceso al abrir, escuchar, cambiar de página, recuperar el foco y periódicamente mientras la pestaña está visible.
+## Comprobaciones de este rediseño
 
+- `pnpm typecheck`; `pnpm test:story-mode`: cinco pruebas aprobadas de proyección privada, límites, bloqueo y correspondencia entre páginas físicas y relatos.
+- `pnpm lint`: cero errores y nueve advertencias anteriores en los motores de la landing.
+- Next.js MCP: sin incidencias de compilación ni errores de ejecución; árbol React verificado con `agent-browser`.
+- Apertura medida en 726 ms; giro con movimiento reducido en unos 49 ms. Portada, cierre, avance, retroceso, extremos, selector directo y tres clics rápidos que avanzan solo una página.
+- Gesto real de arrastre desde la esquina hasta atravesar el lomo; el contenido participa del pliegue y la navegación termina correctamente.
+- Narración real, pausa y navegación manual que detiene el audio. Avance automático continúa la voz después del giro; en la última página termina sin reiniciar. Una página de prueba sin voz detiene el avance.
+- Ilustración SVG controlada, error 500, reintento y ampliación. Texto de 3.213 caracteres completo, desplazamiento dentro de la hoja y vista ampliada. Los botones de ampliación no giran la página; el foco vuelve al botón al cerrar.
+- Móvil 390 × 844, conservación de página al cambiar de composición, imagen ampliable y ausencia de desbordamiento horizontal.
+- Diálogo dentro del elemento fullscreen; Escape fuera de fullscreen cierra el diálogo. En fullscreen el navegador puede consumir el primer Escape para salir de ese modo.
+- Fallo de inicialización simulado: lector plano conserva la página y permite navegar. Al desmontar Turn.js no quedan sus listeners mousemove/mouseup en document.
+- Acceso 403 simulado: desaparecen las hojas, se pausa el audio y se retira su `src`.
+- Ruta autenticada temporal de pruebas retirada. Los medios de muestra solo existieron en respuestas simuladas del navegador; no se modificó la base ni se consumió generación.
 
-## Pulido del lector (10 de octubre de 2026)
+## Evidencia anterior conservada
 
-- Encuadre ampliado y cámara móvil centrada en una página, con selector Texto / Imagen.
-- Barra compacta con navegación y voz; menú accesible para repetir, avance automático y cerrar. «Mis cuentos» vuelve a la biblioteca.
-- El contenido HTML acompaña a la hoja mediante 16 franjas por cara, usando la misma curva que la geometría. Las copias decorativas son inertes y quedan fuera del árbol de accesibilidad; desaparecen al acabar el giro. El texto conserva su posición de desplazamiento.
-- La escena confirma el último fotograma antes de habilitar la navegación y continuar el audio. Se limita el delta inicial del renderizado bajo demanda para evitar saltos tras estar inactiva.
-- Textura procedural de tela, papel con grano y sombra central, madera atenuada y sombras menos intensas. Se liberan las texturas y los listeners de WebGL.
-- Cuatro pruebas unitarias aprobadas, incluida la equivalencia de la curva al avanzar y retroceder. Tipos y lint sin errores; permanecen nueve advertencias anteriores en archivos de la landing.
-- Navegador: giro adelante/atrás con texto e ilustraciones SVG controladas, bloqueo ante tres clics rápidos, límites, texto de 2.880 caracteres íntegro en ampliación, foco al cerrar, reproducción y pausa reales, avance automático detenido ante una página sin voz.
-- Pantalla completa: menú y diálogo dentro del elemento fullscreen. Pérdida de contexto WebGL: lector plano, navegación, cierre y reapertura operativos. Movimiento reducido: apertura medida en aproximadamente 102 ms.
-- Retirada de acceso simulada: desaparecen escena y páginas, se pausa audio y se revocan todas las URLs blob registradas, incluidas las copias del giro.
-- Vista móvil 390 × 844 sin desbordamiento horizontal. Ruta autenticada de prueba eliminada después de validar; no se añadieron medios a la base ni se consumió generación.
-
-- Cuento real: las cuatro narraciones continúan después de su animación y la última termina sin reiniciar. Cerrar y reabrir vuelve a la primera página con la voz pausada.
+La implementación anterior había validado seis pruebas de creaciones en PostgreSQL desechable, incluidos permisos y retirada de fuentes, con proveedores simulados. También comprobó archivos sin sesión (401), redirección del lector al login y contenido inexistente no disponible. Esta revisión conserva esos servicios y endpoints; no repitió esa suite de integración. Las pruebas visuales anteriores de geometría Three.js quedan sustituidas por las comprobaciones de Turn.js indicadas arriba.

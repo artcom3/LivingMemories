@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
 import { diaryWorld } from "@/components/landing/diary-world";
 import { ScrollWorld } from "@/components/landing/scroll-world";
 import "@/components/landing/landing.css";
@@ -12,9 +9,7 @@ export const metadata: Metadata = {
   description:
     "Keep your elders' voices and turn them into illustrated, narrated stories for your children and grandchildren. Private pilot by invitation.",
 };
-export default async function Home() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (session) redirect("/families");
+export default function Home() {
   return (
     <div className="landing-page" lang="en">
       <div id="top" />

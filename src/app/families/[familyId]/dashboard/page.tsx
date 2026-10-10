@@ -1,13 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ArrowUpRight,
-  BookOpen,
-  Plus,
-  Music,
-  Mic,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, BookOpen, Plus, Music, Mic } from "lucide-react";
 import { familyPageContext } from "@/lib/memories/page-context";
 import { familyDashboard } from "@/lib/dashboard/service";
 import { Button } from "@/components/ui/button";
@@ -19,7 +12,6 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Empty,
@@ -28,9 +20,9 @@ import {
   EmptyDescription,
   EmptyContent,
 } from "@/components/ui/empty";
-import { Separator } from "@/components/ui/separator";
 import { AlbumCover } from "@/components/private/album-cover";
 import { DashboardRefresh } from "@/components/private/dashboard-refresh";
+
 export default async function DashboardPage({
   params,
 }: PageProps<"/families/[familyId]/dashboard">) {
@@ -38,25 +30,74 @@ export default async function DashboardPage({
   const { user, view } = await familyPageContext(familyId);
   const data = await familyDashboard(user.id, familyId);
   const base = `/families/${familyId}`;
+  const pending =
+    data.pending.find((item) => item.kind === "error") || data.pending[0];
+  const emptyMemory = data.memories.find((memory) => memory.count === 0);
+  const preparation = data.preparation;
+  const nextStep = pending
+    ? {
+        ...pending,
+        eyebrow:
+          pending.kind === "error"
+            ? "NEEDS YOUR ATTENTION"
+            : "PICK UP WHERE YOU LEFT OFF",
+      }
+    : preparation
+      ? {
+          title: preparation.title,
+          description: `${preparation.kind === "stories" ? "Your story" : "Your music"} · ${preparation.language === "en" ? "English" : "Spanish"} · ${preparation.status}`,
+          action:
+            preparation.kind === "stories"
+              ? "Open your story"
+              : "Open your music",
+          href: preparation.href,
+          kind: "creation",
+          eyebrow: "PICK UP WHERE YOU LEFT OFF",
+        }
+      : emptyMemory
+        ? {
+            title: `Bring ${emptyMemory.title} to life`,
+            description: "Add a photo or a recording to preserve this memory.",
+            action: "Add materials",
+            href: emptyMemory.href,
+            kind: "materials",
+            eyebrow: "A SMALL NEXT STEP",
+          }
+        : {
+            title: data.memories.length
+              ? "Return to a memory"
+              : "Start with what you remember",
+            description: data.memories.length
+              ? "Revisit the details you have saved, or add something new."
+              : "A photo, a voice, or a few words is enough to begin.",
+            action: data.memories.length
+              ? "Explore memories"
+              : "Save your first memory",
+            href: data.memories.length ? base : `${base}/memories/new`,
+            kind: "memory",
+            eyebrow: "A SMALL NEXT STEP",
+          };
+  const otherPending = data.pending.filter(
+    (item) => item.href !== nextStep.href,
+  );
+
   return (
     <div className="family-dashboard">
       <DashboardRefresh active={data.hasActiveCreations} />
       <div className="dashboard-welcome">
         <div>
-          <span className="eyebrow">
-            {view.family.name} · Our family archive
-          </span>
-          <h1>A place to come back to.</h1>
+          <span className="eyebrow">{view.family.name} · Private group</span>
+          <h1>Your shared memories</h1>
           <p className="muted">
             {data.reader
-              ? "The stories your family shares will have a home here."
-              : "The people, voices, and memories that bring us together."}
+              ? "The stories your group shares will have a home here."
+              : "Keep the voices, photos and stories that matter."}
           </p>
         </div>
         {!data.reader ? (
           <Button asChild>
             <Link href={`${base}/memories/new`}>
-              <Plus data-icon="inline-start" />
+              <Plus data-icon="inline-start" aria-hidden="true" />
               Save a memory
             </Link>
           </Button>
@@ -72,268 +113,257 @@ export default async function DashboardPage({
               alt=""
               className="empty-illustration"
             />
-            <EmptyTitle>Your family library will grow</EmptyTitle>
+            <EmptyTitle>Your shared library will grow</EmptyTitle>
             <EmptyDescription>
               Original memories and test versions stay private. Stories will
-              appear here when your family can share them.
+              appear here when your group can share them.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : (
-        <>
-          <div className="dashboard-section-heading">
-            <h2>Your albums</h2>
-            <Button asChild variant="ghost">
-              <Link href={`${base}/albums`}>
-                View all
-                <ArrowUpRight data-icon="inline-end" />
-              </Link>
-            </Button>
-          </div>
-          {data.albums.length ? (
-            <div className="dashboard-albums">
-              {data.albums.map((album) => (
-                <Card key={album.id}>
-                  <AlbumCover src={album.cover} name={album.name} />
-                  <CardHeader>
-                    <span className="eyebrow">Family album</span>
-                    <CardTitle>
-                      <h3>{album.name}</h3>
-                    </CardTitle>
-                    <CardDescription>
-                      {album.count} {album.count === 1 ? "memory" : "memories"}
-                      {album.description ? ` · ${album.description}` : ""}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="form-hint">
-                      A person, a time, or a place you want to preserve.
-                    </p>
-                  </CardContent>
-                  <CardFooter>
-                    <Button asChild variant="ghost">
-                      <Link href={album.href}>
-                        Explore album
-                        <ArrowUpRight data-icon="inline-end" />
-                      </Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+        <div className="dashboard-overview">
+          <section
+            className="dashboard-recent-section"
+            aria-labelledby="recent-memories-title"
+          >
+            <div className="dashboard-section-heading">
+              <h2 id="recent-memories-title">Recent memories</h2>
+              <Button asChild variant="ghost">
+                <Link href={base}>
+                  View all
+                  <ArrowRight data-icon="inline-end" aria-hidden="true" />
+                </Link>
+              </Button>
             </div>
-          ) : (
-            <Empty>
-              <EmptyHeader>
-                <Image
-                  src="/landing/scenes/recuerdos-wide.webp"
-                  width={340}
-                  height={190}
-                  alt=""
-                  className="empty-illustration"
-                />
-                <EmptyTitle>Your first album starts with a memory</EmptyTitle>
-                <EmptyDescription>
-                  Bring together the photos, letters, and voices of someone in
-                  your family.
-                </EmptyDescription>
-              </EmptyHeader>
-              <EmptyContent>
-                <Button asChild variant="secondary">
-                  <Link href={`${base}/albums`}>Create my first album</Link>
-                </Button>
-              </EmptyContent>
-            </Empty>
-          )}
-          {data.preparation ? (
-            <Card className="dashboard-resume">
-              <CardHeader>
-                <span className="eyebrow">Pick up where you left off</span>
-                <CardTitle>
-                  <h2>{data.preparation.title}</h2>
-                </CardTitle>
-                <CardDescription>
-                  {data.preparation.kind === "stories"
-                    ? "Your story"
-                    : "Your music"}{" "}
-                  · {data.preparation.language === "en" ? "English" : "Spanish"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Badge variant="secondary">{data.preparation.status}</Badge>
-              </CardContent>
-              <CardFooter>
-                <Button asChild variant="secondary">
-                  <Link href={data.preparation.href}>
-                    {data.preparation.kind === "stories" ? (
-                      <BookOpen data-icon="inline-start" />
-                    ) : (
-                      <Music data-icon="inline-start" />
-                    )}
-                    Continue{" "}
-                    {data.preparation.kind === "stories"
-                      ? "your story"
-                      : "your music"}
-                    <ArrowUpRight data-icon="inline-end" />
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          ) : null}
-          <div className="dashboard-columns">
-            <section>
-              <div className="dashboard-section-heading">
-                <h2>Recent memories</h2>
-                <Button asChild variant="ghost">
-                  <Link href={base}>View memories</Link>
-                </Button>
-              </div>
-              {data.memories.length ? (
-                <div className="dashboard-memory-list">
-                  {data.memories.map((memory) => (
-                    <Link
-                      href={memory.href}
-                      className="dashboard-memory"
-                      key={memory.id}
-                    >
-                      <Avatar>
+            {data.memories.length ? (
+              <ul className="dashboard-overview-list">
+                {data.memories.map((memory) => (
+                  <li key={memory.id}>
+                    <Link href={memory.href} className="dashboard-overview-row">
+                      <Avatar aria-hidden="true">
                         <AvatarFallback>
                           {memory.narrator?.slice(0, 1) ||
                             memory.title.slice(0, 1)}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
+                      <div className="dashboard-row-details">
                         <h3>{memory.title}</h3>
                         <p className="muted">
                           {memory.narrator || "Storyteller to be added"} ·{" "}
-                          {memory.count}{" "}
-                          {memory.count === 1 ? "material" : "materials"}
+                          {memory.count === 0
+                            ? "No materials yet"
+                            : `${memory.count} ${memory.count === 1 ? "material" : "materials"}`}
                           {memory.album ? ` · ${memory.album}` : ""}
                         </p>
                       </div>
-                      <ArrowUpRight aria-hidden="true" />
+                      <ArrowRight aria-hidden="true" />
                     </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyTitle>Start with what you remember</EmptyTitle>
+                  <EmptyDescription>
+                    You do not need every detail. You can continue later.
+                  </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button asChild variant="secondary">
+                    <Link href={`${base}/memories/new`}>
+                      Save my first memory
+                    </Link>
+                  </Button>
+                </EmptyContent>
+              </Empty>
+            )}
+          </section>
+          <aside className="dashboard-next" aria-label="Your next step">
+            <Card>
+              <CardHeader>
+                <span className="eyebrow">{nextStep.eyebrow}</span>
+                <CardTitle>
+                  <h2>{nextStep.title}</h2>
+                </CardTitle>
+                <CardDescription>{nextStep.description}</CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Button
+                  asChild
+                  variant={
+                    nextStep.kind === "error" ? "destructive" : "outline"
+                  }
+                >
+                  <Link href={nextStep.href}>
+                    {nextStep.action}
+                    <ArrowRight data-icon="inline-end" aria-hidden="true" />
+                  </Link>
+                </Button>
+              </CardFooter>
+              {otherPending.length ||
+              (preparation && preparation.href !== nextStep.href) ? (
+                <CardContent className="dashboard-other-pending">
+                  {otherPending.map((item) => (
+                    <div key={item.id}>
+                      <h3>{item.title}</h3>
+                      <p className="muted">{item.description}</p>
+                      <Button
+                        asChild
+                        variant={
+                          item.kind === "error" ? "destructive" : "ghost"
+                        }
+                      >
+                        <Link href={item.href}>
+                          {item.action}
+                          <ArrowRight
+                            data-icon="inline-end"
+                            aria-hidden="true"
+                          />
+                        </Link>
+                      </Button>
+                    </div>
                   ))}
-                </div>
-              ) : (
-                <Empty>
-                  <EmptyHeader>
-                    <EmptyTitle>Start with what you remember</EmptyTitle>
-                    <EmptyDescription>
-                      You do not need every detail. You can continue later.
-                    </EmptyDescription>
-                  </EmptyHeader>
-                  <EmptyContent>
-                    <Button asChild variant="secondary">
-                      <Link href={`${base}/memories/new`}>
-                        Save my first memory
+                  {preparation &&
+                  preparation.href !== nextStep.href &&
+                  !otherPending.some(
+                    (item) => item.href === preparation.href,
+                  ) ? (
+                    <Button asChild variant="ghost">
+                      <Link href={preparation.href}>
+                        Continue{" "}
+                        {preparation.kind === "stories"
+                          ? "your story"
+                          : "your music"}
+                        <ArrowRight data-icon="inline-end" aria-hidden="true" />
                       </Link>
                     </Button>
-                  </EmptyContent>
-                </Empty>
-              )}
-              <div className="dashboard-section-heading narrator-heading">
-                <h2>The voices of your family</h2>
-                <Button asChild variant="ghost">
-                  <Link href={`${base}/narrators`}>View storytellers</Link>
-                </Button>
-              </div>
-              {data.narrators.length ? (
-                <div className="dashboard-narrators">
-                  {data.narrators.map((person) => (
+                  ) : null}
+                </CardContent>
+              ) : null}
+            </Card>
+            <div className="dashboard-quicklinks">
+              <Button asChild variant="outline">
+                <Link href={`${base}/stories/new`}>
+                  <BookOpen data-icon="inline-start" aria-hidden="true" />
+                  Create a story
+                  <ArrowRight data-icon="inline-end" aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={`${base}/music/new`}>
+                  <Music data-icon="inline-start" aria-hidden="true" />
+                  Create music
+                  <ArrowRight data-icon="inline-end" aria-hidden="true" />
+                </Link>
+              </Button>
+            </div>
+          </aside>
+          <section
+            className="dashboard-albums-section"
+            aria-labelledby="albums-title"
+          >
+            <div className="dashboard-section-heading">
+              <h2 id="albums-title">Your albums</h2>
+              <Button asChild variant="ghost">
+                <Link href={`${base}/albums`}>
+                  View albums
+                  <ArrowRight data-icon="inline-end" aria-hidden="true" />
+                </Link>
+              </Button>
+            </div>
+            {data.albums.length ? (
+              <ul className="dashboard-overview-list dashboard-compact-albums">
+                {data.albums.map((album) => (
+                  <li key={album.id}>
+                    <Link
+                      href={album.href}
+                      className="dashboard-overview-row dashboard-album-row"
+                    >
+                      <AlbumCover src={album.cover} name={album.name} />
+                      <div className="dashboard-row-details">
+                        <h3>{album.name}</h3>
+                        <p className="muted">
+                          {album.count}{" "}
+                          {album.count === 1 ? "memory" : "memories"}
+                          {album.description ? ` · ${album.description}` : ""}
+                        </p>
+                      </div>
+                      <span className="dashboard-row-action">
+                        <span>Open album</span>
+                        <ArrowRight aria-hidden="true" />
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyTitle>Your first album starts with a memory</EmptyTitle>
+                  <EmptyDescription>
+                    Bring together the photos, letters, and voices you want to
+                    preserve.
+                  </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button asChild variant="secondary">
+                    <Link href={`${base}/albums`}>Create my first album</Link>
+                  </Button>
+                </EmptyContent>
+              </Empty>
+            )}
+          </section>
+          <section
+            className="dashboard-storytellers-section"
+            aria-labelledby="storytellers-title"
+          >
+            <div className="dashboard-section-heading">
+              <h2 id="storytellers-title">Storytellers</h2>
+              <Button asChild variant="ghost">
+                <Link href={`${base}/narrators`}>
+                  View all
+                  <ArrowRight data-icon="inline-end" aria-hidden="true" />
+                </Link>
+              </Button>
+            </div>
+            {data.narrators.length ? (
+              <ul className="dashboard-overview-list">
+                {data.narrators.map((person) => (
+                  <li key={person.id}>
                     <Link
                       href={`${base}/narrators`}
-                      className="dashboard-narrator"
-                      key={person.id}
+                      className="dashboard-overview-row"
                     >
-                      <Avatar>
+                      <Avatar aria-hidden="true">
                         <AvatarFallback>
                           {person.name.slice(0, 1)}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
+                      <div className="dashboard-row-details">
                         <h3>{person.name}</h3>
-                        <p className="form-hint">
-                          {person.relationship || "Family storyteller"}
+                        <p className="muted">
+                          {person.relationship || "Storyteller"}
                         </p>
                       </div>
+                      <ArrowRight aria-hidden="true" />
                     </Link>
-                  ))}
-                </div>
-              ) : (
-                <p className="muted">
-                  Whose voice would you like to preserve? Add your first
-                  storyteller whenever you are ready.
-                </p>
-              )}
-            </section>
-            <aside>
-              <Card>
-                <CardHeader>
-                  <span className="eyebrow">One small step further</span>
-                  <CardTitle>
-                    <h2>Keep going</h2>
-                  </CardTitle>
-                  <CardDescription>
-                    Every detail helps tell your story.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {data.pending.length ? (
-                    data.pending.map((item, index) => (
-                      <div className="dashboard-pending" key={item.id}>
-                        {index > 0 ? <Separator /> : null}
-                        <h3>{item.title}</h3>
-                        <p className="form-hint">{item.description}</p>
-                        <Button
-                          asChild
-                          variant={
-                            item.kind === "error" ? "destructive" : "ghost"
-                          }
-                        >
-                          <Link href={item.href}>
-                            {item.action}
-                            <ArrowUpRight data-icon="inline-end" />
-                          </Link>
-                        </Button>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="muted">
-                      Everything is up to date. Revisit a memory or save a new
-                      one whenever you like.
-                    </p>
-                  )}
-                </CardContent>
-                <CardFooter>
-                  <Sparkles aria-hidden="true" />
-                  <p className="form-hint">
-                    Your family brings the stories. We help you preserve them.
-                  </p>
-                </CardFooter>
-              </Card>
-              <div className="dashboard-quicklinks">
-                <Button asChild variant="outline">
-                  <Link href={`${base}/stories/new`}>
-                    <BookOpen data-icon="inline-start" />
-                    Prepare a story
-                  </Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href={`${base}/music/new`}>
-                    <Music data-icon="inline-start" />
-                    Prepare music
-                  </Link>
-                </Button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="dashboard-storytellers-empty">
+                <p className="muted">Whose voice would you like to preserve?</p>
                 <Button asChild variant="ghost">
                   <Link href={`${base}/narrators`}>
-                    <Mic data-icon="inline-start" />
+                    <Mic data-icon="inline-start" aria-hidden="true" />
                     Add a storyteller
                   </Link>
                 </Button>
               </div>
-            </aside>
-          </div>
-        </>
+            )}
+          </section>
+        </div>
       )}
     </div>
   );

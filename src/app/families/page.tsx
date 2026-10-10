@@ -1,6 +1,6 @@
 import { InitialAvatar } from "@/components/private/initial-avatar";
 import { EmptyState } from "@/components/private/content-primitives";
-import { Disclosure } from "@/components/private/disclosure";
+import { ArrowRight, LockKeyhole } from "lucide-react";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -9,7 +9,8 @@ import { listFamilies } from "@/lib/families/service";
 import { roleLabels } from "@/lib/families/validation";
 import { isLandingAction } from "@/lib/landing/actions";
 import { AppShell } from "@/components/app-shell";
-import { FamilyCreateForm } from "@/components/family-create-form";
+import { GroupCreateButton } from "@/components/group-create-button";
+
 export default async function FamiliesPage({
   searchParams,
 }: {
@@ -18,64 +19,73 @@ export default async function FamiliesPage({
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/login");
   const families = await listFamilies(session.user.id);
-  // Coming from a landing call to action with several families: each family
-  // continues to that action instead of its home.
+  // Landing actions continue through the selected group.
   const { go } = await searchParams;
   const action = isLandingAction(go) ? go : null;
   return (
     <AppShell userName={session.user.name} families={families}>
-      <div className="page-heading">
-        <span className="eyebrow">OUR CONNECTIONS</span>
-        <h1>Your families</h1>
-        <p className="muted">
-          {action
-            ? "Choose the family you want to continue with."
-            : "Every family has its own private space."}
-        </p>
-      </div>
-      {families.length ? (
-        <div className="family-list">
-          {families.map(({ family, role }) => (
-            <Link
-              key={family.id}
-              href={
-                action
-                  ? `/go/${action}?family=${family.id}`
-                  : `/families/${family.id}/dashboard`
-              }
-              className="family-entry"
-            >
-              <InitialAvatar>{family.name.slice(0, 1)}</InitialAvatar>
-              <span>
-                <h2>{family.name}</h2>
-                <span className="muted">{roleLabels[role]}</span>
-              </span>
-              <span className="family-open">
-                Open <span aria-hidden="true">↗</span>
-              </span>
-            </Link>
-          ))}
+      <div className="groups-page">
+        <div className="groups-heading">
+          <div>
+            <span className="eyebrow">YOUR MEMORIES, TOGETHER</span>
+            <h1>Your groups</h1>
+            <p className="muted">
+              {action
+                ? "Choose the group you want to continue with."
+                : "Private places to keep and share memories with the people you love."}
+            </p>
+          </div>
+          {families.length ? <GroupCreateButton /> : null}
         </div>
-      ) : (
-        <EmptyState className="empty-state">
-          <h2>Your next memory starts with an invitation</h2>
-          <p>
-            Open the link your administrator sent you. If your access was
-            removed, you will need a new invitation.
-          </p>
-        </EmptyState>
-      )}
-      {families.length ? (
-        <Disclosure
-          className="create-family"
-          title={<>Create another family space</>}
-        >
-          <p className="muted">
-            You will be its first administrator and can invite other adults.
-          </p>
-          <FamilyCreateForm />
-        </Disclosure>
-      ) : null}
+        {families.length ? (
+          <>
+            <p className="groups-count muted">
+              {families.length} {families.length === 1 ? "group" : "groups"}
+            </p>
+            <ul className="groups-list">
+              {families.map(({ family, role }) => (
+                <li key={family.id}>
+                  <Link
+                    href={
+                      action
+                        ? `/go/${action}?family=${family.id}`
+                        : `/families/${family.id}/dashboard`
+                    }
+                    className="group-entry"
+                  >
+                    <InitialAvatar>{family.name.slice(0, 1)}</InitialAvatar>
+                    <div className="group-details">
+                      <h2>{family.name}</h2>
+                      <span className="group-meta muted">
+                        <span>{roleLabels[role]}</span>
+                        <span className="group-privacy">
+                          <LockKeyhole aria-hidden="true" /> Private
+                        </span>
+                      </span>
+                    </div>
+                    <span className="group-open">
+                      <span>{action ? "Continue" : "Open group"}</span>
+                      <ArrowRight aria-hidden="true" />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <p className="groups-privacy muted">
+              <LockKeyhole aria-hidden="true" />
+              Only invited members can access each group.
+            </p>
+          </>
+        ) : (
+          <EmptyState className="empty-state">
+            <h2>Your next memory starts with an invitation</h2>
+            <p>
+              Open the link your administrator sent you. If your access was
+              removed, you will need a new invitation.
+            </p>
+          </EmptyState>
+        )}
+      </div>
     </AppShell>
   );
 }
