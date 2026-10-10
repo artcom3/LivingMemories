@@ -29,7 +29,7 @@ FROM dependencies AS worker
 RUN apk add --no-cache ffmpeg poppler-utils tesseract-ocr tesseract-ocr-data-eng tesseract-ocr-data-spa libheif-tools
 COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml prisma.config.ts ./
 COPY --chown=node:node tsconfig.json ./
-COPY --chown=node:node src/lib/infrastructure ./src/lib/infrastructure
+COPY --chown=node:node src/lib ./src/lib
 COPY --chown=node:node src/worker ./src/worker
 COPY --chown=node:node scripts ./scripts
 ENV NODE_ENV=production WORKER_HEALTH_PORT=3010

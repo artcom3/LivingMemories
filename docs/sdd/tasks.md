@@ -1,6 +1,6 @@
 # Tareas de implementación de LivingMemories
 
-Este backlog organiza la construcción posterior del piloto. Todas las tareas de aplicación están pendientes; los documentos del SDD no acreditan que sus módulos o escenarios ya funcionen.
+Este backlog organiza la construcción del piloto. TASK-002 está implementada y validada para acceso, familias y perfiles; el resto de tareas de aplicación continúa pendiente. Los documentos del SDD por sí solos no acreditan que sus módulos o escenarios funcionen.
 
 La entrega de una tarea incluye criterios de aceptación, validación, migraciones cuando correspondan y actualización del SDD. Las 11 decisiones iniciales están resueltas en DEC-014 a DEC-024. Configurar claves, comprobar compatibilidad o evaluar los modelos seleccionados es trabajo técnico pendiente, no una elección de producto aún abierta.
 
@@ -16,17 +16,19 @@ Dependencias: SDD actual. Salida: prerrequisitos comprobados y ejemplos reproduc
 
 ### TASK-002
 
-- [ ] Construir acceso por invitación, familias, membresías y perfiles.
+- [x] Construir acceso por invitación, familias, membresías y perfiles.
 
-Añadir invitaciones al piloto y a familias, validar el registro directo de Better Auth y construir los flujos de entrada. Introducir los modelos de familia y narradores mediante migraciones, con permisos comprobados en el servidor.
+Implementados los flujos de entrada, invitaciones, familias, roles y narradores, con una migración aditiva y permisos comprobados en el servidor. Evidencia y operación: [guía de acceso](../access.md), `pnpm test:access`, compatibilidad Better Auth y revisión en navegador.
 
-Dependencias: TASK-001; implementar DEC-014, incluidas validez de 7 días, correo destinatario y protección del último administrador. Aceptación: SCN-01 y atribución de SCN-02.
+Dependencias: SDD vigente; por prioridad expresa del usuario, TASK-001 no bloquea esta fase sin llamadas AI. DEC-014 incluye siete días, correo destinatario y protección concurrente del último administrador. SCN-01 está probado para familias y perfiles; la atribución de grabaciones y el recorrido completo de SCN-02 se completan al construir memorias y fuentes.
 
 ### TASK-003
 
 - [ ] Construir captura, almacenamiento privado y fragmentos.
 
 Guardar memorias con múltiples fuentes, versiones y atribución. Validar cargas, conservar originales y servir fragmentos independientes con permisos distintos al archivo completo. Aplicar la política acordada de retirada, papelera y purga.
+
+Avance implementado: captura de texto/fotos/audio, grabador, originales privados en MinIO, contexto manual, agrupación por álbumes y papelera recuperable. La [adaptación funcional de UX](../ux-reference-adaptation.md) conserva la prioridad del SDD. Inspección completa de archivos/duración, versiones de transcripción, fragmentos publicados y purga automática siguen pendientes; esta tarea permanece abierta.
 
 Dependencias: TASK-002; implementar formatos/límites de DEC-015 y retirada/papelera/purga de DEC-017. Aceptación: SCN-02, SCN-04, SCN-10 y SCN-12.
 
@@ -70,6 +72,8 @@ Dependencias: TASK-006; aplicar DEC-016, DEC-017 y DEC-024. Aceptación: SCN-03,
 
 Construir selección de memoria principal, revisión de hechos, idioma y perfil lector. Generar páginas con respaldo verificable y contexto documental separado. Conservar versiones y detectar dependencias alteradas.
 
+Avance implementado: preparación privada y retomable con memoria principal, selección de fuentes autorizadas, idioma, perfil lector, páginas e indicaciones. Se añadió generación privada de borradores con fuentes y contexto por versión. La revisión estructurada de hechos y el conjunto publicable siguen pendientes; la calidad del proveedor todavía requiere claves.
+
 Dependencias: TASK-007; usar gpt-6.1-sol, los presets ajustables de DEC-020 y los topes de DEC-023. Aceptación: SCN-02, SCN-07, SCN-08 y SCN-14.
 
 ### TASK-009
@@ -77,6 +81,8 @@ Dependencias: TASK-007; usar gpt-6.1-sol, los presets ajustables de DEC-020 y lo
 - [ ] Añadir ilustraciones y narración.
 
 Utilizar fotografías autorizadas y una guía visual consistente, generar y guardar medios por página, y narrar la versión textual correspondiente. Preparar voz sintética y fragmentos reales opcionales como reproducciones distintas.
+
+Avance: adaptadores reales de ilustración y narración por página, almacenamiento privado y reproducción en borradores. Pruebas de proveedor simuladas; calidad/consumo real y fragmentos originales integrados pendientes.
 
 Dependencias: TASK-008; usar gpt-image-2.5-flare y eleven_multilingual_v2. Configurar IDs de voz disponibles en español/inglés, acuarela consistente y alternativa genérica de DEC-020, con los topes de DEC-023. Aceptación: SCN-09, SCN-10 y SCN-13.
 
@@ -138,3 +144,19 @@ Cada requisito tiene una tarea principal responsable y escenarios de aceptación
 | [REQ-SYS-001](architecture.md#req-sys-001) | [TASK-003](#task-003) | [SCN-01](validation.md#scn-01), [SCN-10](validation.md#scn-10), [SCN-12](validation.md#scn-12) |
 | [REQ-SYS-002](architecture.md#req-sys-002) | [TASK-004](#task-004) | [SCN-13](validation.md#scn-13), [SCN-17](validation.md#scn-17) |
 | [REQ-SYS-003](architecture.md#req-sys-003) | [TASK-004](#task-004) | [SCN-13](validation.md#scn-13), [SCN-17](validation.md#scn-17) |
+
+### TASK-013
+
+- [x] Reutilizar materiales de álbumes en cuentos y música, conservando su contexto, estilos y permisos.
+- [x] Implementar Music v2 y generación por etapas en el worker; revisar antes de generar audio/ilustraciones.
+- [ ] Completar validación real de ilustración automática y Music, calidad y consumo.
+
+Avance real: borrador de cuatro páginas a partir de texto/fotografía y cuatro narraciones completadas. Ilustraciones por MCP demostradas separadamente; API de imagen de ElevenLabs bloqueada por plan Creator. [Registro](../testing/real-story-flow.md).
+
+Requisitos: [REQ-CRE-001](specs/album-creations.md#req-cre-001), [REQ-CRE-002](specs/album-creations.md#req-cre-002), [REQ-CRE-003](specs/album-creations.md#req-cre-003). Escenarios y evidencia: tests/creations.integration.test.ts y [guía](../content-generation.md). La publicación final sigue en TASK-010.
+
+| Requisito ampliado | Tarea principal | Escenarios |
+| --- | --- | --- |
+| [REQ-CRE-001](specs/album-creations.md#req-cre-001) | [TASK-013](#task-013) | [SCN-18](validation.md#scn-18) |
+| [REQ-CRE-002](specs/album-creations.md#req-cre-002) | [TASK-013](#task-013) | [SCN-19](validation.md#scn-19) |
+| [REQ-CRE-003](specs/album-creations.md#req-cre-003) | [TASK-013](#task-013) | [SCN-18](validation.md#scn-18), [SCN-19](validation.md#scn-19) |

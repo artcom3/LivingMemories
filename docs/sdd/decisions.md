@@ -6,7 +6,7 @@ Este registro distingue los acuerdos de producto de las propuestas de implementa
 
 ### DEC-001
 
-**Piloto privado por invitación.** Las primeras familias participan mediante invitaciones. El registro abierto no forma parte del piloto; su enforcement todavía debe añadirse a la base de Better Auth.
+**Piloto privado por invitación.** Las primeras familias participan mediante invitaciones. El registro abierto no forma parte del piloto y ya está deshabilitado en Better Auth; el alta invitada y su membresía se guardan juntas.
 
 ### DEC-002
 
@@ -203,3 +203,23 @@ Estas referencias respaldan capacidades de los productos seleccionados y opcione
 | [pgvector](https://github.com/pgvector/pgvector) | Evaluación de vectores, índices y recuperación filtrada |
 
 Para escribir código de Next.js se consultará primero la documentación de la versión instalada en `node_modules/next/dist/docs/`, especialmente Route Handlers, autenticación y Backend for Frontend. Esta entrega solo añade documentación y no modifica esa base.
+
+### DEC-026
+
+**Confirmado por el usuario, 2026-10-10:** seleccionar álbumes y materiales ya subidos para crear relatos y música, reutilizando el contexto opcional de fotografías, grabaciones y videos; ofrecer estilos antes de generar y conservar la UI actual. Amplía el alcance previo de captura y creaciones.
+
+**Implementación para desarrollo:** estilos de relato y visuales separados; música instrumental o con letra de 30/60/90 segundos; generación por etapas con revisión adulta; una memoria principal en cuentos y varias fuentes autorizadas de álbumes. OpenAI interpreta imágenes/texto y crea borradores; ElevenLabs transcribe y genera narración o música. Music v2 usa `force_instrumental` o un plan de composición con letra aprobada. No requiere agentes ni clonación de voz. [Music](https://elevenlabs.io/docs/api-reference/music/compose), [Scribe](https://elevenlabs.io/docs/api-reference/speech-to-text/convert), [OpenAI visión](https://developers.openai.com/api/docs/guides/images-vision).
+
+**Propuestas técnicas provisionales:** veinte fuentes por prueba, video de diez minutos/100 MB, tres fotogramas por video; reserva local conservadora de US$5 por creación, incluida música, dentro de los topes mensuales existentes; hasta dos nuevas versiones por preparación. La reserva no concilia automáticamente el coste real ni impone un límite de facturación externo. Deben revisarse tarifas/créditos de la cuenta al conectar las claves. Publicación y revisión estructurada de hechos siguen pendientes. [Guía de pruebas](../content-generation.md).
+
+### DEC-027
+
+**Confirmado, 2026-10-10:** Gemini como alternativa cuando no esté configurada la clave de OpenAI. Si ambas están presentes, OpenAI tiene prioridad. Se conserva el proveedor/modelos en cada nueva versión; versiones previas siguen usando OpenAI. No se reintenta con otro proveedor ante errores, para evitar llamadas facturables duplicadas. ElevenLabs mantiene transcripción, narración y música.
+
+**Implementación:** Interactions API con respuesta JSON estructurada para borradores y salida PNG para ilustraciones, contexto y referencias seleccionadas, `store: false`. Modelos iniciales configurables: gemini-3.8-flash y gemini-nano-banana-2.1. Referencias: [modelos](https://ai.google.dev/gemini-api/docs/models), [JSON](https://ai.google.dev/gemini-api/docs/structured-output), [imágenes](https://ai.google.dev/gemini-api/docs/image-generation). Pruebas contractuales locales; calidad y acceso reales requieren la clave de la cuenta.
+
+### DEC-028
+
+**Prueba de desarrollo, 2026-10-10:** se permite seleccionar `GEMINI_API_MODE=generate_content` de forma explícita, además de Interactions. En la cuenta actual funcionó con gemini-3.5-flash-lite; los fallos anteriores no prueban que todo el nivel gratuito estuviera agotado. La selección queda en la versión y no cambia automáticamente tras errores. Los intentos fallidos sin borrador no son regeneraciones de contenido, pero conservan su reserva.
+
+**Petición del usuario:** probar ilustraciones mediante el MCP de ElevenLabs. Conexión y cuatro variaciones completadas; no se importaron ni se automatizó la API de imágenes. La clave API de la app es Creator y recibió `402 paid_plan_required`; la automatización sigue pendiente de un proveedor con acceso. [Evidencia](../testing/real-story-flow.md).

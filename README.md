@@ -4,7 +4,7 @@ Proyecto con Next.js 16, React 19, PostgreSQL, Prisma 7.10.0 y Better Auth 1.7.7
 
 ## Especificaciones del producto
 
-El [SDD de LivingMemories](docs/sdd/README.md) reúne las decisiones de producto, las especificaciones funcionales, el diseño técnico, las tareas y los escenarios de aceptación. Las 11 decisiones iniciales están resueltas. La infraestructura Docker local está implementada; los módulos familiares y las conexiones AI siguen en el backlog.
+El [SDD de LivingMemories](docs/sdd/README.md) reúne las decisiones del piloto. Están implementados Docker, invitaciones, familias, narradores, captura básica de memorias, álbumes y preparaciones de cuentos. La revisión, generación AI y publicación siguen en el backlog. Consultar la [guía de acceso](docs/access.md) y la [adaptación funcional de UX](docs/ux-reference-adaptation.md), que mantiene el diseño visual de esta rama.
 
 ## Arranque completo con Docker
 
@@ -70,11 +70,11 @@ Better Auth utiliza el adaptador oficial de Prisma y las tablas `user`, `session
 - Configuración del servidor: `src/lib/auth.ts`.
 - Cliente React: `src/lib/auth-client.ts` (importar `authClient`).
 - Endpoints GET/POST: `/api/auth/[...all]`.
-- Registro e inicio de sesión por correo y contraseña habilitados.
+- Inicio de sesión por correo y contraseña; registro directo deshabilitado. El alta requiere una invitación válida y declaración adulta.
 - Cookies con prefijo `livingmemories` para separar las sesiones de otras apps locales.
 - Plugin `nextCookies` preparado para autenticación desde Server Actions.
 
-La base de autenticación está lista para conectar los formularios de la app. Los proveedores sociales, el envío de correos de verificación y la recuperación de contraseña se configurarán cuando se definan esos flujos. Las futuras páginas y acciones privadas deben validar la sesión en el servidor con `auth.api.getSession`.
+La app incluye formularios de entrada, aceptación de invitaciones y gestión familiar. El alta invitada crea cuenta y membresía de forma atómica; un narrador no necesita cuenta. Los correos se capturan en Mailpit. Los proveedores sociales y la recuperación de contraseña siguen pendientes. Cada operación familiar comprueba la membresía vigente además de la sesión.
 
 Después de añadir plugins o campos a Better Auth:
 
@@ -93,6 +93,9 @@ pnpm auth:check
 pnpm lint
 pnpm typecheck
 pnpm build
+pnpm auth:check
+pnpm test:access
+pnpm test:content
 ```
 
 ## Documentación oficial
@@ -101,3 +104,7 @@ pnpm build
 - [Better Auth con Prisma](https://better-auth.com/docs/adapters/prisma)
 - [Better Auth con Next.js](https://better-auth.com/docs/integrations/next)
 - [Imagen oficial de PostgreSQL](https://hub.docker.com/_/postgres)
+
+La [guía de cuentos y música](docs/content-generation.md) explica cómo reutilizar álbumes, revisar borradores, conectar las claves y realizar las primeras pruebas.
+
+Para iterar en desarrollo, ejecuta `pnpm dev` y `pnpm worker` desde el código local. PostgreSQL, MinIO y Mailpit pueden seguir en Docker; no hace falta reconstruir app/worker por cada cambio. La app local está en `http://localhost:3000`. Reinicia el worker local después de cambiar su código o sus variables.

@@ -10,7 +10,10 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    disableSignUp: true,
+    minPasswordLength: 12,
   },
+  user: { deleteUser: { enabled: false } },
   advanced: {
     cookiePrefix: "livingmemories",
   },

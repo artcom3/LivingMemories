@@ -1,6 +1,6 @@
 # Validación del SDD y del piloto
 
-Los escenarios siguientes definen aceptación para la implementación futura. No se han ejecutado contra módulos que todavía no existen. Los requisitos y responsables están conectados en la [matriz de trazabilidad](tasks.md#trazabilidad).
+Los escenarios definen aceptación del piloto. Las pruebas de acceso, familias y perfiles de TASK-002 se ejecutan con `pnpm test:access` y revisión en navegador, según la [guía de acceso](../access.md). SCN-01 está validado para esos recursos; los casos de memorias y publicaciones y el recorrido completo de SCN-02 siguen pendientes. Los requisitos y responsables están conectados en la [matriz de trazabilidad](tasks.md#trazabilidad).
 
 ## Datos de prueba previstos
 
@@ -143,3 +143,15 @@ Responsables: producto supervisa recorridos y fidelidad; desarrollo mide jobs, a
 La cobertura editorial y de lectura se registra por idioma y perfil. La evaluación debe incluir al menos una adaptación en español e inglés y cada uno de los cinco perfiles; un buen porcentaje agregado no acredita esa cobertura por sí solo. La muestra no permite afirmar resultados representativos de todas las familias migrantes.
 
 Registrar como diagnóstico los fallos de carga, etapas abandonadas, duración de procesos, gasto variable realizado, reservas pendientes y costo de regeneraciones. Las solicitudes bloqueadas antes de encolar por límite de gasto no entran en el denominador de jobs, pero se muestran y afectan la finalización del recorrido. Las suscripciones se reportan aparte y ningún costo desconocido se transforma en cero.
+
+### SCN-18
+
+**Álbumes reutilizados y contexto por versión.** Elegir materiales de dos álbumes, ocultar uno y guardar; reabrir la selección. Incluir una foto con contexto y un video corto con audio. Cambiar el contexto tras iniciar una versión.
+
+Resultado esperado: originales sin duplicar, selección completa visible al retomar, contexto de álbum/memoria/material congelado por versión, transcripción y tres fotogramas del video disponibles para el borrador. Una fuente retirada o de otra familia no puede usarse ni leerse desde resultados derivados. Evidencia local: tests/creations.integration.test.ts y recorrido de navegador. Responsable: TASK-013.
+
+### SCN-19
+
+**Estilos, revisión y salida musical.** Preparar relato con estilo manga y música instrumental/con letra. Confirmar que no se generan medios antes de revisar; cambiar el texto o la letra, confirmar y seguir el estado en la pantalla. Probar falta de claves y rechazo del proveedor.
+
+Resultado esperado: estilos persistidos, letra revisada enviada mediante plan v2, instrumental forzado, resultados privados y errores sin repetición pagada automática. Pruebas locales usan proveedores simulados; la validación de calidad y consumo reales queda pendiente de claves. Responsable: TASK-008/009/013.

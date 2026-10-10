@@ -54,7 +54,7 @@ Responsable de implementación: desarrollo y diseño. Acuerdo: [DEC-020](decisio
 
 **Resuelta: primer piloto local supervisado.** Docker reúne Nginx, app, worker, PostgreSQL con búsqueda vectorial, almacenamiento compatible con S3 y correo de prueba. Los servicios de AI siguen siendo externos. La prueba inicial es supervisada localmente; no implica acceso público remoto ni contratación de Supabase, AWS o un VPS.
 
-Responsable de implementación: desarrollo y operación. Acuerdos: [DEC-021](decisions.md#dec-021) y [DEC-025](decisions.md#dec-025). El entorno Docker completo está implementado con MinIO por elección del usuario; modelos familiares, índices de contenido, handlers AI y evaluación del piloto siguen pendientes en las tareas.
+Responsable de implementación: desarrollo y operación. Acuerdos: [DEC-021](decisions.md#dec-021) y [DEC-025](decisions.md#dec-025). El entorno Docker y los modelos de familias, membresías, invitaciones y narradores están implementados. Memorias, índices de contenido, handlers AI y evaluación del piloto siguen pendientes.
 
 ### Q-009
 
@@ -73,3 +73,7 @@ Responsable de implementación: desarrollo y diseño. Ya no bloquea la definici�
 **Resuelta: historial privado sin caducidad textual automática.** Texto y citas se conservan hasta que el adulto los elimine; los audios de preguntas y respuestas se conservan 7 días. El historial no se comparte automáticamente con familiares ni administradores. Los permisos actuales se comprueban al mostrar o reutilizar contenido; una respuesta derivada de una fuente retirada no expone otra vez su contenido restringido.
 
 Responsable de implementación: desarrollo. Ya no bloquea la definición de [TASK-011](tasks.md#task-011). Acuerdo: [DEC-019](decisions.md#dec-019). Los audios conversacionales no se confunden con las grabaciones originales de una memoria, que siguen su ciclo de conservación propio.
+
+## Integración real de creaciones (DEC-026)
+
+Pendiente al conectar las cuentas: claves, acceso a Music, IDs de voz por idioma, coste efectivo y calidad/fidelidad por estilo. Bloquea pruebas facturables reales, no captura o preparaciones. También queda pendiente conciliar la reserva local de US$5 con tokens/créditos reales; no se presenta como factura ni garantía de gasto externo.

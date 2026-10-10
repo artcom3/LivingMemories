@@ -2,14 +2,15 @@
 
 LivingMemories ayuda a las familias a conservar sus recuerdos y convertirlos en historias que otras generaciones puedan leer y escuchar. Este SDD es la base para desarrollar un piloto privado mediante especificaciones verificables.
 
-**Versión:** 0.2. **Estado:** las 11 decisiones iniciales del piloto están resueltas; implementación y validación de los módulos pendientes. **Fecha:** 2026-10-09.
+**Versión:** 0.5. **Estado:** acceso, captura, álbumes, selección reutilizable y generación privada por etapas de cuentos/música implementados; validación con proveedores reales, revisión estructurada de hechos y publicación pendientes. **Fecha:** 2026-10-10.
 
-La aplicación tiene la base de Next.js, Prisma y Better Auth y un entorno Docker con PostgreSQL/pgvector, MinIO, Mailpit, Nginx y worker/pg-boss. La [guía de Docker](../docker.md) describe su arranque y diagnóstico. Los módulos de familias, memorias, biblioteca, generación y asistente todavía no están implementados; las claves AI se incorporarán después. Una casilla del backlog solo se completa con evidencia de implementación y validación.
+La aplicación tiene Next.js, Prisma, Better Auth y el entorno Docker conectado. La [guía de Docker](../docker.md) describe su arranque y la [guía de acceso](../access.md) cubre las invitaciones, familias y perfiles. La [adaptación funcional de UX](../ux-reference-adaptation.md) añade captura básica, álbumes, contexto manual y preparaciones de cuentos sin adoptar la UI de referencia. La [generación de contenido](../content-generation.md) incorpora video como fuente, estilos, borradores revisables, narración, ilustraciones y música privada. Biblioteca, revisión estructurada de hechos, publicación y asistente siguen pendientes. Una casilla del backlog solo se completa con evidencia de implementación y validación.
 
 ## Ruta de lectura
 
 | Documento | Contenido |
 | --- | --- |
+| [Creaciones desde álbumes](specs/album-creations.md) | Selección reutilizable, estilos, cuento y música privada |
 | [Producto](product.md) | Propósito, usuarios, recorrido y límites del piloto |
 | [Acceso y familias](specs/access-and-families.md) | Invitaciones, espacios privados y narradores |
 | [Memorias y fuentes](specs/memories-and-sources.md) | Captura, originales, transcripciones y fragmentos |

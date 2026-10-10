@@ -84,7 +84,7 @@ Ese proyecto crea sus propios datos: no copia automáticamente la base de otro w
 
 ## Alcance del worker y del piloto
 
-El worker ya conecta a PostgreSQL, registra su cola y procesa `infrastructure.check`. Los handlers de transcripción, extracción, cuentos e imágenes se implementarán después con permisos, revisiones y topes de consumo. La app mantiene la base existente de autenticación; el flujo por invitaciones y los módulos familiares siguen en el backlog. Infraestructura lista no significa que la experiencia completa del piloto ya esté implementada.
+El worker conecta a PostgreSQL y procesa `infrastructure.check`. La app incluye acceso, narradores, captura básica de memorias, álbumes y preparación de cuentos; la [guía de acceso](access.md) explica el primer administrador y la [adaptación de UX](ux-reference-adaptation.md) detalla el recorrido. Transcripción, revisión, generación, publicación y asistente siguen pendientes.
 
 ## Validación realizada
 
