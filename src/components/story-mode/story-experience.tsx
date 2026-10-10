@@ -75,7 +75,7 @@ export function StoryExperience({
 }) {
   const [navigation, dispatch] = useReducer(bookNavigation, initialNavigation);
   const [playing, setPlaying] = useState(false);
-  const [automatic, setAutomatic] = useState(false);
+  const [automatic, setAutomatic] = useState(true);
   const [blocked, setBlocked] = useState(false);
   const [flat, setFlat] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -420,6 +420,7 @@ export function StoryExperience({
             </div>
             <div className="story-reader-status">
               {page.narrationUrl ? <><progress aria-label="Narration progress" value={time.current} max={time.duration || 1} /><span>{playing ? "Listening" : automatic ? "Automatic pages on" : "Read at your own pace"}</span></> : <span>No narration on this page. Keep reading at your own pace.</span>}
+              {!flat && !playing ? <span>Drag the illustration or a page edge to turn</span> : null}
               {mediaError ? <Button variant="ghost" size="sm" onClick={() => { stop(); setRetry(r => r + 1); }}>Retry voice</Button> : null}
             </div>
           </>}

@@ -30,7 +30,14 @@
 .story-cover-art span:nth-child(4) { rotate: 216deg; background: #7997a0; }
 .story-cover-art span:nth-child(5) { rotate: 288deg; background: #c8735a; }
 .story-cover-back { background-color: #cad2bd; }
-.story-leaf { display: flex; flex-direction: column; gap: 20px; height: 100%; padding: clamp(20px,3vw,44px); color: var(--ink); background: var(--album); border: 1px solid #decfbb70; }
+.story-leaf { position: relative; display: flex; flex-direction: column; gap: 20px; height: 100%; padding: clamp(20px,3vw,44px); color: var(--ink); background: var(--album); border: 1px solid #decfbb70; }
+.story-drag-edge { position: absolute; top: 0; bottom: 0; width: 20px; z-index: 2; cursor: grab; touch-action: none; user-select: none; }
+.story-drag-edge:active { cursor: grabbing; }
+.story-drag-edge-left { left: 0; }
+.story-drag-edge-right { right: 0; }
+.story-drag-edge:hover { background: #b775560c; }
+.story-picture-frame { cursor: grab; touch-action: pan-y; }
+.story-picture-frame:active { cursor: grabbing; }
 .story-leaf-image { background: linear-gradient(to left,#69513912,transparent 8%),var(--album); }
 .story-leaf-text { background: linear-gradient(to right,#69513912,transparent 8%),var(--album); }
 .story-page-caption { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 9px; color: var(--ink-soft); letter-spacing: .12em; text-transform: uppercase; padding-bottom: 12px; border-bottom: 1px solid var(--rule); }

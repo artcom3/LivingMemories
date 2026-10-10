@@ -27,7 +27,7 @@ export function Illustration(props: BookContentProps) {
   if (props.imageUrl) return (
     // Private media stays behind the existing authenticated endpoint.
     // eslint-disable-next-line @next/next/no-img-element
-    <img className="story-illustration" src={props.imageUrl} alt={`Illustration, page ${props.page + 1} of ${props.title}`} onError={props.onImageError} />
+    <img className="story-illustration" draggable={false} src={props.imageUrl} alt={`Illustration, page ${props.page + 1} of ${props.title}`} onError={props.onImageError} />
   );
   return <div className="story-editorial-art">
     <span className="story-editorial-number" aria-hidden="true">{String(props.page + 1).padStart(2, "0")}</span>
@@ -61,6 +61,8 @@ export function StorySheet({ book, page, kind, enabled, onDenied, onExpand }: {
     onImageError: () => setFailedUrl(image.url), onRetry: () => setRetry(v => v + 1), onExpand,
   };
   return <section className={`story-leaf story-leaf-${kind}`} aria-label={`Page ${page + 1}`} lang={book.language}>
+    <span className="story-drag-edge story-drag-edge-left" aria-hidden="true" />
+    <span className="story-drag-edge story-drag-edge-right" aria-hidden="true" />
     <div className="story-page-caption"><span>LivingMemories</span><span>{String(page + 1).padStart(2, "0")}</span></div>
     <div ref={body} className="story-page-body" tabIndex={kind === "image" ? undefined : 0}>
       {kind !== "text" && (kind !== "combined" || data.imageUrl) ? <div className="story-picture-frame"><Illustration {...content} />{kind === "combined" && image.url && !content.imageError ? <Button className="story-picture-expand" variant="secondary" size="icon" aria-label="View image" onClick={e => onExpand("image", e.currentTarget)}><Maximize2 /></Button> : null}</div> : null}

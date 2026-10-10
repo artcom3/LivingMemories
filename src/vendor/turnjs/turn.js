@@ -1270,7 +1270,8 @@ flipMethods = {
 			return false;
 		}		
 
-		e = (isTouch) ? e.originalEvent.touches : [e];
+		var pressed = e.type === events.start;
+		e = e.originalEvent.touches || [e];
 
 		var data = this.data().f,
 			pos = data.parent.offset(),
@@ -1282,8 +1283,19 @@ flipMethods = {
 
 			if (c.x<=0 || c.y<=0 || c.x>=width || c.y>=height) return false;
 
+			// A press can grab the sheet anywhere; hover only previews its edges.
+			// Choose a supported outer corner so the existing fold follows the pointer.
+			if (pressed) {
+				var vertical = c.y < height/2 ? 't' : 'b';
+				var side = c.x < width/2 ? 'l' : 'r';
+				c.corner = vertical + side;
+				if ($.inArray(c.corner, allowedCorners) === -1) c.corner = vertical + (side === 'l' ? 'r' : 'l');
+				return $.inArray(c.corner, allowedCorners) === -1 ? false : c;
+			}
+
 			if (c.y<csz) c.corner = 't';
 			else if (c.y>=height-csz) c.corner = 'b';
+			else if (c.x <= 24 || c.x >= width-24) c.corner = c.y < height/2 ? 't' : 'b';
 			else return false;
 			
 			if (c.x<=csz) c.corner+= 'l';
@@ -1800,7 +1812,7 @@ flipMethods = {
 
 		var data = this.data().f;
 		// Page controls, text selection and scrolling must not start a corner gesture.
-		if ($(e.target).closest('button, a, input, select, textarea, .story-page-body').length) return;
+		if ($(e.target).closest('button, a, input, select, textarea, .story-page-text').length) return;
 
 		if (!data.disabled && !this.flip('isTurning')) {
 			data.corner = flipMethods._cornerActivated.call(this, e);
@@ -1817,7 +1829,7 @@ flipMethods = {
 	_eventMove: function(e) {
 
 		var data = this.data().f;
-		if (!data.corner && $(e.target).closest('button, a, input, select, textarea, .story-page-body').length) {
+		if (!data.corner && $(e.target).closest('button, a, input, select, textarea, .story-page-text').length) {
 			if (!this.flip('isTurning')) flipMethods.hideFoldedPage.call(this, true);
 			return;
 		}
