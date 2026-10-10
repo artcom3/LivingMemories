@@ -331,8 +331,8 @@ function mountScrollWorld(container, config) {
     }
     const e = easeInOut(local);
     s.leaf.style.transform = `rotateY(${(-180 * e).toFixed(2)}deg)`;
-    s.frontShade.style.opacity = (0.35 * Math.sin(Math.min(e, 0.5) * Math.PI)).toFixed(3);
-    s.cast.style.opacity = (0.28 * Math.sin(e * Math.PI)).toFixed(3);
+    s.frontShade.style.opacity = (0.18 * Math.sin(Math.min(e, 0.5) * Math.PI)).toFixed(3);
+    s.cast.style.opacity = (0.12 * Math.sin(e * Math.PI)).toFixed(3);
   }
 
   function raf() {
@@ -461,10 +461,10 @@ function injectCSS() {
   .sw-scene__video,.sw-scene__still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;}
   .sw-scene__still{will-change:transform;} .sw-scene.has-clip .sw-scene__still{opacity:0;} .sw-scene__video{z-index:1;}
   .sw-page{perspective:2400px;perspective-origin:0 50%;}
-  .sw-page__shade,.sw-leaf__shade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;}
+  .sw-page__shade,.sw-leaf__shade{position:absolute;inset:0;background:var(--sw-ink);opacity:0;pointer-events:none;}
   .sw-leaf{position:absolute;inset:0;transform-origin:0 50%;transform-style:preserve-3d;will-change:transform;}
-  .sw-leaf__front,.sw-leaf__back{position:absolute;inset:0;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
-  .sw-leaf__back{transform:rotateY(180deg);background:var(--sw-bg);box-shadow:inset -48px 0 96px rgba(0,0,0,.10);}
+  .sw-leaf__front,.sw-leaf__back{position:absolute;inset:0;overflow:hidden;background:var(--sw-bg);backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+  .sw-leaf__back{transform:rotateY(180deg);box-shadow:inset -48px 0 96px color-mix(in srgb,var(--sw-ink) 10%,transparent);}
   .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;}
   .sw-copylayer::before{content:"";position:absolute;inset:0;width:min(58vw,780px);background:linear-gradient(90deg,var(--sw-bg) 0%,color-mix(in srgb,var(--sw-bg) 82%,transparent) 34%,color-mix(in srgb,var(--sw-bg) 40%,transparent) 62%,transparent 100%);}
   .sw-copy{position:absolute;left:clamp(18px,5vw,64px);top:50%;transform:translateY(-50%);width:min(42vw,460px);opacity:0;will-change:opacity,transform;}

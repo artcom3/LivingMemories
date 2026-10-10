@@ -6,7 +6,7 @@
       <feGaussianBlur stdDeviation="6"/>
     </filter>
   </defs>
-  <rect width="1536" height="1024" fill="#F6EFE3"/>
+  <rect width="1536" height="1024" fill="#F9EDDD"/>
   <ellipse cx="768" cy="760" rx="520" ry="60" fill="#2B2A33" opacity="0.08"/>
   <path d="M248 700 L768 760 L768 330 L278 280 Z" fill="#FBF7EF" stroke="#2B2A33" stroke-opacity="0.25" stroke-width="3"/>
   <path d="M1288 700 L768 760 L768 330 L1258 280 Z" fill="#FBF7EF" stroke="#2B2A33" stroke-opacity="0.25" stroke-width="3"/>

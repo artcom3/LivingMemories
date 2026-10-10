@@ -144,6 +144,21 @@ Reglas:
 2. **Con video.** Mejorar el plan de ElevenLabs, estimar el costo de los 11 clips, generarlos, codificarlos y añadir sus rutas a la configuración, sin rehacer la página.
 3. **QA.** Revisar las costuras, el modo de movimiento reducido y el comportamiento en móvil.
 
+## Estado de las imágenes
+
+Generadas con `gpt-image-2` (3:2, 2K, calidad alta, unos 1.350 a 1.600 créditos cada una) en el flow de ElevenLabs `wNhxFEjibk3unBFGPcuk`:
+
+| Escena | Estado |
+| --- | --- |
+| `grabaciones` | Lista. Es la referencia de estilo y de personajes (generación `Dij5hvh0ypCkrQ4gCULP`) |
+| `portada`, `recuerdos` | Listas, generadas con esa referencia |
+| `historias`, `cuento` | Nodos creados y configurados (`bC8X1a5dff0KpCZKiPTA`, `6FQmrlGWDYTmJoqBSxrW`); falta ejecutarlos |
+| `final` | Sin nodo; se crea igual que los anteriores, conectado a la referencia |
+
+El plan gratuito de ElevenLabs limita las imágenes por día; el lote se detuvo en `free_tier_image_limit_reached` tras tres imágenes. Los enlaces de descarga caducan a las 2 horas.
+
+Cada PNG se procesa con `node scripts/landing/process-scene.mjs <in.png> <id> --check <preview.png>`: recorta el fondo y escribe `public/landing/scenes/<id>.webp` con transparencia. Después se añade el id al conjunto `rendered` de `src/components/landing/diary-world.ts` y se borra su SVG temporal.
+
 ## Pendiente
 
 - Elegir entre Seedance 2.5 y Veo 3.1 tras una prueba con dos clips.
