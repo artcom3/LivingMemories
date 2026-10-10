@@ -78,3 +78,7 @@ Esta v1 no incluye cuentas infantiles, entrevistas de voz en tiempo real, clonac
 El primer piloto es local, supervisado y ejecutado con Docker. Participan 5 familias y se capturan al menos 20 memorias durante 4 semanas. Metas: 80% de recorridos completados sin ayuda técnica, 95% de trabajos terminados tras reintentos y cero filtraciones o afirmaciones familiares sin respaldo en los cuentos publicados revisados. Son objetivos acordados, no rendimiento observado. Sus cálculos están en [medición del piloto](validation.md#medición-del-piloto).
 
 Los límites variables de AI son US$5 por versión de cuento, US$25 por adulto y por familia al mes y US$100 mensuales para el conjunto del piloto. Se muestran estimaciones y se reserva saldo; suscripciones se contabilizan aparte. Proveedores: OpenAI para texto, documentos, búsqueda e imágenes; ElevenLabs para transcripción y narración. Los modelos están en [DEC-024](decisions.md#dec-024).
+
+## Ampliación de pruebas: álbumes, estilos y música
+
+Por petición del usuario del 10 de octubre de 2026, se añaden reutilización explícita de álbumes, video como fuente y propuestas musicales instrumentales o con letra. Los cuentos incorporan estilos narrativos y visuales, incluyendo cómic/manga/anime como adaptación ilustrada, sin inventar hechos familiares. Se conserva la memoria principal del cuento, el acceso privado y la revisión antes de generar medios. Véase [REQ-CRE](specs/album-creations.md) y [DEC-026](decisions.md#dec-026). No se genera video ni se publica automáticamente.

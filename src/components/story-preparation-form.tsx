@@ -7,8 +7,9 @@ import {
   hasContext,
   readerProfiles,
   type ReaderProfile,
-  sourceLabels,
 } from "@/lib/memories/shared";
+import { AlbumSourcePicker } from "./album-source-picker";
+import { narrativeStyles, visualStyles } from "@/lib/creations/shared";
 import { mutate } from "@/lib/families/client";
 type Preparation = {
   id: string;
@@ -19,6 +20,10 @@ type Preparation = {
   pages: number;
   instructions: string | null;
   genericCharacters: boolean;
+  narrativeStyle: string;
+  visualStyle: string;
+  narrate: boolean;
+  illustrate: boolean;
   sources: { sourceId: string }[];
 };
 export function StoryPreparationForm({
@@ -26,15 +31,18 @@ export function StoryPreparationForm({
   memories,
   initialMemory = "",
   preparation,
+  initialAlbum,
 }: {
   familyId: string;
   memories: MemoryOverview["memories"];
   initialMemory?: string;
   preparation?: Preparation;
+  initialAlbum?: string;
 }) {
   const router = useRouter();
   const starting =
     memories.find((m) => m.id === (preparation?.memoryId || initialMemory)) ||
+    memories.find((m) => initialAlbum && m.collectionId === initialAlbum) ||
     memories[0];
   const available = new Set(
     memories.flatMap((m) => m.sources.map((s) => s.id)),
@@ -114,6 +122,8 @@ export function StoryPreparationForm({
                 pages,
                 sourceIds: selected,
                 genericCharacters: data.genericCharacters === "on",
+                narrate: data.narrate === "on",
+                illustrate: data.illustrate === "on",
               },
             );
             if (preparation) {
@@ -170,53 +180,14 @@ export function StoryPreparationForm({
         </fieldset>
         <fieldset className="preparation-step">
           <legend>2 · Materiales que quieres utilizar</legend>
-          {memories.map((memory) => (
-            <details
-              key={memory.id}
-              open={memory.id === memoryId}
-              className="source-choices"
-            >
-              <summary>
-                {memory.title} ·{" "}
-                {memory.id === memoryId
-                  ? "Memoria principal"
-                  : "Contexto adicional"}{" "}
-                · {memory.sources.length} materiales
-              </summary>
-              {memory.sources.length ? (
-                memory.sources.map((source) => (
-                  <label className="check-label" key={source.id}>
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(source.id)}
-                      onChange={() =>
-                        setSelected((values) =>
-                          values.includes(source.id)
-                            ? values.filter((id) => id !== source.id)
-                            : [...values, source.id],
-                        )
-                      }
-                    />
-                    <span>
-                      {sourceLabels[source.type]} · {source.originalName} ·{" "}
-                      {memory.id === memoryId
-                        ? "Este recuerdo"
-                        : "Otro recuerdo"}
-                      <small className="profile-caption">
-                        {hasContext(source)
-                          ? "Contexto aportado"
-                          : "Contexto por completar"}
-                      </small>
-                    </span>
-                  </label>
-                ))
-              ) : (
-                <p className="form-hint">
-                  Añade materiales desde la memoria para poder seleccionarlos.
-                </p>
-              )}
-            </details>
-          ))}
+          <AlbumSourcePicker
+            familyId={familyId}
+            memories={memories}
+            selected={selected}
+            onChange={setSelected}
+            primaryMemoryId={memoryId}
+            initialAlbum={initialAlbum}
+          />
           {pending ? (
             <p className="form-hint">
               {pending} materiales todavía no tienen contexto. Puedes guardar
@@ -276,8 +247,55 @@ export function StoryPreparationForm({
             </label>
           </div>
           <p className="form-hint">
-            {readerProfiles[profile].words} como punto de partida; acuarela
-            suave y consistente.
+            {readerProfiles[profile].words} como punto de partida.
+          </p>
+          <div className="form-columns">
+            <label>
+              Estilo del relato
+              <select
+                name="narrativeStyle"
+                defaultValue={preparation?.narrativeStyle || "CHILDREN"}
+              >
+                {Object.entries(narrativeStyles).map(([id, style]) => (
+                  <option key={id} value={id}>
+                    {style.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Estilo de las ilustraciones
+              <select
+                name="visualStyle"
+                defaultValue={preparation?.visualStyle || "WATERCOLOR"}
+              >
+                {Object.entries(visualStyles).map(([id, style]) => (
+                  <option key={id} value={id}>
+                    {style.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <label className="check-label">
+            <input
+              type="checkbox"
+              name="narrate"
+              defaultChecked={preparation?.narrate ?? true}
+            />
+            Añadir narración sintética después de revisar el texto
+          </label>
+          <label className="check-label">
+            <input
+              type="checkbox"
+              name="illustrate"
+              defaultChecked={preparation?.illustrate ?? false}
+            />
+            Generar una ilustración por página después de revisar el texto
+          </label>
+          <p className="form-hint">
+            El estilo cambia cómo contamos e ilustramos el recuerdo. Los hechos
+            familiares siguen ligados a sus fuentes.
           </p>
           <label>
             ¿Qué te gustaría transmitir de este recuerdo?
@@ -317,9 +335,8 @@ export function StoryPreparationForm({
           {busy ? "Guardando…" : "Guardar preparación"}
         </button>
         <p className="muted">
-          Esta preparación queda privada y puedes retomarla. La revisión de
-          hechos y la generación del cuento se incorporarán en las siguientes
-          etapas.
+          Guarda los cambios antes de crear un nuevo borrador. Podrás revisar su
+          texto antes de generar las ilustraciones y la voz.
         </p>
       </form>
     </>

@@ -1,3 +1,4 @@
+import { CreationWorkspace } from "@/components/creation-workspace";
 import { AppShell } from "@/components/app-shell";
 import { FamilyNavigation } from "@/components/family-navigation";
 import { StoryPreparationForm } from "@/components/story-preparation-form";
@@ -27,6 +28,11 @@ export default async function StoryPage({
         familyId={familyId}
         memories={data.memories}
         preparation={preparation}
+      />
+      <CreationWorkspace
+        familyId={familyId}
+        kind="stories"
+        preparationId={storyId}
       />
     </AppShell>
   );

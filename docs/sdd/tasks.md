@@ -72,7 +72,7 @@ Dependencias: TASK-006; aplicar DEC-016, DEC-017 y DEC-024. Aceptación: SCN-03,
 
 Construir selección de memoria principal, revisión de hechos, idioma y perfil lector. Generar páginas con respaldo verificable y contexto documental separado. Conservar versiones y detectar dependencias alteradas.
 
-Avance implementado: preparación privada y retomable con memoria principal, selección de fuentes autorizadas, idioma, perfil lector, páginas e indicaciones. No representa texto generado ni una versión publicable. Revisión de hechos y generación siguen pendientes.
+Avance implementado: preparación privada y retomable con memoria principal, selección de fuentes autorizadas, idioma, perfil lector, páginas e indicaciones. Se añadió generación privada de borradores con fuentes y contexto por versión. La revisión estructurada de hechos y el conjunto publicable siguen pendientes; la calidad del proveedor todavía requiere claves.
 
 Dependencias: TASK-007; usar gpt-6.1-sol, los presets ajustables de DEC-020 y los topes de DEC-023. Aceptación: SCN-02, SCN-07, SCN-08 y SCN-14.
 
@@ -81,6 +81,8 @@ Dependencias: TASK-007; usar gpt-6.1-sol, los presets ajustables de DEC-020 y lo
 - [ ] Añadir ilustraciones y narración.
 
 Utilizar fotografías autorizadas y una guía visual consistente, generar y guardar medios por página, y narrar la versión textual correspondiente. Preparar voz sintética y fragmentos reales opcionales como reproducciones distintas.
+
+Avance: adaptadores reales de ilustración y narración por página, almacenamiento privado y reproducción en borradores. Pruebas de proveedor simuladas; calidad/consumo real y fragmentos originales integrados pendientes.
 
 Dependencias: TASK-008; usar gpt-image-2.5-flare y eleven_multilingual_v2. Configurar IDs de voz disponibles en español/inglés, acuarela consistente y alternativa genérica de DEC-020, con los topes de DEC-023. Aceptación: SCN-09, SCN-10 y SCN-13.
 
@@ -142,3 +144,17 @@ Cada requisito tiene una tarea principal responsable y escenarios de aceptación
 | [REQ-SYS-001](architecture.md#req-sys-001) | [TASK-003](#task-003) | [SCN-01](validation.md#scn-01), [SCN-10](validation.md#scn-10), [SCN-12](validation.md#scn-12) |
 | [REQ-SYS-002](architecture.md#req-sys-002) | [TASK-004](#task-004) | [SCN-13](validation.md#scn-13), [SCN-17](validation.md#scn-17) |
 | [REQ-SYS-003](architecture.md#req-sys-003) | [TASK-004](#task-004) | [SCN-13](validation.md#scn-13), [SCN-17](validation.md#scn-17) |
+
+### TASK-013
+
+- [x] Reutilizar materiales de álbumes en cuentos y música, conservando su contexto, estilos y permisos.
+- [x] Implementar Music v2 y generación por etapas en el worker; revisar antes de generar audio/ilustraciones.
+- [ ] Validar las generaciones reales con claves, voz disponible y acceso a Music; evaluar fidelidad y consumo.
+
+Requisitos: [REQ-CRE-001](specs/album-creations.md#req-cre-001), [REQ-CRE-002](specs/album-creations.md#req-cre-002), [REQ-CRE-003](specs/album-creations.md#req-cre-003). Escenarios y evidencia: tests/creations.integration.test.ts y [guía](../content-generation.md). La publicación final sigue en TASK-010.
+
+| Requisito ampliado | Tarea principal | Escenarios |
+| --- | --- | --- |
+| [REQ-CRE-001](specs/album-creations.md#req-cre-001) | [TASK-013](#task-013) | [SCN-18](validation.md#scn-18) |
+| [REQ-CRE-002](specs/album-creations.md#req-cre-002) | [TASK-013](#task-013) | [SCN-19](validation.md#scn-19) |
+| [REQ-CRE-003](specs/album-creations.md#req-cre-003) | [TASK-013](#task-013) | [SCN-18](validation.md#scn-18), [SCN-19](validation.md#scn-19) |

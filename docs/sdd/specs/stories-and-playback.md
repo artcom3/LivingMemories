@@ -28,7 +28,7 @@ Aceptación: cambiar de idioma o perfil crea una adaptación identificable y no 
 
 ### REQ-STO-003
 
-**Libro por páginas e ilustraciones con referencias opcionales.** Las páginas combinan texto e ilustración en acuarela suave y consistente, manteniendo el parecido basado en fotografías cuando existen. Sin ellas se permiten personajes genéricos, indicando que no representan el parecido real. Las imágenes generadas se identifican como representaciones ilustradas.
+**Libro por páginas e ilustraciones con referencias opcionales.** Las páginas combinan texto e ilustración con el estilo visual elegido, consistente entre páginas (acuarela suave por defecto; véase DEC-026), manteniendo el parecido basado en fotografías cuando existen. Sin ellas se permiten personajes genéricos, indicando que no representan el parecido real. Las imágenes generadas se identifican como representaciones ilustradas.
 
 Aceptación: las referencias son autorizadas y el adulto puede revisar el parecido y las escenas antes de publicar. Sin fotos, puede aceptar personajes genéricos con su indicación o añadir referencias; no se promete un parecido no fundamentado. [SCN-09](../validation.md#scn-09). Tarea: [TASK-009](../tasks.md#task-009). Acuerdo: [DEC-020](../decisions.md#dec-020).
 

@@ -10,11 +10,11 @@ El entorno Docker conecta PostgreSQL/pgvector, MinIO privado, Mailpit, worker/pg
 
 | Componente | Responsabilidad | Estado |
 | --- | --- | --- |
-| Aplicación Next.js | Entrada, memorias, álbumes y preparación de cuentos | Captura y contexto manual implementados; revisión/generación pendientes |
+| Aplicación Next.js | Entrada, memorias, álbumes y preparación de cuentos | Captura, contexto y generación privada por etapas implementados; publicación y revisión estructurada pendientes |
 | Servicios de dominio | Permisos, revisiones, versiones y publicación | Permisos de originales y preparaciones implementados; hechos/publicación pendientes |
 | PostgreSQL y Prisma | Metadatos, relaciones, evidencia y procesos | Memorias/fuentes/preparaciones implementadas; evidencia versionada pendiente |
 | Almacenamiento privado MinIO | Originales, fragmentos y medios | Texto y archivos originales autorizados implementados; derivados y fragmentos pendientes |
-| Worker Node.js y pg-boss | Base para transcripción, OCR, generación e indexación | Cola de diagnóstico implementada; handlers de producto pendientes |
+| Worker Node.js y pg-boss | Base para transcripción, OCR, generación e indexación | Colas de diagnóstico y creaciones implementadas; OCR/indexación pendientes |
 | PostgreSQL textual y pgvector | Pasajes relevantes con permisos y procedencia | Extensión activada; índices/documentos pendientes |
 | Adaptadores OpenAI y ElevenLabs | Contratos por capacidad, modelos de DEC-024 | Integraciones pendientes |
 | Nginx | Entrada a app y servicios autorizados | Configurado para la app local |
@@ -142,3 +142,9 @@ Aceptación: una interrupción de worker o callback duplicado no pierde original
 Aceptación: puede investigarse un cuento y sus regeneraciones sin almacenar secretos en logs; un valor desconocido no se interpreta como gasto cero. Los límites aprobados se aplican antes de generar. [SCN-13](validation.md#scn-13), [SCN-17](validation.md#scn-17). Tarea: [TASK-004](tasks.md#task-004).
 
 Las referencias oficiales y sus alcances se conservan en [decisions.md](decisions.md#referencias-oficiales). Las migraciones y compatibilidades se validarán en bases de desarrollo independientes antes de preparar el piloto.
+
+## Creaciones privadas desde álbumes (DEC-026)
+
+`MusicPreparation` y sus fuentes acompañan a `StoryPreparation`. Ambas producen versiones `Creation`, con configuración/modelos, contexto de fuentes, borrador revisable, archivos privados y referencias `CreationSource`. El worker procesa medios y dos etapas en pg-boss: borrador → revisión → medios. OpenAI recibe texto e imágenes normalizadas/fotogramas, y ElevenLabs recibe audio derivado para Scribe, texto aprobado para TTS o dirección/plan musical aprobado para Music. No se comparten URLs públicas de MinIO ni se envían materiales de álbumes no seleccionados. Cada llamada y lectura de resultado vuelve a comprobar permisos.
+
+La reserva de US$5 se serializa entre familias para controlar el cupo local. No concilia todavía facturación externa. Fallos no tienen reintentos pagados automáticos; se conservan resultados parciales. [Detalles y límites](../content-generation.md).

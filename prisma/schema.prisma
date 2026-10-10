@@ -24,6 +24,8 @@ model User {
   memoryCollections   MemoryCollection[]
   memories            Memory[]
   storyPreparations   StoryPreparation[]
+  musicPreparations   MusicPreparation[]
+  creations           Creation[]
 
   @@map("user")
 }
@@ -110,6 +112,8 @@ model Family {
   collections       MemoryCollection[]
   memories          Memory[]
   storyPreparations StoryPreparation[]
+  musicPreparations MusicPreparation[]
+  creations         Creation[]
 
   @@map("family")
 }
@@ -174,6 +178,7 @@ model PersonProfile {
 
 enum MemorySourceType {
   PHOTO
+  VIDEO
   AUDIO
   TEXT
 }
@@ -235,6 +240,8 @@ model MemorySource {
   updatedAt          DateTime                 @updatedAt
   memory             Memory                   @relation(fields: [memoryId], references: [id], onDelete: Cascade)
   preparations       StoryPreparationSource[]
+  musicPreparations  MusicPreparationSource[]
+  creations          CreationSource[]
 
   @@index([memoryId, withdrawnAt])
   @@map("memory_source")
@@ -251,6 +258,11 @@ model StoryPreparation {
   pages             Int                      @default(6)
   instructions      String?                  @db.Text
   genericCharacters Boolean                  @default(false)
+  narrativeStyle    String                   @default("CHILDREN")
+  visualStyle       String                   @default("WATERCOLOR")
+  narrate           Boolean                  @default(true)
+  illustrate        Boolean                  @default(false)
+  creations         Creation[]
   createdAt         DateTime                 @default(now())
   updatedAt         DateTime                 @updatedAt
   family            Family                   @relation(fields: [familyId], references: [id], onDelete: Cascade)
@@ -270,4 +282,88 @@ model StoryPreparationSource {
 
   @@id([preparationId, sourceId])
   @@map("story_preparation_source")
+}
+
+model MusicPreparation {
+  id              String                   @id @default(cuid())
+  familyId        String
+  createdById     String
+  title           String
+  language        String                   @default("es")
+  style           String                   @default("ACOUSTIC")
+  instrumental    Boolean                  @default(true)
+  durationSeconds Int                      @default(30)
+  instructions    String?                  @db.Text
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  family          Family                   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy       User                     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  sources         MusicPreparationSource[]
+  creations       Creation[]
+
+  @@index([familyId, createdById])
+  @@map("music_preparation")
+}
+
+model MusicPreparationSource {
+  preparationId String
+  sourceId      String
+  preparation   MusicPreparation @relation(fields: [preparationId], references: [id], onDelete: Cascade)
+  source        MemorySource     @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+
+  @@id([preparationId, sourceId])
+  @@map("music_preparation_source")
+}
+
+enum CreationKind {
+  STORY
+  MUSIC
+}
+
+enum CreationStatus {
+  QUEUED
+  ANALYZING
+  REVIEW
+  RENDER_QUEUED
+  RENDERING
+  READY
+  FAILED
+}
+
+model Creation {
+  id                 String            @id @default(cuid())
+  familyId           String
+  createdById        String
+  kind               CreationKind
+  status             CreationStatus    @default(QUEUED)
+  storyPreparationId String?
+  musicPreparationId String?
+  settings           Json
+  evidence           Json?
+  draft              Json?
+  artifacts          Json              @default("[]")
+  reservedCents      Int               @default(500)
+  errorMessage       String?
+  reviewedAt         DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  family             Family            @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy          User              @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  storyPreparation   StoryPreparation? @relation(fields: [storyPreparationId], references: [id], onDelete: Cascade)
+  musicPreparation   MusicPreparation? @relation(fields: [musicPreparationId], references: [id], onDelete: Cascade)
+  sources            CreationSource[]
+
+  @@index([familyId, createdById, createdAt])
+  @@index([status])
+  @@map("creation")
+}
+
+model CreationSource {
+  creationId String
+  sourceId   String
+  creation   Creation     @relation(fields: [creationId], references: [id], onDelete: Cascade)
+  source     MemorySource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+
+  @@id([creationId, sourceId])
+  @@map("creation_source")
 }

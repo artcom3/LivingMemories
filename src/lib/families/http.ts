@@ -65,7 +65,7 @@ export function checkOrigin(request: Request) {
       "La solicitud no está permitida.",
     );
 }
-export async function body(request: Request): Promise<Input> {
+export async function body(request: Request, maxBytes = 16384): Promise<Input> {
   checkOrigin(request);
   if (
     request.headers.get("content-type")?.split(";")[0].trim() !==
@@ -81,7 +81,7 @@ export async function body(request: Request): Promise<Input> {
     const { done, value } = await reader.read();
     if (done) break;
     size += value.byteLength;
-    if (size > 16384) {
+    if (size > maxBytes) {
       await reader.cancel();
       throw new AccessError(
         413,

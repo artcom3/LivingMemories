@@ -9,13 +9,13 @@ export default async function NewStoryPage({
   searchParams,
 }: {
   params: Promise<{ familyId: string }>;
-  searchParams: Promise<{ memory?: string }>;
+  searchParams: Promise<{ memory?: string; album?: string }>;
 }) {
   const { familyId } = await params;
   const { user, view } = await familyPageContext(familyId);
   if (view.role === "READER") notFound();
   const data = await memoryOverview(user.id, familyId);
-  const { memory } = await searchParams;
+  const { memory, album } = await searchParams;
   return (
     <AppShell userName={user.name}>
       <FamilyNavigation
@@ -27,6 +27,7 @@ export default async function NewStoryPage({
         familyId={familyId}
         memories={data.memories}
         initialMemory={memory}
+        initialAlbum={album}
       />
     </AppShell>
   );

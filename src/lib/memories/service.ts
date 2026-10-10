@@ -16,6 +16,7 @@ import {
 } from "@/lib/families/validation";
 import { storage } from "@/lib/infrastructure/connections";
 import { required } from "@/lib/infrastructure/config";
+import { narrativeStyles, visualStyles } from "../creations/shared";
 import { hasContext, readerProfiles, type ReaderProfile } from "./shared";
 
 type Tx = Prisma.TransactionClient;
@@ -87,6 +88,7 @@ export async function memoryOverview(
             id: true,
             type: true,
             originalName: true,
+            mimeType: true,
             contextDescription: true,
             peopleContext: true,
             locationContext: true,
@@ -377,7 +379,10 @@ export async function addText(
     return source;
   });
 }
-const formats: Record<string, { type: "PHOTO" | "AUDIO"; mime: string }> = {
+const formats: Record<
+  string,
+  { type: "PHOTO" | "AUDIO" | "VIDEO"; mime: string }
+> = {
   jpg: { type: "PHOTO", mime: "image/jpeg" },
   jpeg: { type: "PHOTO", mime: "image/jpeg" },
   png: { type: "PHOTO", mime: "image/png" },
@@ -390,6 +395,8 @@ const formats: Record<string, { type: "PHOTO" | "AUDIO"; mime: string }> = {
   webm: { type: "AUDIO", mime: "audio/webm" },
   ogg: { type: "AUDIO", mime: "audio/ogg" },
   flac: { type: "AUDIO", mime: "audio/flac" },
+  mp4: { type: "VIDEO", mime: "video/mp4" },
+  mov: { type: "VIDEO", mime: "video/quicktime" },
 };
 export async function uploadSource(
   actorId: string,
@@ -399,12 +406,15 @@ export async function uploadSource(
 ) {
   await getMemory(actorId, familyId, memoryId);
   const extension = file.name.split(".").pop()?.toLowerCase() || "";
-  const format = formats[extension];
+  const format =
+    extension === "webm" && file.type.startsWith("video/")
+      ? { type: "VIDEO" as const, mime: "video/webm" }
+      : formats[extension];
   if (!format)
     throw new AccessError(
       400,
       "FORMAT",
-      "Elige una fotografía JPEG, PNG, WebP o HEIC, o un audio MP3, WAV, M4A, WebM, OGG o FLAC.",
+      "Elige una fotografía JPEG, PNG, WebP o HEIC, un audio MP3, WAV, M4A, WebM, OGG o FLAC, o un video MP4, MOV o WebM.",
     );
   const limit = format.type === "PHOTO" ? 15_000_000 : 100_000_000;
   if (!file.size || file.size > limit)
@@ -413,7 +423,7 @@ export async function uploadSource(
       "SIZE",
       format.type === "PHOTO"
         ? "La fotografía debe pesar como máximo 15 MB."
-        : "El audio debe pesar como máximo 100 MB.",
+        : "El audio o video debe pesar como máximo 100 MB.",
     );
   const originalName = text(file.name, "El nombre del archivo", 255);
   const key =
@@ -588,6 +598,17 @@ export async function prepareStory(
       "Selecciona materiales para el cuento.",
     );
   const sourceIds = [...new Set(input.sourceIds as string[])];
+  const narrativeStyle = String(input.narrativeStyle || "CHILDREN");
+  const visualStyle = String(input.visualStyle || "WATERCOLOR");
+  if (
+    !Object.hasOwn(narrativeStyles, narrativeStyle) ||
+    !Object.hasOwn(visualStyles, visualStyle)
+  )
+    throw new AccessError(
+      400,
+      "INPUT",
+      "Elige estilos de relato e ilustración válidos.",
+    );
   return withFamily(actorId, familyId, async (tx, member) => {
     write(member);
     const memory = await memoryFor(
@@ -635,6 +656,10 @@ export async function prepareStory(
       pages,
       instructions: optionalText(input.instructions, "Las indicaciones", 4000),
       genericCharacters: input.genericCharacters === true,
+      narrativeStyle,
+      visualStyle,
+      narrate: input.narrate !== false,
+      illustrate: input.illustrate === true,
     };
     if (id) {
       await tx.storyPreparationSource.deleteMany({

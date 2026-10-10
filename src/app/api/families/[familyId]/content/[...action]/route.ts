@@ -1,3 +1,14 @@
+import {
+  approveCreation,
+  beginCreation,
+  creationView,
+  creationList,
+  creationAsset,
+  musicPreparation,
+  musicPreparations,
+  prepareMusic,
+  providerConfiguration,
+} from "@/lib/creations/service";
 import { actor, body, checkOrigin, endpoint, json } from "@/lib/families/http";
 import {
   addText,
@@ -45,6 +56,37 @@ async function handle(request: Request, context: Context) {
           childId,
           req.headers.get("range"),
         );
+      if (kind === "music" && action.length === 1)
+        return json(await musicPreparations(actorId, familyId));
+      if (kind === "music" && action.length === 2)
+        return json(await musicPreparation(actorId, familyId, id));
+      if (kind === "creations" && action.length === 2)
+        return json(await creationView(actorId, familyId, id));
+      if (kind === "creations" && child === "assets" && action.length === 4)
+        return creationAsset(
+          actorId,
+          familyId,
+          id,
+          childId,
+          req.headers.get("range"),
+        );
+      if (
+        (kind === "stories" || kind === "music") &&
+        child === "creations" &&
+        action.length === 3
+      )
+        return json(
+          await creationList(
+            actorId,
+            familyId,
+            kind === "stories" ? "STORY" : "MUSIC",
+            id,
+          ),
+        );
+      if (kind === "generation-config" && action.length === 1) {
+        await memoryOverview(actorId, familyId);
+        return json(providerConfiguration());
+      }
       throw unavailable();
     }
     if (
@@ -65,7 +107,35 @@ async function handle(request: Request, context: Context) {
         );
       return json(await uploadSource(actorId, familyId, id, file), 201);
     }
-    const input = await body(req);
+    const input = await body(req, kind === "creations" ? 256000 : 16384);
+    if (
+      req.method === "POST" &&
+      (kind === "stories" || kind === "music") &&
+      child === "creations" &&
+      action.length === 3
+    )
+      return json(
+        await beginCreation(
+          actorId,
+          familyId,
+          kind === "stories" ? "STORY" : "MUSIC",
+          id,
+        ),
+        202,
+      );
+    if (
+      req.method === "POST" &&
+      kind === "creations" &&
+      child === "approve" &&
+      action.length === 3
+    )
+      return json(await approveCreation(actorId, familyId, id, input), 202);
+    if (kind === "music") {
+      if (req.method === "POST" && action.length === 1)
+        return json(await prepareMusic(actorId, familyId, input), 201);
+      if (req.method === "PATCH" && action.length === 2)
+        return json(await prepareMusic(actorId, familyId, input, id));
+    }
     if (kind === "collections") {
       if (req.method === "POST" && action.length === 1)
         return json(await createCollection(actorId, familyId, input), 201);

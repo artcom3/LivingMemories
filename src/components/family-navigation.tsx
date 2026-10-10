@@ -1,11 +1,7 @@
 import Link from "next/link";
 import { roleLabels, type Role } from "@/lib/families/validation";
 export type FamilySection =
-  | "memories"
-  | "albums"
-  | "stories"
-  | "narrators"
-  | "settings";
+  "memories" | "albums" | "stories" | "music" | "narrators" | "settings";
 export function FamilyNavigation({
   family,
   role,
@@ -20,6 +16,7 @@ export function FamilyNavigation({
     { key: "memories", label: "Memorias", href: base },
     { key: "albums", label: "Álbumes", href: base + "/albums" },
     { key: "stories", label: "Cuentos", href: base + "/stories" },
+    { key: "music", label: "Música", href: base + "/music" },
     { key: "narrators", label: "Narradores", href: base + "/narrators" },
     { key: "settings", label: "Familia", href: base + "/settings" },
   ];

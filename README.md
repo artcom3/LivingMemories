@@ -104,3 +104,5 @@ pnpm test:content
 - [Better Auth con Prisma](https://better-auth.com/docs/adapters/prisma)
 - [Better Auth con Next.js](https://better-auth.com/docs/integrations/next)
 - [Imagen oficial de PostgreSQL](https://hub.docker.com/_/postgres)
+
+La [guía de cuentos y música](docs/content-generation.md) explica cómo reutilizar álbumes, revisar borradores, conectar las claves y realizar las primeras pruebas.

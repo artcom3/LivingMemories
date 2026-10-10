@@ -143,3 +143,15 @@ Responsables: producto supervisa recorridos y fidelidad; desarrollo mide jobs, a
 La cobertura editorial y de lectura se registra por idioma y perfil. La evaluación debe incluir al menos una adaptación en español e inglés y cada uno de los cinco perfiles; un buen porcentaje agregado no acredita esa cobertura por sí solo. La muestra no permite afirmar resultados representativos de todas las familias migrantes.
 
 Registrar como diagnóstico los fallos de carga, etapas abandonadas, duración de procesos, gasto variable realizado, reservas pendientes y costo de regeneraciones. Las solicitudes bloqueadas antes de encolar por límite de gasto no entran en el denominador de jobs, pero se muestran y afectan la finalización del recorrido. Las suscripciones se reportan aparte y ningún costo desconocido se transforma en cero.
+
+### SCN-18
+
+**Álbumes reutilizados y contexto por versión.** Elegir materiales de dos álbumes, ocultar uno y guardar; reabrir la selección. Incluir una foto con contexto y un video corto con audio. Cambiar el contexto tras iniciar una versión.
+
+Resultado esperado: originales sin duplicar, selección completa visible al retomar, contexto de álbum/memoria/material congelado por versión, transcripción y tres fotogramas del video disponibles para el borrador. Una fuente retirada o de otra familia no puede usarse ni leerse desde resultados derivados. Evidencia local: tests/creations.integration.test.ts y recorrido de navegador. Responsable: TASK-013.
+
+### SCN-19
+
+**Estilos, revisión y salida musical.** Preparar relato con estilo manga y música instrumental/con letra. Confirmar que no se generan medios antes de revisar; cambiar el texto o la letra, confirmar y seguir el estado en la pantalla. Probar falta de claves y rechazo del proveedor.
+
+Resultado esperado: estilos persistidos, letra revisada enviada mediante plan v2, instrumental forzado, resultados privados y errores sin repetición pagada automática. Pruebas locales usan proveedores simulados; la validación de calidad y consumo reales queda pendiente de claves. Responsable: TASK-008/009/013.

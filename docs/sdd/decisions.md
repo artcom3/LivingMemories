@@ -203,3 +203,11 @@ Estas referencias respaldan capacidades de los productos seleccionados y opcione
 | [pgvector](https://github.com/pgvector/pgvector) | Evaluación de vectores, índices y recuperación filtrada |
 
 Para escribir código de Next.js se consultará primero la documentación de la versión instalada en `node_modules/next/dist/docs/`, especialmente Route Handlers, autenticación y Backend for Frontend. Esta entrega solo añade documentación y no modifica esa base.
+
+### DEC-026
+
+**Confirmado por el usuario, 2026-10-10:** seleccionar álbumes y materiales ya subidos para crear relatos y música, reutilizando el contexto opcional de fotografías, grabaciones y videos; ofrecer estilos antes de generar y conservar la UI actual. Amplía el alcance previo de captura y creaciones.
+
+**Implementación para desarrollo:** estilos de relato y visuales separados; música instrumental o con letra de 30/60/90 segundos; generación por etapas con revisión adulta; una memoria principal en cuentos y varias fuentes autorizadas de álbumes. OpenAI interpreta imágenes/texto y crea borradores; ElevenLabs transcribe y genera narración o música. Music v2 usa `force_instrumental` o un plan de composición con letra aprobada. No requiere agentes ni clonación de voz. [Music](https://elevenlabs.io/docs/api-reference/music/compose), [Scribe](https://elevenlabs.io/docs/api-reference/speech-to-text/convert), [OpenAI visión](https://developers.openai.com/api/docs/guides/images-vision).
+
+**Propuestas técnicas provisionales:** veinte fuentes por prueba, video de diez minutos/100 MB, tres fotogramas por video; reserva local conservadora de US$5 por creación, incluida música, dentro de los topes mensuales existentes; hasta dos nuevas versiones por preparación. La reserva no concilia automáticamente el coste real ni impone un límite de facturación externo. Deben revisarse tarifas/créditos de la cuenta al conectar las claves. Publicación y revisión estructurada de hechos siguen pendientes. [Guía de pruebas](../content-generation.md).

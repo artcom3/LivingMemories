@@ -15,14 +15,15 @@ export function hasContext(source: {
 }) {
   return Boolean(
     source.contextDescription ||
-      source.peopleContext ||
-      source.locationContext ||
-      source.dateContext ||
-      source.emotionContext,
+    source.peopleContext ||
+    source.locationContext ||
+    source.dateContext ||
+    source.emotionContext,
   );
 }
 export const sourceLabels = {
   PHOTO: "Fotografía",
+  VIDEO: "Video",
   AUDIO: "Audio",
   TEXT: "Relato escrito",
 } as const;

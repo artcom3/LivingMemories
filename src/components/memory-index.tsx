@@ -203,6 +203,18 @@ export function MemoryIndex({
                     </button>
                     <Link
                       className="button quiet"
+                      href={base + "/stories/new?album=" + collection.id}
+                    >
+                      Crear cuento con este álbum
+                    </Link>
+                    <Link
+                      className="button quiet"
+                      href={base + "/music/new?album=" + collection.id}
+                    >
+                      Crear música con este álbum
+                    </Link>
+                    <Link
+                      className="button quiet"
                       href={base + "/memories/new?album=" + collection.id}
                     >
                       Añadir un recuerdo

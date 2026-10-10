@@ -127,6 +127,14 @@ export function MemoryEditor({
             Preparar un cuento
           </Link>
         ) : null}
+        {memory.sources.length ? (
+          <Link
+            className="button secondary"
+            href={familyBase + "/music/new?memory=" + memory.id}
+          >
+            Preparar música
+          </Link>
+        ) : null}
       </div>
       <ol className="journey-steps" aria-label="Recorrido de la memoria">
         <li>Guarda tus materiales</li>
@@ -146,17 +154,17 @@ export function MemoryEditor({
       <section className="side-section">
         <h3>Añadir materiales</h3>
         <p className="form-hint">
-          Fotos hasta 15 MB; audios hasta 100 MB. Puedes reunir hasta 20
-          materiales en esta memoria.
+          Fotos hasta 15 MB; audios y videos hasta 100 MB. Puedes reunir hasta
+          20 materiales en esta memoria.
         </p>
         <div className="capture-options">
           <label>
-            Fotografías o audios
+            Fotografías, audios o videos
             <input
               type="file"
               multiple
               disabled={busy || memory.sources.length >= 20}
-              accept=".jpg,.jpeg,.png,.webp,.heic,.heif,.mp3,.wav,.m4a,.webm,.ogg,.flac"
+              accept=".jpg,.jpeg,.png,.webp,.heic,.heif,.mp3,.wav,.m4a,.webm,.ogg,.flac,.mp4,.mov"
               onChange={async (event) => {
                 const input = event.currentTarget;
                 const files = Array.from(input.files || []);
@@ -226,6 +234,7 @@ export function MemoryEditor({
               <option value="pending">Por describir</option>
               <option value="PHOTO">Fotografías</option>
               <option value="AUDIO">Audios</option>
+              <option value="VIDEO">Videos</option>
               <option value="TEXT">Textos</option>
             </select>
           </label>
@@ -248,6 +257,12 @@ export function MemoryEditor({
                     />
                   ) : item.type === "AUDIO" ? (
                     <audio
+                      src={base + "/sources/" + item.id}
+                      controls
+                      preload="metadata"
+                    />
+                  ) : item.type === "VIDEO" ? (
+                    <video
                       src={base + "/sources/" + item.id}
                       controls
                       preload="metadata"

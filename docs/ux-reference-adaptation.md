@@ -6,9 +6,9 @@ Referencia revisada: [`ux-reference-not-use-ui`, commit `00e2944`](https://githu
 
 | Comportamiento de referencia | Adaptación en esta rama |
 | --- | --- |
-| Inicio con acceso a álbumes y creaciones | Navegación dentro de la familia: Memorias, Álbumes, Cuentos, Narradores y Familia |
+| Inicio con acceso a álbumes y creaciones | Navegación dentro de la familia: Memorias, Álbumes, Cuentos, Música, Narradores y Familia |
 | Crear, consultar, renombrar y quitar álbumes | Álbumes como agrupadores de memorias; quitarlos no borra recuerdos ni originales |
-| Subir varios archivos y retomarlos después | Fotos y audio en MinIO privado; relato escrito y grabación local; progreso y errores por archivo |
+| Subir varios archivos y retomarlos después | Fotos, audio y video en MinIO privado; relato escrito y grabación local; progreso y errores por archivo |
 | Marcar materiales con/sin contexto | Contexto manual por material y filtro de pendientes |
 | Describir personas, lugar, fecha y emoción | Campos de contexto opcionales, incluida fecha aproximada, sin asumir hechos desconocidos |
 | Seleccionar materiales antes de una creación | Una memoria principal y selección explícita de materiales de ella y contexto autorizado de otras memorias |
@@ -50,16 +50,18 @@ Recorrido implementado:
 6. Preparar un cuento con memoria principal, fuentes, idioma, lector y páginas; guardar y retomar.
 7. Mover memorias a la papelera o recuperarlas durante treinta días.
 
-Las preparaciones no generan texto, imágenes o narración ni publican contenido. Esas acciones requieren la revisión de hechos, adaptadores, presupuesto y publicación previstos en el SDD.
+Las preparaciones guardadas pueden iniciar versiones privadas de cuentos y música mediante generación por etapas. Se revisa el borrador antes de crear medios. La publicación final y la revisión estructurada de hechos siguen pendientes.
 
 ## Límites de esta entrega de desarrollo
 
 Se aplican formatos de captura, límites de bytes (15 MB por foto y 100 MB por audio) y 20 materiales activos por memoria. El grabador se detiene a treinta minutos. La inspección técnica completa de formatos/duración de audios subidos, extracción/OCR, transcripción, pasajes compartidos, purga automática y caducidad de respaldos siguen en TASK-003/004/005/012. La papelera impide lecturas nuevas y conserva los originales para recuperación; no se considera una política de purga finalizada.
 
-PDF y documentos culturales siguen en la biblioteca futura; no se confunden con los originales de una memoria. La vinculación a versiones de hechos y la generación del cuento siguen pendientes en TASK-006/008/009/010.
+PDF y documentos culturales siguen en la biblioteca futura; no se confunden con los originales de una memoria. La vinculación a versiones de hechos y la publicación siguen pendientes en TASK-006/010. La generación privada inicial se describe en la guía de contenido.
 
 ## Validación enfocada
 
 `pnpm test:content` ejecuta cuatro pruebas en una base temporal: álbum/memoria/narrador/texto; foto real en MinIO y contexto; preparación de cuento con aislamiento; retirada y recuperación. Se complementan con lint, tipos, compilación Docker y el recorrido en navegador. No se realizan llamadas pagadas de AI.
 
 Fuentes funcionales de referencia: `prisma/schema.prisma`, `src/app/albums/page.tsx`, `src/app/albums/[id]/page.tsx`, `src/app/create/[category]/page.tsx`, `src/app/api/assets/[id]/route.ts` y `src/app/api/generate/route.ts`, del commit indicado. Los estilos de esos archivos no forman parte de la adaptación.
+
+La ampliación del 10 de octubre de 2026 añade selección directa de álbumes, video como fuente y cuentos/música con estilos y generación por etapas. No adopta la UI de referencia. Véase [generación](content-generation.md).
