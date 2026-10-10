@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Palette from docs/landing/brief.md. The --sw-* tokens theme the scroll-world
+   engine; its defaults live in `@layer sw`, so these unlayered values win. They
+   sit on :root too because the engine paints html/body with var(--sw-bg). */
+:root,
+.sw-root {
+  --paper: #f6efe3;
+  --ink: #2b2a33;
+  --ink-soft: #6b6560;
+  --terracota: #c8735a;
+  --salvia: #8fa98a;
+  --azul: #6e8fb5;
+  --ocre: #d9a45b;
+
+  --sw-bg: var(--paper);
+  --sw-ink: var(--ink);
+  --sw-ink-soft: var(--ink-soft);
+  --sw-accent: var(--terracota);
+  --sw-font-display: var(--font-manrope), system-ui, sans-serif;
+  --sw-font-body: var(--font-manrope), system-ui, sans-serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-terracota: var(--terracota);
+  --color-salvia: var(--salvia);
+  --color-azul: var(--azul);
+  --color-ocre: var(--ocre);
+  --font-sans: var(--font-manrope);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* The engine's drifting particles are dark gradient dots; they don't belong on
+   watercolor paper. */
+.sw-particles {
+  display: none;
+}
+
+.sw-nav__item {
+  white-space: nowrap;
 }
