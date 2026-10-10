@@ -83,7 +83,7 @@ export const diaryWorld: ScrollWorldConfig = {
     },
     {
       id: "historias",
-      label: "My stories",
+      label: "Library",
       still: still("historias"),
       clip: clip("historias"),
       accent: accent.salvia,
@@ -94,7 +94,7 @@ export const diaryWorld: ScrollWorldConfig = {
     },
     {
       id: "cuento",
-      label: "The story",
+      label: "Storybook",
       still: still("cuento"),
       clip: clip("cuento"),
       accent: accent.morado,

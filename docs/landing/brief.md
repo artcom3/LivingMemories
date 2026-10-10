@@ -194,8 +194,8 @@ Cada tarjeta lleva solo su botón de acción: sin contador `01 / 06`, sin etique
 | Cover | Cover | Open your family diary | `/go/diary` → `/families/<id>` |
 | Recordings | Recordings | Record a memory | `/go/record` → `memories/new` |
 | Memories | Memories | Organize your albums | `/go/albums` → `albums` |
-| Stories | My stories | Write your own story | `/go/write` → `stories/new` |
-| The story | The story | Read your family's stories | `/go/stories` → `stories` |
+| Stories | Library | Write your own story | `/go/write` → `stories/new` |
+| The story | Storybook | Read your family's stories | `/go/stories` → `stories` |
 | Your diary | Your diary | Request an invitation · Sign in | `#invitation` · `/login` |
 
 `src/app/go/[action]/page.tsx` resuelve cada acción, usando el mapa de `src/lib/landing/actions.ts`:
