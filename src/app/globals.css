@@ -2873,3 +2873,64 @@ html {
     animation: none;
   }
 }
+
+/* ---- Cursors (public/cursors/*.svg) -------------------------------------------
+   One quiet set for the whole site, in the spirit of Figma's: a tailless arrow
+   folded like paper (two ink faces), the same piece in terracotta with papel
+   picado punches on anything you can click, and a slim I-beam with a
+   terracotta caret diamond in text fields. Real cursors (nothing chasing the
+   pointer), mouse and trackpad only. Hotspots: the arrow's tip and the
+   I-beam's centre; system keywords are the fallback. */
+:root {
+  --cursor-arrow: url("/cursors/arrow.svg") 4 3, default;
+  --cursor-pointer: url("/cursors/pointer.svg") 4 3, pointer;
+  --cursor-text: url("/cursors/text.svg") 16 16, text;
+}
+@media (pointer: fine) {
+  html {
+    cursor: var(--cursor-arrow);
+  }
+  :is(
+      a[href],
+      button,
+      summary,
+      select,
+      label[for],
+      [role="button"],
+      [role="tab"],
+      [role="menuitem"],
+      [role="option"],
+      [data-slot="button"],
+      [data-slot="dropdown-menu-item"],
+      [data-slot="dropdown-menu-sub-trigger"],
+      input[type="checkbox"],
+      input[type="radio"],
+      input[type="submit"],
+      input[type="button"],
+      input[type="file"],
+      .sw-nav__item,
+      .sw-route__dot
+    ) {
+    cursor: var(--cursor-pointer);
+  }
+  :is(
+      input:not(
+          [type="checkbox"],
+          [type="radio"],
+          [type="submit"],
+          [type="button"],
+          [type="file"],
+          [type="range"],
+          [type="color"]
+        ),
+      textarea,
+      [contenteditable="true"]
+    ) {
+    cursor: var(--cursor-text);
+  }
+  /* Same weight as the rules above (html adds the element), and later, so a
+     disabled button or field always says so. */
+  html :is(:disabled, [aria-disabled="true"], [data-disabled]) {
+    cursor: not-allowed;
+  }
+}
