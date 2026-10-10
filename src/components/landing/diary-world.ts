@@ -1,8 +1,10 @@
 import type { ScrollWorldConfig } from "./scrub-engine";
 
 // Copy and scene order come from docs/landing/brief.md.
-// Stills are ElevenLabs renders (WebP); scenes still marked `.svg` are temporary
-// placeholders. Add `clip` per section and `connectors` once the video phase is done.
+// Stills are the 16:9 canvases built from the ElevenLabs renders
+// (scripts/landing/make-canvas.mjs); they double as the clips' first frames.
+// Scenes still marked `.svg` are temporary placeholders. Add `clip` per section
+// and `connectors` once the video phase is done.
 const accent = {
   terracota: "#C8735A",
   salvia: "#8FA98A",
@@ -11,7 +13,7 @@ const accent = {
 };
 
 const rendered = new Set(["portada", "grabaciones", "recuerdos"]);
-const still = (id: string) => `/landing/scenes/${id}.${rendered.has(id) ? "webp" : "svg"}`;
+const still = (id: string) => `/landing/scenes/${rendered.has(id) ? `${id}-wide.webp` : `${id}.svg`}`;
 
 export const diaryWorld: ScrollWorldConfig = {
   brand: { name: "LivingMemories", href: "#top" },

@@ -53,25 +53,19 @@
   display: none;
 }
 
-/* Show the whole pop-up book instead of cropping it: the scene background is
-   the page paper, so the letterbox around it is invisible. On desktop the book
-   sits right of the copy card. Leaf faces use the same box, so page turns match. */
-.sw-scene__still {
-  object-fit: contain;
-  object-position: center;
-}
-@media (min-width: 861px) {
-  .sw-scene__still {
-    top: 88px;
-    left: 40%;
-    width: 58%;
-    height: calc(100% - 112px);
-  }
+/* Full-bleed scenes, like the scroll-world demo. Posters and clips are 16:9
+   canvases with the book on the right (scripts/landing/make-canvas.mjs), so
+   anchoring right keeps the book clear of the copy card on any aspect ratio.
+   Leaf faces share the class, so page turns hand off the same framing. */
+.sw-scene__still,
+.sw-scene__video {
+  object-fit: cover;
+  object-position: right center;
 }
 @media (max-width: 860px) {
-  .sw-scene__still {
-    top: 72px;
-    height: 40%;
+  .sw-scene__still,
+  .sw-scene__video {
+    object-position: 72% 30%;
   }
 }
 

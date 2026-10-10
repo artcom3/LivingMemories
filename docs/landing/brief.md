@@ -26,7 +26,9 @@ Los textos solo prometen funciones del [producto](../sdd/product.md). La landing
 | Estética | Libro pop-up de cartulina, colorido, poblado por figuritas chibi de arcilla mate (revisado el 2026-10-09; sustituye a la acuarela) |
 | Cámara | `CAMERA = fly-through`, arquitectura B: la cámara entra en cada escena y sale con un paso de página hacia la siguiente |
 | Transición sin video | Pase de página 3D ligado al scroll; la portada se abre como la tapa. Los connectors de video lo reemplazan cuando existan |
-| Versión móvil | Solo escritorio (16:9). En móvil el motor recorta al centro |
+| Versión móvil | Solo escritorio (16:9). En móvil el motor recorta con el foco hacia el libro |
+| Encuadre | Pantalla completa como la demo de scroll-world: lienzos 16:9 con el libro a la derecha y la tarjeta de texto flotando a la izquierda (2026-10-10) |
+| Videos | Generados con ElevenLabs, codificados y commiteados en `public/landing/video/`; el hosting definitivo se decide antes de desplegar |
 | Escenas | 6, por lo que el video completo son 11 clips: 6 entradas y 5 pasos de página |
 | Canciones | Fusionadas con Grabaciones; el SDD no tiene una función de canciones |
 
@@ -157,7 +159,26 @@ Generadas con `gpt-image-2` (3:2, 2K, calidad alta, unos 1.350 a 1.600 créditos
 
 El plan gratuito de ElevenLabs limita las imágenes por día; el lote se detuvo en `free_tier_image_limit_reached` tras tres imágenes. Los enlaces de descarga caducan a las 2 horas.
 
-Cada PNG se procesa con `node scripts/landing/process-scene.mjs <in.png> <id> --check <preview.png>`: recorta el fondo y escribe `public/landing/scenes/<id>.webp` con transparencia. Después se añade el id al conjunto `rendered` de `src/components/landing/diary-world.ts` y se borra su SVG temporal.
+Los PNG originales se guardan en `landing-src/`, que git ignora. Cada uno se convierte en lienzo con `node scripts/landing/make-canvas.mjs landing-src/<id>.png <id>`. El script recorta el fondo, coloca el libro a la derecha de un lienzo de 1920×1080 y escribe dos archivos:
+
+- `landing-src/canvas/<id>.png`: el `start_frame` del video.
+- `public/landing/scenes/<id>-wide.webp`: el póster.
+
+Después se añade el id al conjunto `rendered` de `src/components/landing/diary-world.ts` y se borra su SVG temporal.
+
+## Estado del video
+
+La cuenta de ElevenLabs aún no puede generar video: todos los modelos responden *"video generation needs a paid plan"*. Los prompts están en [video-prompts.md](video-prompts.md).
+
+Scripts del proceso en `scripts/landing/` (necesitan ffmpeg):
+
+| Script | Uso |
+| --- | --- |
+| `frames.sh` | Extrae el primer y el último fotograma de un clip, para las costuras |
+| `seam-check.sh` | Mide el PSNR entre dos fotogramas, para calificar el modelo y revisar costuras |
+| `encode.sh` | Codifica el clip para el scroll |
+
+Estimación (2026-10-10, con cifras públicas aproximadas): entre 55.000 y 135.000 créditos para las 3 escenas restantes, la prueba de modelos, los 11 clips y las repeticiones. El plan Starter (30.000 créditos) no alcanza; Creator (121.000) alcanza en 720p y Pro (600.000) en 1080p. El costo real se confirma con `estimate_only` cuando el plan esté activo.
 
 ## Pendiente
 
