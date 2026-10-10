@@ -9,7 +9,9 @@
    `keyboardSteps` (with stepSpeed/stepDuration) for arrows/PageUp/PageDown, also
    used by nav and route clicks; `copyFade`/`copySlide` copy timing and motion;
    `stillOffset`; `links`, secondary top bar links before the CTA; and
-   `route: false` / `copyNumbers: false` to drop the side rail and card counters.
+   `route: false` / `copyNumbers: false` to drop the side rail and card counters;
+   a per-section `nav: false` to leave a scene out of the top nav; and a same-page
+   brand href (`#top`) that travels back to the first scene like a nav item.
    ----------------------------------------------------------------------------
    Framework-agnostic. Vanilla JS, zero dependencies. It builds its own DOM and
    injects its own (namespaced) CSS into a container you give it, so it drops into
@@ -144,11 +146,18 @@ function mountScrollWorld(container, config) {
   const scrollbarFill = el('span'); scrollbar.appendChild(scrollbarFill);
 
   const topbar = el('div', 'sw-topbar');
+  // A same-page brand link (`#top`) doubles as the first scene's tab: it travels
+  // back like the nav items instead of jumping to the anchor.
+  let brandHome = null;
   if (config.brand) {
     const brand = el('a', 'sw-brand'); brand.href = (config.brand.href || '#');
     brand.appendChild(el('span', 'sw-brand__mark'));
     const nm = el('span', 'sw-brand__name'); nm.textContent = config.brand.name || ''; brand.appendChild(nm);
     topbar.appendChild(brand);
+    if ((config.brand.href || '#').startsWith('#')) {
+      brandHome = brand;
+      brand.addEventListener('click', (e) => { e.preventDefault(); jumpTo(0); });
+    }
   }
   const nav = el('nav', 'sw-nav'); if (config.nav !== false) topbar.appendChild(nav);
   // Right-hand actions: optional secondary links (e.g. sign in), then the CTA.
@@ -206,7 +215,7 @@ function mountScrollWorld(container, config) {
   });
 
   // per-section copy / route / nav
-  const copies = [], dots = [];
+  const copies = [], dots = [], navItems = [];
   SECTIONS.forEach((s, i) => {
     const c = el('article', 'sw-copy'); c.style.setProperty('--sw-accent', s.accent || '');
     c.innerHTML =
@@ -222,9 +231,13 @@ function mountScrollWorld(container, config) {
     dot.innerHTML = `<span class="sw-route__label">${esc(s.label || '')}</span><i></i>`;
     dot.addEventListener('click', () => jumpTo(i)); route.appendChild(dot); dots.push(dot);
 
-    if (config.nav !== false) {
+    // `nav: false` on a section leaves it out of the top nav (e.g. the cover,
+    // reached through the brand). navItems stays indexed by section.
+    navItems[i] = null;
+    if (config.nav !== false && s.nav !== false) {
       const b = el('button', 'sw-nav__item'); b.textContent = s.label || '';
       b.addEventListener('click', () => jumpTo(i)); nav.appendChild(b);
+      navItems[i] = b;
     }
   });
 
@@ -400,7 +413,11 @@ function mountScrollWorld(container, config) {
       activeIndex = near;
       dots.forEach((d, k) => d.classList.toggle('is-active', k === near));
       copies.forEach((c, k) => c.classList.toggle('is-active', k === near));
-      nav.querySelectorAll('.sw-nav__item').forEach((n, k) => n.classList.toggle('is-active', k === near));
+      navItems.forEach((n, k) => n && n.classList.toggle('is-active', k === near));
+      if (brandHome) {
+        if (near === 0) brandHome.setAttribute('aria-current', 'true');
+        else brandHome.removeAttribute('aria-current');
+      }
       container.style.setProperty('--sw-accent', SECTIONS[near].accent || '');
     }
     scrollbarFill.style.transform = `scaleX(${clamp(y / (totalW * vh))})`;
