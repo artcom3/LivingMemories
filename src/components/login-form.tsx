@@ -21,13 +21,13 @@ export function LoginForm({ next }: { next: string }) {
           });
           if (result.error)
             throw new Error(
-              "No pudimos iniciar sesión. Revisa tu correo y contraseña.",
+              "We could not sign you in. Check your email and password.",
             );
           router.push(next);
           router.refresh();
         } catch (error) {
           setError(
-            error instanceof Error ? error.message : "Inténtalo de nuevo.",
+            error instanceof Error ? error.message : "Please try again.",
           );
         } finally {
           setBusy(false);
@@ -35,7 +35,7 @@ export function LoginForm({ next }: { next: string }) {
       }}
     >
       <label>
-        Correo
+        Email
         <input
           name="email"
           type="email"
@@ -45,7 +45,7 @@ export function LoginForm({ next }: { next: string }) {
         />
       </label>
       <label>
-        Contraseña
+        Password
         <input
           name="password"
           type="password"
@@ -60,10 +60,10 @@ export function LoginForm({ next }: { next: string }) {
         </p>
       ) : null}
       <button className="button primary" disabled={busy}>
-        {busy ? "Entrando…" : "Entrar a mis familias"}
+        {busy ? "Signing in…" : "Sign in to my family"}
       </button>
       <p className="form-hint">
-        Para crear tu cuenta, abre la invitación que recibiste de tu familia.
+        To create your account, open the invitation your family sent you.
       </p>
     </form>
   );

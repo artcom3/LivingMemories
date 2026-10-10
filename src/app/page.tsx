@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Manrope } from "next/font/google";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { diaryWorld } from "@/components/landing/diary-world";
 import { ScrollWorld } from "@/components/landing/scroll-world";
+import { manrope } from "@/components/landing/fonts";
 import "@/components/landing/landing.css";
 
-const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "LivingMemories, your family diary",
   description:

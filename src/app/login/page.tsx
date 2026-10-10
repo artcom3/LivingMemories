@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { AppShell } from "@/components/app-shell";
 import { LoginForm } from "@/components/login-form";
+import { manrope } from "@/components/landing/fonts";
+import { LoginScene } from "@/components/login/login-scene";
+import "@/components/login/login.css";
+
+export const metadata: Metadata = {
+  title: "Sign in · LivingMemories",
+  description: "Return to your family's private diary on LivingMemories.",
+};
+
 export default async function LoginPage({
   searchParams,
 }: {
@@ -19,32 +29,35 @@ export default async function LoginPage({
   if (await auth.api.getSession({ headers: await headers() }))
     redirect(next === "/" ? "/families" : next);
   return (
-    <AppShell>
-      <div className="entry-layout">
-        <div className="entry-story">
-          <span className="eyebrow">TU ÁLBUM FAMILIAR</span>
-          <h1>Hay historias que merecen quedarse.</h1>
-          <p>
-            Un espacio privado para conservar las voces, los recuerdos y las
-            personas que forman tu familia.
-          </p>
-          <div className="album-note">
-            <span aria-hidden="true">“</span>
-            <p>La historia empieza con alguien que la recuerda.</p>
-            <span className="note-caption">
-              LivingMemories · Piloto privado
-            </span>
-          </div>
-        </div>
-        <section className="entry-card" aria-labelledby="login-title">
-          <span className="eyebrow">BIENVENIDO DE NUEVO</span>
-          <h2 id="login-title">Vuelve a tu familia</h2>
-          <p className="muted">
-            Entra con la cuenta que creaste al aceptar tu invitación.
+    <div className={`${manrope.variable} login-page`} lang="en">
+      <a className="login-skip" href="#login-title">
+        Skip to the form
+      </a>
+      <header className="login-nav">
+        <Link href="/" className="login-brand">
+          <span className="login-brand__mark" aria-hidden="true" />
+          LivingMemories
+        </Link>
+        <Link href="/" className="login-back">
+          Back to the diary
+        </Link>
+      </header>
+      <main id="main" className="login-main">
+        <LoginScene />
+        <section className="login-card" aria-labelledby="login-title">
+          <span className="login-card__eyebrow">Welcome back</span>
+          <h1 id="login-title" className="login-card__title" tabIndex={-1}>
+            Return to your
+            <br />
+            family diary
+          </h1>
+          <p className="login-card__body">
+            Sign in with the account you created when you accepted your invitation.
           </p>
           <LoginForm next={next} />
         </section>
-      </div>
-    </AppShell>
+      </main>
+      <footer className="login-footer">Real stories. Voices that connect us.</footer>
+    </div>
   );
 }

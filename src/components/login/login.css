@@ -1,0 +1,656 @@
+/* Sign in page in the landing's art direction: the same paper, palette, Manrope
+   type, book-open mark and tinted glass card (src/components/landing/landing.css),
+   with the clay family diorama standing in for the film. Palette from
+   docs/landing/brief.md. Every value snaps to the landing-page-design scale. */
+.login-page {
+  --paper: #f9eddd;
+  --ink: #2b2a33;
+  --ink-soft: #6b6560;
+  --terracota: #c8735a;
+  --ocre: #d9a45b;
+  --azul: #6e8fb5;
+  --salvia: #8fa98a;
+  --morado: #7b5ba6;
+  --rosa: #d9577a;
+  --accent: var(--terracota);
+  --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  overflow-x: clip;
+}
+.login-page h1 {
+  font-family: inherit;
+}
+.login-page :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.login-skip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 20;
+  padding: 8px 12px;
+  border-radius: 9999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  text-decoration: none;
+  translate: 0 -64px;
+  transition: translate 700ms var(--ease-fluid);
+}
+.login-skip:focus-visible {
+  translate: 0 0;
+}
+
+/* ---- Floating glass island nav, as on the landing ---------------------------- */
+.login-nav {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 8px 8px 8px 16px;
+  translate: -50% 0;
+  border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--paper) 72%, transparent);
+  backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: 0 16px 48px -24px color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.login-brand__mark {
+  width: 24px;
+  height: 24px;
+  background: var(--terracota);
+  /* Phosphor book-open (fill), MIT. Same mark as the landing's top bar. */
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><path d='M240,56V200a8,8,0,0,1-8,8H160a24,24,0,0,0-24,23.94,7.9,7.9,0,0,1-5.12,7.55A8,8,0,0,1,120,232a24,24,0,0,0-24-24H24a8,8,0,0,1-8-8V56a8,8,0,0,1,8-8H88a32,32,0,0,1,32,32v87.73a8.17,8.17,0,0,0,7.47,8.25,8,8,0,0,0,8.53-8V80a32,32,0,0,1,32-32h64A8,8,0,0,1,240,56Z'/></svg>")
+    center / contain no-repeat;
+  transition: rotate 700ms var(--ease-fluid);
+}
+.login-brand:hover .login-brand__mark {
+  rotate: -8deg;
+}
+.login-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 9999px;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 700ms var(--ease-fluid),
+    scale 700ms var(--ease-fluid);
+}
+.login-back::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  /* Phosphor arrow-left (bold), MIT. */
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><path d='M228,128a12,12,0,0,1-12,12H69l51.52,51.51a12,12,0,0,1-17,17l-72-72a12,12,0,0,1,0-17l72-72a12,12,0,0,1,17,17L69,116H216A12,12,0,0,1,228,128Z'/></svg>")
+    center / contain no-repeat;
+  transition: translate 700ms var(--ease-fluid);
+}
+.login-back:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+.login-back:hover::before {
+  translate: -2px 0;
+}
+.login-back:active {
+  scale: 0.98;
+}
+
+/* ---- Layout ------------------------------------------------------------------ */
+.login-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 440px);
+  align-items: center;
+  gap: 64px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 96px 48px 48px;
+}
+.login-footer {
+  padding: 24px 16px 32px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+}
+
+/* ---- The diorama ------------------------------------------------------------- */
+.login-scene {
+  margin: 0;
+  padding: 48px 32px 24px;
+}
+/* Pop up: the scene stands up from the table like a page of the landing's book. */
+.login-popup {
+  perspective: 1600px;
+  animation: login-popup 1200ms var(--ease-fluid) 120ms both;
+  transform-origin: 50% 100%;
+}
+@keyframes login-popup {
+  from {
+    opacity: 0;
+    transform: rotateX(72deg) scale(0.92);
+  }
+  40% {
+    opacity: 1;
+  }
+}
+/* Leans toward the pointer; --mx and --my run from -1 to 1 (login-scene.tsx). */
+.login-stage {
+  --mx: 0;
+  --my: 0;
+  position: relative;
+  aspect-ratio: 1237 / 955;
+  transform: rotateX(calc(var(--my) * -5deg)) rotateY(calc(var(--mx) * 6deg));
+  transform-style: preserve-3d;
+}
+/* Each layer drifts by its depth: behind the family against the pointer, in
+   front of it with the pointer, so the scene reads as stacked paper. */
+.login-layer {
+  position: absolute;
+  translate: calc(var(--mx) * var(--depth) * 16px) calc(var(--my) * var(--depth) * 12px);
+}
+
+.login-sun {
+  top: -10%;
+  left: 22%;
+  width: 56%;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--ocre) 30%, var(--paper));
+}
+/* A dashed paper ring, turning slowly like the landing's sun. */
+.login-sun::before {
+  content: "";
+  position: absolute;
+  inset: -4%;
+  border: 2px dashed color-mix(in srgb, var(--ocre) 55%, transparent);
+  border-radius: inherit;
+  animation: login-spin 80s linear infinite;
+}
+
+.login-garland {
+  top: -16%;
+  left: -4%;
+  width: 108%;
+  overflow: visible;
+  animation: login-drop 1000ms var(--ease-fluid) 520ms both;
+}
+.login-garland__string {
+  fill: none;
+  stroke: color-mix(in srgb, var(--ink) 40%, transparent);
+  stroke-width: 1.5;
+}
+.login-flag {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: login-sway 3.6s ease-in-out infinite alternate;
+}
+.login-flag use {
+  filter: drop-shadow(0 4px 4px color-mix(in srgb, var(--ink) 18%, transparent));
+}
+@keyframes login-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-32px);
+  }
+}
+@keyframes login-sway {
+  from {
+    rotate: -5deg;
+  }
+  to {
+    rotate: 5deg;
+  }
+}
+
+.login-family {
+  inset: 0;
+}
+.login-family__float {
+  position: relative;
+  animation: login-float 6s ease-in-out infinite alternate;
+}
+.login-family img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: scale 700ms var(--ease-fluid);
+}
+.login-scene[data-awake] .login-family img {
+  scale: 1.02;
+}
+/* Contact shadow on the table: it tightens as the family floats up. */
+.login-family__shadow {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -2%;
+  height: 8%;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--ink) 22%, transparent);
+  filter: blur(16px);
+  animation: login-shadow 6s ease-in-out infinite alternate;
+}
+@keyframes login-float {
+  to {
+    translate: 0 -8px;
+  }
+}
+@keyframes login-shadow {
+  to {
+    scale: 0.92 0.8;
+    opacity: 0.7;
+  }
+}
+
+/* Hearts rise from the laptop while the scene is awake. */
+.login-hearts {
+  left: 49%;
+  top: 56%;
+  width: 12%;
+  aspect-ratio: 1;
+  pointer-events: none;
+}
+.login-heart {
+  position: absolute;
+  bottom: 0;
+  width: 40%;
+  opacity: 0;
+  filter: drop-shadow(0 4px 4px color-mix(in srgb, var(--ink) 18%, transparent));
+}
+.login-heart:nth-child(1) {
+  left: 0;
+}
+.login-heart:nth-child(2) {
+  left: 36%;
+}
+.login-heart:nth-child(3) {
+  left: 68%;
+}
+.login-scene[data-awake] .login-heart {
+  animation: login-heart 2.1s var(--ease-fluid) infinite;
+}
+@keyframes login-heart {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.4) rotate(-12deg);
+  }
+  24% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-160%) scale(1) rotate(12deg);
+  }
+}
+
+/* The grandmother's story bubble, with a voice waveform like the recordings. */
+/* Beside the grandmother's bun, just below the papel picado. */
+.login-bubble {
+  top: 15%;
+  left: 64%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--morado) 30%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--morado) 12%, var(--paper));
+  box-shadow: 0 16px 48px -24px color-mix(in srgb, var(--morado) 60%, transparent);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  scale: 0.6;
+  transform-origin: 0 100%;
+  transition:
+    opacity 700ms var(--ease-fluid),
+    scale 700ms var(--ease-fluid);
+}
+.login-bubble::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  border: inherit;
+  border-top: 0;
+  border-left: 0;
+  background: inherit;
+  rotate: 45deg;
+  /* Keeps the bubble's border continuous over the tail's top. */
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+.login-scene[data-awake] .login-bubble {
+  opacity: 1;
+  scale: 1;
+}
+.login-bubble__wave {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 16px;
+}
+.login-bubble__wave i {
+  width: 2px;
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--morado);
+  scale: 1 0.3;
+}
+.login-scene[data-awake] .login-bubble__wave i {
+  animation: login-wave 900ms ease-in-out infinite alternate;
+}
+@keyframes login-wave {
+  to {
+    scale: 1 1;
+  }
+}
+
+/* Clay flowers in front of the family, like the one on the laptop. */
+.login-flower {
+  overflow: visible;
+  filter: drop-shadow(0 8px 8px color-mix(in srgb, var(--ink) 20%, transparent));
+  animation: login-bloom 900ms var(--ease-fluid) both;
+}
+.login-flower__spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: login-spin 24s linear infinite;
+}
+.login-flower--a {
+  top: 18%;
+  left: -2%;
+  width: 9%;
+  animation-delay: 760ms;
+}
+.login-flower--b {
+  top: 66%;
+  left: 94%;
+  width: 7%;
+  animation-delay: 880ms;
+}
+.login-flower--b .login-flower__spin {
+  animation-direction: reverse;
+}
+.login-flower--c {
+  top: 92%;
+  left: 4%;
+  width: 6%;
+  animation-delay: 1000ms;
+}
+.login-scene[data-awake] .login-flower__spin {
+  animation-duration: 8s;
+}
+@keyframes login-bloom {
+  from {
+    opacity: 0;
+    scale: 0;
+    rotate: -90deg;
+  }
+}
+@keyframes login-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.login-caption {
+  margin-top: 32px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  text-align: center;
+  text-wrap: balance;
+  animation: login-rise 800ms var(--ease-fluid) 900ms both;
+}
+
+/* ---- The card: the landing's tinted glass copy card, holding the form -------- */
+.login-card {
+  padding: 32px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--accent) 14%, color-mix(in srgb, var(--paper) 80%, transparent));
+  backdrop-filter: blur(24px) saturate(1.2);
+  box-shadow: 0 24px 64px -32px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+/* Heavy fade up on load (landing-page-design B7), line by line. */
+.login-card > * {
+  animation: login-rise 800ms var(--ease-fluid) both;
+}
+.login-card > :nth-child(1) {
+  animation-delay: 300ms;
+}
+.login-card > :nth-child(2) {
+  animation-delay: 380ms;
+}
+.login-card > :nth-child(3) {
+  animation-delay: 460ms;
+}
+.login-card > :nth-child(4) {
+  animation-delay: 540ms;
+}
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    translate: 0 64px;
+    filter: blur(12px);
+  }
+}
+.login-card__eyebrow {
+  display: block;
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+/* Hero heading: the one sanctioned text gradient (landing-page-design B5). */
+.login-card__title {
+  margin-top: 8px;
+  font-size: 36px;
+  line-height: 40px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background: linear-gradient(90deg, #000000, #666666);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.login-card__title:focus {
+  outline: none;
+}
+.login-card__body {
+  margin-top: 12px;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+/* LoginForm (src/components/login-form.tsx) in the landing's style. */
+.login-card .form-stack {
+  gap: 16px;
+  margin-top: 24px;
+}
+.login-card label {
+  gap: 8px;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.login-card input:not([type="checkbox"]) {
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, #ffffff 56%, var(--paper));
+  font-size: 16px;
+  line-height: 24px;
+  transition:
+    border-color 700ms var(--ease-fluid),
+    box-shadow 700ms var(--ease-fluid),
+    background-color 700ms var(--ease-fluid);
+}
+.login-card input:not([type="checkbox"]):hover {
+  border-color: color-mix(in srgb, var(--ink) 24%, transparent);
+}
+.login-card input:not([type="checkbox"]):focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+.login-card .button.primary {
+  min-height: 0;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  transition:
+    translate 700ms var(--ease-fluid),
+    scale 700ms var(--ease-fluid),
+    opacity 700ms var(--ease-fluid);
+}
+/* The landing's call to action arrow, in the accent. */
+.login-card .button.primary::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  /* Phosphor arrow-right (bold), MIT. */
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><path d='M224.49,136.49l-72,72a12,12,0,0,1-17-17L187,140H40a12,12,0,0,1,0-24H187L135.51,64.48a12,12,0,0,1,17-17l72,72A12,12,0,0,1,224.49,136.49Z'/></svg>")
+    center / contain no-repeat;
+  transition: translate 700ms var(--ease-fluid);
+}
+.login-card .button.primary:hover {
+  background: var(--ink);
+  translate: 0 -2px;
+}
+.login-card .button.primary:hover::after {
+  translate: 2px 0;
+}
+.login-card .button.primary:active {
+  scale: 0.98;
+}
+.login-card .button.primary:disabled {
+  opacity: 0.72;
+  translate: none;
+}
+/* While signing in the arrow keeps walking, instead of a spinner. */
+.login-card .button.primary:disabled::after {
+  animation: login-walk 900ms var(--ease-fluid) infinite;
+}
+@keyframes login-walk {
+  50% {
+    translate: 4px 0;
+  }
+}
+.login-card .form-error {
+  padding: 12px 16px;
+  border: 1px solid color-mix(in srgb, var(--rosa) 30%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--rosa) 12%, var(--paper));
+  color: #8e352d;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.login-card .form-hint {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* ---- Smaller screens: the diorama above the card ----------------------------- */
+@media (max-width: 1023px) {
+  .login-main {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 32px;
+    padding: 96px 16px 32px;
+  }
+  /* Capped by the viewport height too, so the form starts within the first screen. */
+  .login-scene {
+    width: min(100%, 480px, 56svh);
+    padding: 40px 24px 0;
+  }
+  .login-caption {
+    margin-top: 24px;
+  }
+  .login-card {
+    width: min(100%, 480px);
+    padding: 24px;
+  }
+}
+@media (max-width: 480px) {
+  .login-nav {
+    top: 16px;
+  }
+  .login-bubble {
+    left: 50%;
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .login-card__title {
+    font-size: 30px;
+    line-height: 36px;
+  }
+}
+
+/* `data-motion="full"` is the development preview override (?motion=full). */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-motion="full"]) .login-page *,
+  html:not([data-motion="full"]) .login-page *::before,
+  html:not([data-motion="full"]) .login-page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
