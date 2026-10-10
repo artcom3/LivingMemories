@@ -154,17 +154,16 @@ Generadas con `gpt-image-2` (3:2, 2K, calidad alta, unos 1.350 a 1.600 créditos
 | --- | --- |
 | `grabaciones` | Lista. Es la referencia de estilo y de personajes (generación `Dij5hvh0ypCkrQ4gCULP`) |
 | `portada`, `recuerdos` | Listas, generadas con esa referencia |
-| `historias`, `cuento` | Nodos creados y configurados (`bC8X1a5dff0KpCZKiPTA`, `6FQmrlGWDYTmJoqBSxrW`); falta ejecutarlos |
-| `final` | Sin nodo; se crea igual que los anteriores, conectado a la referencia |
+| `historias`, `cuento`, `final` | Listas (2026-10-10), generadas con la misma referencia |
 
-El plan gratuito de ElevenLabs limita las imágenes por día; el lote se detuvo en `free_tier_image_limit_reached` tras tres imágenes. Los enlaces de descarga caducan a las 2 horas.
+La cuenta pasó a Creator el 2026-10-10; con el plan gratuito el lote se había detenido en `free_tier_image_limit_reached`. Los enlaces de descarga caducan a las 2 horas.
 
 Los PNG originales se guardan en `landing-src/`, que git ignora. Cada uno se convierte en lienzo con `node scripts/landing/make-canvas.mjs landing-src/<id>.png <id>`. El script recorta el fondo, coloca el libro a la derecha de un lienzo de 1920×1080 y escribe dos archivos:
 
 - `landing-src/canvas/<id>.png`: el `start_frame` del video.
 - `public/landing/scenes/<id>-wide.webp`: el póster.
 
-Después se añade el id al conjunto `rendered` de `src/components/landing/diary-world.ts` y se borra su SVG temporal.
+`src/components/landing/diary-world.ts` toma cada póster de `public/landing/scenes/<id>-wide.webp`.
 
 ## Estado del video
 

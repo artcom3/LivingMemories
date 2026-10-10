@@ -18,15 +18,17 @@ Los fotogramas de cada conexión se extraen de los clips ya renderizados con `sc
 
 ## Entrada
 
+Todos los lienzos comparten el mismo encuadre: el libro entero y centrado. Las entradas empiezan ahí y las conexiones terminan ahí.
+
 ```text
 Single continuous cinematic camera move, no cuts. Start exactly on the start frame: an
-open children's paper pop-up book on a plain cream background, the book on the right of
-the frame. The camera glides slowly forward and gently descends toward [FOCAL], as if
-flying into the miniature paper world, ending close inside the scene. [ACTION]. The paper
-pop-up stays fully unfolded and rigid; maintain exact appearance from the start frame,
-consistent characters throughout, no deformation or drift. Soft matte clay figurines,
-thick cardstock with embossed dots, warm studio light, tilt-shift miniature look. Smooth,
-graceful slow motion with subtle parallax. No text, no captions.
+open children's paper pop-up book centered in the frame on a plain cream background. The
+camera glides slowly forward along the book's center line and gently descends toward
+[FOCAL], as if flying into the miniature paper world, ending close inside the scene.
+[ACTION]. The paper pop-up stays fully unfolded and rigid; maintain exact appearance from
+the start frame, consistent characters throughout, no deformation or drift. Soft matte
+clay figurines, thick cardstock with embossed dots, warm studio light, tilt-shift
+miniature look. Smooth, graceful slow motion with subtle parallax. No text, no captions.
 ```
 
 | Id | `[FOCAL]` | `[ACTION]` |
@@ -40,12 +42,15 @@ graceful slow motion with subtle parallax. No text, no captions.
 
 ## Conexión
 
+La conexión no desciende: termina en el libro entero y centrado, que es el primer fotograma de la entrada siguiente. El descenso lo hace esa entrada.
+
 ```text
 Single continuous camera move, no cuts, from the start frame to the end frame. The camera
-rises and pulls back out of [SCENE A] until the whole pop-up book is visible, then the
-page lifts and turns from right to left while the pop-up folds flat, revealing the next
-spread where [SCENE B] unfolds and rises, and the camera glides down toward it, arriving
-exactly on the end frame. Same paper pop-up book, same clay figurines, warm studio light,
+rises and pulls back out of [SCENE A] along the book's center line until the whole open
+pop-up book is centered in the frame. Then the right-hand page lifts and turns from right
+to left while the pop-up folds flat, and on the new spread [SCENE B] unfolds and rises,
+arriving exactly on the end frame. The book stays centered and the camera stays level
+while the page turns. Same paper pop-up book, same clay figurines, warm studio light,
 plain cream background. Seamless flowing transition, smooth slow motion. No text, no
 captions.
 ```
