@@ -7,6 +7,7 @@ import { FieldGroup } from "@/components/ui/field";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { celebrateSignIn } from "@/components/login/particle-field";
 export function LoginForm({ next }: { next: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -28,6 +29,8 @@ export function LoginForm({ next }: { next: string }) {
             throw new Error(
               "We could not sign you in. Check your email and password.",
             );
+          // The sign in illustration's dust bursts in celebration, then the app opens.
+          await celebrateSignIn();
           router.push(next);
           router.refresh();
         } catch (error) {
