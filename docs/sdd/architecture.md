@@ -2,23 +2,23 @@
 
 ## Base existente y alcance del diseño
 
-El repositorio contiene Next.js 16.4.0 con App Router, React 19.3.0, Prisma 7.10.0, PostgreSQL 18.6 en Compose y Better Auth 1.7.7. El esquema actual contiene únicamente los modelos de autenticación. La ruta `/api/auth/[...all]` y los clientes de autenticación y Prisma ya existen.
+El repositorio contiene Next.js 16.4.0 con App Router, React 19.3.0, Prisma 7.10.0, PostgreSQL 18.6 y Better Auth 1.7.7. El esquema incluye autenticación, `Family`, `Membership`, `Invitation` y `PersonProfile`. Las rutas de acceso y los servicios familiares están implementados con comprobación de permisos vigente.
 
-El entorno Docker implementa PostgreSQL con pgvector, MinIO privado, Mailpit, worker/pg-boss, app y Nginx, con migraciones e inicialización coordinadas. El worker procesa una cola de diagnóstico real y los clientes locales de S3/SMTP/base están conectados. No hay todavía modelos familiares, índices de contenido ni handlers de generación; las claves AI se incorporarán después. Los acuerdos y modelos están fijados en [decisions.md](decisions.md); los contratos de producto siguientes siguen como diseño de implementación.
+El entorno Docker conecta PostgreSQL/pgvector, MinIO privado, Mailpit, worker/pg-boss, app y Nginx. El acceso por invitación y las familias/perfiles están implementados y sus correos se capturan en Mailpit. No hay todavía modelos de memorias, índices de contenido ni handlers de generación; las claves AI se incorporarán después. Los contratos de esos módulos siguen como diseño de implementación.
 
 ## Componentes y estado
 
 | Componente | Responsabilidad | Estado |
 | --- | --- | --- |
-| Aplicación Next.js | Captura, revisión, biblioteca, libro por páginas y consultas | Base existente; experiencia pendiente |
-| Servicios de dominio | Permisos, revisiones, versiones y publicación | Propuesto |
-| PostgreSQL y Prisma | Metadatos, relaciones, evidencia y estado de procesos | Base existente; modelos de producto pendientes |
+| Aplicación Next.js | Entrada, familias y perfiles; después captura y cuentos | Acceso/familias/perfiles implementados; resto pendiente |
+| Servicios de dominio | Permisos, revisiones, versiones y publicación | Permisos familiares y perfiles implementados; resto pendiente |
+| PostgreSQL y Prisma | Metadatos, relaciones, evidencia y estado de procesos | Autenticación y participación implementadas; memorias/evidencia pendientes |
 | Almacenamiento privado MinIO | S3 compatible local para originales, fragmentos y medios | Bucket privado, usuario de app y conexión implementados; dominio de fuentes pendiente |
 | Worker Node.js y pg-boss | Base para transcripción, OCR, generación e indexación | Cola de diagnóstico implementada; handlers de producto pendientes |
 | PostgreSQL textual y pgvector | Pasajes relevantes con permisos y procedencia | Extensión activada; índices/documentos pendientes |
 | Adaptadores OpenAI y ElevenLabs | Contratos por capacidad, modelos de DEC-024 | Integraciones pendientes |
 | Nginx | Entrada a app y servicios autorizados | Configurado para la app local |
-| Mailpit | Captura local de invitaciones/correos de prueba | Conexión SMTP y captura probadas; envío de invitaciones pendiente |
+| Mailpit | Captura local de invitaciones/correos de prueba | Invitaciones y fallos de entrega gestionados; no entrega externa |
 
 Next.js conserva las comprobaciones de sesión y permisos junto a las operaciones de servidor. Un identificador familiar enviado por el navegador se valida contra la membresía; no se confía en el cliente para declarar autoría o privilegios. Los servicios de dominio deben reutilizar la misma política en APIs, worker, búsquedas y reproducción de archivos.
 
@@ -101,7 +101,7 @@ Los contratos definen capacidades, no SDKs ni modelos obligatorios. Se validan c
 | Narración | Texto versionado, idioma y voz elegida | Audio y alineación cuando esté disponible |
 | Recuperación y respuesta | Actor, contexto, pregunta y pasajes permitidos | Respuesta, citas y estado de respaldo; sin mutación del cuento |
 
-Las interfaces de la aplicación cubrirán cargas, turnos de entrevista, revisiones, procesos de generación, publicación y reproducción de evidencia. Sus rutas y estructuras HTTP definitivas se diseñan en cada tarea; no se confunden con el único endpoint de autenticación ya existente.
+Las rutas de acceso, familias, membresías, invitaciones y perfiles están enumeradas en la [guía de acceso](../access.md). Cargas, entrevistas, revisiones, generación y reproducción se diseñarán en sus tareas; sus contratos todavía no están implementados.
 
 El entorno local usa un bucket privado de MinIO/S3 fuera de `public/`. La infraestructura autentica al cliente S3; la autorización por familia y el flujo de cargas se implementarán en TASK-003. Allí se comprobarán los límites de DEC-015 antes de procesos costosos, incluidas cargas concurrentes. El worker ya incluye herramientas para audio, PDF, OCR español/inglés y conversión HEIC; todavía no están conectadas a procesadores de memorias.
 

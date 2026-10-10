@@ -54,7 +54,7 @@ Responsable de implementación: desarrollo y diseño. Acuerdo: [DEC-020](decisio
 
 **Resuelta: primer piloto local supervisado.** Docker reúne Nginx, app, worker, PostgreSQL con búsqueda vectorial, almacenamiento compatible con S3 y correo de prueba. Los servicios de AI siguen siendo externos. La prueba inicial es supervisada localmente; no implica acceso público remoto ni contratación de Supabase, AWS o un VPS.
 
-Responsable de implementación: desarrollo y operación. Acuerdos: [DEC-021](decisions.md#dec-021) y [DEC-025](decisions.md#dec-025). El entorno Docker completo está implementado con MinIO por elección del usuario; modelos familiares, índices de contenido, handlers AI y evaluación del piloto siguen pendientes en las tareas.
+Responsable de implementación: desarrollo y operación. Acuerdos: [DEC-021](decisions.md#dec-021) y [DEC-025](decisions.md#dec-025). El entorno Docker y los modelos de familias, membresías, invitaciones y narradores están implementados. Memorias, índices de contenido, handlers AI y evaluación del piloto siguen pendientes.
 
 ### Q-009
 

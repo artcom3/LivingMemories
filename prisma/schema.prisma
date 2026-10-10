@@ -8,15 +8,19 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id                  String          @id
+  name                String
+  email               String          @unique
+  emailVerified       Boolean         @default(false)
+  image               String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @default(now()) @updatedAt
+  sessions            Session[]
+  accounts            Account[]
+  memberships         Membership[]
+  invitationsCreated  Invitation[]    @relation("InvitationCreator")
+  invitationsAccepted Invitation[]    @relation("InvitationAcceptor")
+  personProfiles      PersonProfile[]
 
   @@map("user")
 }
@@ -66,4 +70,97 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+enum FamilyRole {
+  ADMIN
+  CONTRIBUTOR
+  READER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model Family {
+  id          String          @id @default(cuid())
+  name        String
+  activatedAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  memberships Membership[]
+  invitations Invitation[]
+  profiles    PersonProfile[]
+
+  @@map("family")
+}
+
+model Membership {
+  id               String           @id @default(cuid())
+  familyId         String
+  userId           String
+  role             FamilyRole
+  status           MembershipStatus @default(ACTIVE)
+  adultConfirmedAt DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  family           Family           @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([familyId, userId])
+  @@index([userId, status])
+  @@index([familyId, status, role])
+  @@map("membership")
+}
+
+model Invitation {
+  id             String           @id @default(cuid())
+  familyId       String
+  email          String
+  role           FamilyRole
+  tokenHash      String           @unique
+  status         InvitationStatus @default(PENDING)
+  deliveryStatus DeliveryStatus   @default(PENDING)
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  acceptedById   String?
+  createdById    String?
+  createdAt      DateTime         @default(now())
+  family         Family           @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy      User?            @relation("InvitationCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  acceptedBy     User?            @relation("InvitationAcceptor", fields: [acceptedById], references: [id], onDelete: SetNull)
+
+  @@index([familyId, email, status])
+  @@map("invitation")
+}
+
+model PersonProfile {
+  id           String    @id @default(cuid())
+  familyId     String
+  name         String
+  relationship String?
+  biography    String?
+  createdById  String
+  archivedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  family       Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy    User      @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([familyId, archivedAt])
+  @@map("person_profile")
 }

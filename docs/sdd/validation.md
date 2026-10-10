@@ -1,6 +1,6 @@
 # Validación del SDD y del piloto
 
-Los escenarios siguientes definen aceptación para la implementación futura. No se han ejecutado contra módulos que todavía no existen. Los requisitos y responsables están conectados en la [matriz de trazabilidad](tasks.md#trazabilidad).
+Los escenarios definen aceptación del piloto. Las pruebas de acceso, familias y perfiles de TASK-002 se ejecutan con `pnpm test:access` y revisión en navegador, según la [guía de acceso](../access.md). SCN-01 está validado para esos recursos; los casos de memorias y publicaciones y el recorrido completo de SCN-02 siguen pendientes. Los requisitos y responsables están conectados en la [matriz de trazabilidad](tasks.md#trazabilidad).
 
 ## Datos de prueba previstos
 

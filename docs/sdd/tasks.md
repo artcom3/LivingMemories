@@ -1,6 +1,6 @@
 # Tareas de implementación de LivingMemories
 
-Este backlog organiza la construcción posterior del piloto. Todas las tareas de aplicación están pendientes; los documentos del SDD no acreditan que sus módulos o escenarios ya funcionen.
+Este backlog organiza la construcción del piloto. TASK-002 está implementada y validada para acceso, familias y perfiles; el resto de tareas de aplicación continúa pendiente. Los documentos del SDD por sí solos no acreditan que sus módulos o escenarios funcionen.
 
 La entrega de una tarea incluye criterios de aceptación, validación, migraciones cuando correspondan y actualización del SDD. Las 11 decisiones iniciales están resueltas en DEC-014 a DEC-024. Configurar claves, comprobar compatibilidad o evaluar los modelos seleccionados es trabajo técnico pendiente, no una elección de producto aún abierta.
 
@@ -16,11 +16,11 @@ Dependencias: SDD actual. Salida: prerrequisitos comprobados y ejemplos reproduc
 
 ### TASK-002
 
-- [ ] Construir acceso por invitación, familias, membresías y perfiles.
+- [x] Construir acceso por invitación, familias, membresías y perfiles.
 
-Añadir invitaciones al piloto y a familias, validar el registro directo de Better Auth y construir los flujos de entrada. Introducir los modelos de familia y narradores mediante migraciones, con permisos comprobados en el servidor.
+Implementados los flujos de entrada, invitaciones, familias, roles y narradores, con una migración aditiva y permisos comprobados en el servidor. Evidencia y operación: [guía de acceso](../access.md), `pnpm test:access`, compatibilidad Better Auth y revisión en navegador.
 
-Dependencias: TASK-001; implementar DEC-014, incluidas validez de 7 días, correo destinatario y protección del último administrador. Aceptación: SCN-01 y atribución de SCN-02.
+Dependencias: SDD vigente; por prioridad expresa del usuario, TASK-001 no bloquea esta fase sin llamadas AI. DEC-014 incluye siete días, correo destinatario y protección concurrente del último administrador. SCN-01 está probado para familias y perfiles; la atribución de grabaciones y el recorrido completo de SCN-02 se completan al construir memorias y fuentes.
 
 ### TASK-003
 

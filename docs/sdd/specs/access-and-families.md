@@ -4,13 +4,15 @@
 
 Permitir la participación de adultos invitados en espacios familiares privados, conservando la diferencia entre usuarios y narradores. Participan el administrador de la familia, los adultos invitados y los familiares representados por perfiles sin cuenta.
 
-Acuerdos: [DEC-001](../decisions.md#dec-001), [DEC-002](../decisions.md#dec-002), [DEC-003](../decisions.md#dec-003). La base actual de Better Auth tiene registro por correo y contraseña; todavía no impone el acceso exclusivo por invitación.
+Acuerdos: [DEC-001](../decisions.md#dec-001), [DEC-002](../decisions.md#dec-002), [DEC-003](../decisions.md#dec-003). El acceso por invitación, familias y perfiles está implementado; el registro directo de Better Auth está deshabilitado. La [guía de acceso](../../access.md) describe comandos, contratos y evidencia.
 
-## Flujo y estados propuestos
+## Flujo y estados implementados
 
 El primer administrador se habilita mediante un comando privado. Después, una invitación habilita el alta en el piloto y la membresía de la familia indicada, o añade esa membresía a una cuenta existente. El enlace está ligado al correo, dura 7 días y se consume una sola vez. Al aceptarlo, el adulto obtiene únicamente el acceso asignado. Acuerdo: [DEC-014](../decisions.md#dec-014).
 
 Invitación: `pendiente → aceptada`, `revocada` o `expirada`. Membresía: `activa → revocada`. No se crea una cuenta para un perfil de narrador salvo que ese adulto acepte una invitación independiente.
+
+El comando privado prepara una familia provisional y su invitación inicial de administrador. Aceptarla activa la familia y guarda el alta y consumo de forma atómica. Crear otros espacios requiere una membresía vigente en el piloto. Los narradores son perfiles sin credenciales: administradores y colaboradores los consultan; cada colaborador edita los que creó y un administrador puede gestionar todos los de su familia. Archivar conserva el registro. La atribución de archivos se conectará en TASK-003.
 
 ## Requisitos y aceptación
 

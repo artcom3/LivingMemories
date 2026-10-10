@@ -2,9 +2,9 @@
 
 LivingMemories ayuda a las familias a conservar sus recuerdos y convertirlos en historias que otras generaciones puedan leer y escuchar. Este SDD es la base para desarrollar un piloto privado mediante especificaciones verificables.
 
-**Versión:** 0.2. **Estado:** las 11 decisiones iniciales del piloto están resueltas; implementación y validación de los módulos pendientes. **Fecha:** 2026-10-09.
+**Versión:** 0.3. **Estado:** decisiones iniciales resueltas; acceso, familias y narradores implementados; resto de módulos pendientes. **Fecha:** 2026-10-09.
 
-La aplicación tiene la base de Next.js, Prisma y Better Auth y un entorno Docker con PostgreSQL/pgvector, MinIO, Mailpit, Nginx y worker/pg-boss. La [guía de Docker](../docker.md) describe su arranque y diagnóstico. Los módulos de familias, memorias, biblioteca, generación y asistente todavía no están implementados; las claves AI se incorporarán después. Una casilla del backlog solo se completa con evidencia de implementación y validación.
+La aplicación tiene Next.js, Prisma, Better Auth y el entorno Docker conectado. La [guía de Docker](../docker.md) describe su arranque y la [guía de acceso](../access.md) cubre las invitaciones, familias y perfiles implementados. Memorias, biblioteca, generación y asistente siguen pendientes; las claves AI se incorporarán después. Una casilla del backlog solo se completa con evidencia de implementación y validación.
 
 ## Ruta de lectura
 

@@ -6,7 +6,7 @@ Este registro distingue los acuerdos de producto de las propuestas de implementa
 
 ### DEC-001
 
-**Piloto privado por invitación.** Las primeras familias participan mediante invitaciones. El registro abierto no forma parte del piloto; su enforcement todavía debe añadirse a la base de Better Auth.
+**Piloto privado por invitación.** Las primeras familias participan mediante invitaciones. El registro abierto no forma parte del piloto y ya está deshabilitado en Better Auth; el alta invitada y su membresía se guardan juntas.
 
 ### DEC-002
 
