@@ -708,3 +708,189 @@ summary {
     scroll-behavior: auto !important;
   }
 }
+
+/* Content flows extend the existing album palette and controls. */
+.family-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 32px;
+}
+.family-tabs a {
+  padding: 12px 16px;
+  min-height: 44px;
+  color: var(--soft-ink);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+.family-tabs a:hover {
+  background: var(--leaf);
+  color: var(--family-green);
+}
+.family-tabs a[aria-current="page"] {
+  color: var(--family-green);
+  border-bottom-color: var(--family-green);
+  font-weight: 600;
+}
+.workspace-section,
+.capture-form,
+.story-preparation {
+  max-width: 800px;
+}
+.workspace-section .family-side {
+  width: 100%;
+}
+.content-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.content-toolbar p {
+  margin-top: 12px;
+}
+.content-filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+  margin: 32px 0 24px;
+}
+.memory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 24px 0;
+}
+.memory-entry-body {
+  min-width: 0;
+}
+.memory-entry-body h3,
+.source-details h3 {
+  overflow-wrap: anywhere;
+}
+.capture-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 24px;
+}
+.capture-options audio,
+.source-original audio {
+  display: block;
+  width: 100%;
+  margin: 16px 0;
+}
+.journey-steps {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: decimal inside;
+  gap: 16px 32px;
+  padding: 16px 0;
+  margin: 0 0 24px;
+  color: var(--family-green);
+  border-bottom: 1px solid var(--rule);
+  font-size: 13px;
+}
+.source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.source-entry {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 24px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.source-original {
+  background: var(--leaf);
+  border-radius: 8px;
+  padding: 16px;
+  align-self: start;
+  min-width: 0;
+}
+.source-original img {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+}
+.source-original blockquote {
+  margin: 0;
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font:
+    16px/1.6 Georgia,
+    serif;
+}
+.source-details p {
+  margin-top: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.source-details .eyebrow {
+  margin-bottom: 8px;
+}
+.context-editor {
+  margin-bottom: 32px;
+}
+.preparation-step {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  padding: 24px 0;
+  margin: 0;
+  min-width: 0;
+}
+.preparation-step legend {
+  font:
+    22px Georgia,
+    serif;
+  padding-right: 16px;
+}
+.preparation-step > label,
+.preparation-step .form-columns {
+  margin-top: 16px;
+}
+.source-choices {
+  border-bottom: 1px solid var(--rule);
+  padding: 8px 0;
+}
+.source-choices .check-label {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.source-choices .check-label span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.source-choices .profile-caption {
+  display: block;
+}
+.recording-panel h3 {
+  margin-bottom: 8px;
+}
+@media (max-width: 700px) {
+  .family-tabs {
+    gap: 0;
+  }
+  .family-tabs a {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+  .content-filters,
+  .capture-options,
+  .source-entry {
+    grid-template-columns: 1fr;
+  }
+  .source-original {
+    max-width: 100%;
+  }
+  .content-toolbar {
+    gap: 16px;
+  }
+}

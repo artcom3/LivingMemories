@@ -4,7 +4,7 @@ Proyecto con Next.js 16, React 19, PostgreSQL, Prisma 7.10.0 y Better Auth 1.7.7
 
 ## Especificaciones del producto
 
-El [SDD de LivingMemories](docs/sdd/README.md) reúne las decisiones del piloto. La infraestructura Docker y el acceso por invitación, las familias y los perfiles de narradores están implementados. Memorias, cuentos y AI siguen en el backlog. La [guía de acceso](docs/access.md) explica cómo habilitar al primer administrador, los permisos y las pruebas.
+El [SDD de LivingMemories](docs/sdd/README.md) reúne las decisiones del piloto. Están implementados Docker, invitaciones, familias, narradores, captura básica de memorias, álbumes y preparaciones de cuentos. La revisión, generación AI y publicación siguen en el backlog. Consultar la [guía de acceso](docs/access.md) y la [adaptación funcional de UX](docs/ux-reference-adaptation.md), que mantiene el diseño visual de esta rama.
 
 ## Arranque completo con Docker
 
@@ -95,6 +95,7 @@ pnpm typecheck
 pnpm build
 pnpm auth:check
 pnpm test:access
+pnpm test:content
 ```
 
 ## Documentación oficial

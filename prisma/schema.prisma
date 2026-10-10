@@ -8,19 +8,22 @@ datasource db {
 }
 
 model User {
-  id                  String          @id
+  id                  String             @id
   name                String
-  email               String          @unique
-  emailVerified       Boolean         @default(false)
+  email               String             @unique
+  emailVerified       Boolean            @default(false)
   image               String?
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @default(now()) @updatedAt
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @default(now()) @updatedAt
   sessions            Session[]
   accounts            Account[]
   memberships         Membership[]
-  invitationsCreated  Invitation[]    @relation("InvitationCreator")
-  invitationsAccepted Invitation[]    @relation("InvitationAcceptor")
+  invitationsCreated  Invitation[]       @relation("InvitationCreator")
+  invitationsAccepted Invitation[]       @relation("InvitationAcceptor")
   personProfiles      PersonProfile[]
+  memoryCollections   MemoryCollection[]
+  memories            Memory[]
+  storyPreparations   StoryPreparation[]
 
   @@map("user")
 }
@@ -96,14 +99,17 @@ enum DeliveryStatus {
 }
 
 model Family {
-  id          String          @id @default(cuid())
-  name        String
-  activatedAt DateTime?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  memberships Membership[]
-  invitations Invitation[]
-  profiles    PersonProfile[]
+  id                String             @id @default(cuid())
+  name              String
+  activatedAt       DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  memberships       Membership[]
+  invitations       Invitation[]
+  profiles          PersonProfile[]
+  collections       MemoryCollection[]
+  memories          Memory[]
+  storyPreparations StoryPreparation[]
 
   @@map("family")
 }
@@ -160,7 +166,108 @@ model PersonProfile {
   updatedAt    DateTime  @updatedAt
   family       Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
   createdBy    User      @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  memories     Memory[]
 
   @@index([familyId, archivedAt])
   @@map("person_profile")
+}
+
+enum MemorySourceType {
+  PHOTO
+  AUDIO
+  TEXT
+}
+
+model MemoryCollection {
+  id          String   @id @default(cuid())
+  familyId    String
+  createdById String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  family      Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  memories    Memory[]
+
+  @@index([familyId, createdById])
+  @@map("memory_collection")
+}
+
+model Memory {
+  id                String             @id @default(cuid())
+  familyId          String
+  createdById       String
+  narratorProfileId String?
+  collectionId      String?
+  title             String
+  description       String?            @db.Text
+  trashedAt         DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  family            Family             @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy         User               @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  narrator          PersonProfile?     @relation(fields: [narratorProfileId], references: [id], onDelete: Restrict)
+  collection        MemoryCollection?  @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  sources           MemorySource[]
+  storyPreparations StoryPreparation[]
+
+  @@index([familyId, createdById, trashedAt])
+  @@map("memory")
+}
+
+model MemorySource {
+  id                 String                   @id @default(cuid())
+  memoryId           String
+  type               MemorySourceType
+  originalName       String
+  originalText       String?                  @db.Text
+  fileKey            String?                  @unique
+  mimeType           String?
+  byteSize           Int?
+  contextDescription String?                  @db.Text
+  peopleContext      String?
+  locationContext    String?
+  dateContext        String?
+  emotionContext     String?
+  withdrawnAt        DateTime?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  memory             Memory                   @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  preparations       StoryPreparationSource[]
+
+  @@index([memoryId, withdrawnAt])
+  @@map("memory_source")
+}
+
+model StoryPreparation {
+  id                String                   @id @default(cuid())
+  familyId          String
+  createdById       String
+  memoryId          String
+  title             String
+  language          String                   @default("es")
+  readerProfile     String                   @default("AGE_5_8")
+  pages             Int                      @default(6)
+  instructions      String?                  @db.Text
+  genericCharacters Boolean                  @default(false)
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  family            Family                   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy         User                     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  memory            Memory                   @relation(fields: [memoryId], references: [id], onDelete: Restrict)
+  sources           StoryPreparationSource[]
+
+  @@index([familyId, createdById])
+  @@map("story_preparation")
+}
+
+model StoryPreparationSource {
+  preparationId String
+  sourceId      String
+  preparation   StoryPreparation @relation(fields: [preparationId], references: [id], onDelete: Cascade)
+  source        MemorySource     @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+
+  @@id([preparationId, sourceId])
+  @@map("story_preparation_source")
 }

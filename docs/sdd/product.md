@@ -13,7 +13,7 @@ La AI ayuda a capturar, organizar y presentar recuerdos reales. El valor central
 - **Narrador:** persona a quien se atribuye un testimonio, como una abuela. Puede tener un perfil familiar sin cuenta.
 - **Lector:** miembro adulto autorizado que disfruta cuentos; puede acompañar a un niño, joven u otro familiar.
 
-Quien registra una memoria y quien la cuenta pueden ser personas diferentes. Los niños no tienen cuentas propias en v1. Los permisos se fijaron en [DEC-014](decisions.md#dec-014): varios administradores conservando uno, colaboradores sobre sus propias memorias y lectores sobre contenido publicado. Su implementación sigue pendiente.
+Quien registra una memoria y quien la cuenta pueden ser personas diferentes. Los niños no tienen cuentas propias en v1. Los permisos se fijaron en [DEC-014](decisions.md#dec-014): varios administradores conservando uno, colaboradores sobre sus propias memorias y lectores sobre contenido publicado. El acceso y los permisos sobre memorias originales están implementados; la publicación de cuentos sigue pendiente.
 
 ## Recorrido del piloto
 

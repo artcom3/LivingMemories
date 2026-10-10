@@ -1,6 +1,6 @@
 # Acceso, familias y narradores
 
-Esta entrega implementa TASK-002: acceso por invitación, espacios familiares, membresías y perfiles independientes de narradores. La captura de memorias y la atribución de archivos a esos perfiles pertenecen a TASK-003.
+Esta entrega implementa TASK-002: acceso por invitación, espacios familiares, membresías y perfiles independientes de narradores. La captura básica y atribución de originales ya están conectadas como avance de TASK-003, según la [adaptación de UX](ux-reference-adaptation.md).
 
 ## Preparar al primer administrador
 
@@ -26,10 +26,11 @@ La familia permanece provisional y sin contenido hasta que ese adulto acepta la 
 
 1. Entrar mediante la invitación o en `/login`.
 2. Elegir la familia en `/families`.
-3. Como administrador, invitar a otros adultos con su correo y rol; revisar, reenviar o retirar invitaciones y gestionar miembros.
-4. Como administrador o colaborador, añadir narradores con nombre, parentesco y presentación opcional. No se crean cuentas para ellos.
-5. Editar los perfiles propios; un administrador también puede editar los demás. Archivar conserva el registro para futuras atribuciones.
-6. Un adulto con membresía vigente puede crear otro espacio privado y se convierte en su administrador.
+3. Usar Memorias, Álbumes y Cuentos para el contenido; Narradores para sus perfiles y Familia para miembros, invitaciones y ajustes.
+4. Como administrador, invitar a otros adultos con su correo y rol; revisar, reenviar o retirar invitaciones y gestionar miembros.
+5. Como administrador o colaborador, añadir narradores con nombre, parentesco y presentación opcional. No se crean cuentas para ellos.
+6. Editar los perfiles propios; un administrador también puede editar los demás. Archivar conserva el registro para futuras atribuciones.
+7. Un adulto con membresía vigente puede crear otro espacio privado y se convierte en su administrador.
 
 La declaración de participación adulta es explícita y se registra al aceptar. Es una declaración del participante; esta fase no añade verificación documental de edad. Crear otro espacio reutiliza esa declaración, sin fingir una nueva confirmación.
 

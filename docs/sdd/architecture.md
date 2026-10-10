@@ -2,18 +2,18 @@
 
 ## Base existente y alcance del diseño
 
-El repositorio contiene Next.js 16.4.0 con App Router, React 19.3.0, Prisma 7.10.0, PostgreSQL 18.6 y Better Auth 1.7.7. El esquema incluye autenticación, `Family`, `Membership`, `Invitation` y `PersonProfile`. Las rutas de acceso y los servicios familiares están implementados con comprobación de permisos vigente.
+El repositorio contiene Next.js 16.4.0 con App Router, React 19.3.0, Prisma 7.10.0, PostgreSQL 18.6 y Better Auth 1.7.7. El esquema incluye autenticación, familias, narradores, `MemoryCollection`, `Memory`, `MemorySource`, `StoryPreparation` y sus referencias de fuentes. Los servicios comprueban sesión, membresía y autoría vigentes.
 
-El entorno Docker conecta PostgreSQL/pgvector, MinIO privado, Mailpit, worker/pg-boss, app y Nginx. El acceso por invitación y las familias/perfiles están implementados y sus correos se capturan en Mailpit. No hay todavía modelos de memorias, índices de contenido ni handlers de generación; las claves AI se incorporarán después. Los contratos de esos módulos siguen como diseño de implementación.
+El entorno Docker conecta PostgreSQL/pgvector, MinIO privado, Mailpit, worker/pg-boss, app y Nginx. El acceso, captura básica de memorias y preparación de cuentos están implementados; los originales se guardan en MinIO y se leen mediante rutas autorizadas. No hay todavía índices de contenido ni handlers de generación. Los contratos de revisión, procesamiento y publicación siguen como diseño de implementación.
 
 ## Componentes y estado
 
 | Componente | Responsabilidad | Estado |
 | --- | --- | --- |
-| Aplicación Next.js | Entrada, familias y perfiles; después captura y cuentos | Acceso/familias/perfiles implementados; resto pendiente |
-| Servicios de dominio | Permisos, revisiones, versiones y publicación | Permisos familiares y perfiles implementados; resto pendiente |
-| PostgreSQL y Prisma | Metadatos, relaciones, evidencia y estado de procesos | Autenticación y participación implementadas; memorias/evidencia pendientes |
-| Almacenamiento privado MinIO | S3 compatible local para originales, fragmentos y medios | Bucket privado, usuario de app y conexión implementados; dominio de fuentes pendiente |
+| Aplicación Next.js | Entrada, memorias, álbumes y preparación de cuentos | Captura y contexto manual implementados; revisión/generación pendientes |
+| Servicios de dominio | Permisos, revisiones, versiones y publicación | Permisos de originales y preparaciones implementados; hechos/publicación pendientes |
+| PostgreSQL y Prisma | Metadatos, relaciones, evidencia y procesos | Memorias/fuentes/preparaciones implementadas; evidencia versionada pendiente |
+| Almacenamiento privado MinIO | Originales, fragmentos y medios | Texto y archivos originales autorizados implementados; derivados y fragmentos pendientes |
 | Worker Node.js y pg-boss | Base para transcripción, OCR, generación e indexación | Cola de diagnóstico implementada; handlers de producto pendientes |
 | PostgreSQL textual y pgvector | Pasajes relevantes con permisos y procedencia | Extensión activada; índices/documentos pendientes |
 | Adaptadores OpenAI y ElevenLabs | Contratos por capacidad, modelos de DEC-024 | Integraciones pendientes |
@@ -37,6 +37,8 @@ Next.js conserva las comprobaciones de sesión y permisos junto a las operacione
 | Procesamiento | `GenerationRun`, `ProcessingJob`, `ProviderAttempt`; registran estado, versión de instrucciones, proveedor y resultados |
 
 Las relaciones entre datos familiares deben conservar `familyId` o una asociación verificable con la familia, y no admitir referencias cruzadas por un simple identificador. Los campos definitivos, restricciones e índices se especificarán al implementar cada módulo, antes de crear su migración.
+
+La captura actual usa `MemorySource` para los originales inmutables y su contexto manual. `MemoryCollection` agrupa recuerdos sin destruirlos al eliminar el álbum. `StoryPreparation` conserva una memoria principal y referencias relacionales a materiales autorizados; no sustituye las futuras versiones de hechos o cuentos generados. El detalle de la [adaptación de UX](../ux-reference-adaptation.md) distingue lo implementado de lo pendiente.
 
 Un localizador de evidencia identifica una versión y un pasaje: tiempo inicial/final de audio, rango de texto o página/región de documento. Una corrección humana crea una aportación atribuida. El texto confirmado no se hace pasar por una cita literal de la grabación.
 
@@ -101,9 +103,9 @@ Los contratos definen capacidades, no SDKs ni modelos obligatorios. Se validan c
 | Narración | Texto versionado, idioma y voz elegida | Audio y alineación cuando esté disponible |
 | Recuperación y respuesta | Actor, contexto, pregunta y pasajes permitidos | Respuesta, citas y estado de respaldo; sin mutación del cuento |
 
-Las rutas de acceso, familias, membresías, invitaciones y perfiles están enumeradas en la [guía de acceso](../access.md). Cargas, entrevistas, revisiones, generación y reproducción se diseñarán en sus tareas; sus contratos todavía no están implementados.
+Las rutas de acceso están enumeradas en la [guía de acceso](../access.md). `/api/families/:familyId/content/*` cubre álbumes, memorias, carga/lectura de originales, contexto manual, papelera y preparaciones. Entrevistas, revisión de hechos, generación y publicación se diseñarán en sus tareas.
 
-El entorno local usa un bucket privado de MinIO/S3 fuera de `public/`. La infraestructura autentica al cliente S3; la autorización por familia y el flujo de cargas se implementarán en TASK-003. Allí se comprobarán los límites de DEC-015 antes de procesos costosos, incluidas cargas concurrentes. El worker ya incluye herramientas para audio, PDF, OCR español/inglés y conversión HEIC; todavía no están conectadas a procesadores de memorias.
+El entorno usa MinIO privado fuera de `public/`. Las cargas y nuevas lecturas verifican familia, membresía y autoría; la respuesta de archivos no usa URLs públicas. Bytes y cantidad se limitan en el servidor. La validación técnica completa de formatos/duración, procesamiento y purga siguen en TASK-003/005/012. El worker incluye herramientas multimedia, todavía sin conectarlas a esos procesadores.
 
 ## Procesamiento, errores y costo
 

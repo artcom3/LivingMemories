@@ -25,7 +25,7 @@ try {
       "--conditions=react-server",
       "--import=tsx",
       "--test",
-      "tests/access.integration.test.ts",
+      process.argv[2] || "tests/access.integration.test.ts",
     ],
   ]) {
     const result = spawnSync(process.execPath, args, {

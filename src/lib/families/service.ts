@@ -36,7 +36,7 @@ async function lockFamily(tx: Tx, familyId: string) {
   );
   if (!rows.length) throw unavailable();
 }
-async function withFamily<T>(
+export async function withFamily<T>(
   actorId: string,
   familyId: string,
   run: (
@@ -122,46 +122,44 @@ export async function createFamily(actorId: string, input: Input) {
 }
 export async function getFamily(actorId: string, familyId: string) {
   return withFamily(actorId, familyId, async (tx, member) => {
-    const [family, members, invitations, profiles] = await Promise.all([
-      tx.family.findUniqueOrThrow({
-        where: { id: familyId },
-        select: { id: true, name: true },
-      }),
-      member.role === "ADMIN"
-        ? tx.membership.findMany({
-            where: { familyId, status: "ACTIVE" },
-            select: {
-              id: true,
-              userId: true,
-              role: true,
-              user: { select: { name: true, email: true } },
-            },
-            orderBy: { createdAt: "asc" },
-          })
-        : [],
-      member.role === "ADMIN"
-        ? tx.invitation.findMany({
-            where: { familyId },
-            select: inviteSelection,
-            orderBy: { createdAt: "desc" },
-            take: 50,
-          })
-        : [],
-      member.role !== "READER"
-        ? tx.personProfile.findMany({
-            where: { familyId, archivedAt: null },
-            select: {
-              id: true,
-              name: true,
-              relationship: true,
-              biography: true,
-              createdById: true,
-              createdBy: { select: { name: true } },
-            },
-            orderBy: { createdAt: "asc" },
-          })
-        : [],
-    ]);
+    const family = await tx.family.findUniqueOrThrow({
+      where: { id: familyId },
+      select: { id: true, name: true },
+    });
+    const members = await (member.role === "ADMIN"
+      ? tx.membership.findMany({
+          where: { familyId, status: "ACTIVE" },
+          select: {
+            id: true,
+            userId: true,
+            role: true,
+            user: { select: { name: true, email: true } },
+          },
+          orderBy: { createdAt: "asc" },
+        })
+      : []);
+    const invitations = await (member.role === "ADMIN"
+      ? tx.invitation.findMany({
+          where: { familyId },
+          select: inviteSelection,
+          orderBy: { createdAt: "desc" },
+          take: 50,
+        })
+      : []);
+    const profiles = await (member.role !== "READER"
+      ? tx.personProfile.findMany({
+          where: { familyId, archivedAt: null },
+          select: {
+            id: true,
+            name: true,
+            relationship: true,
+            biography: true,
+            createdById: true,
+            createdBy: { select: { name: true } },
+          },
+          orderBy: { createdAt: "asc" },
+        })
+      : []);
     return {
       family,
       role: member.role,

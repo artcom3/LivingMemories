@@ -28,6 +28,8 @@ Dependencias: SDD vigente; por prioridad expresa del usuario, TASK-001 no bloque
 
 Guardar memorias con múltiples fuentes, versiones y atribución. Validar cargas, conservar originales y servir fragmentos independientes con permisos distintos al archivo completo. Aplicar la política acordada de retirada, papelera y purga.
 
+Avance implementado: captura de texto/fotos/audio, grabador, originales privados en MinIO, contexto manual, agrupación por álbumes y papelera recuperable. La [adaptación funcional de UX](../ux-reference-adaptation.md) conserva la prioridad del SDD. Inspección completa de archivos/duración, versiones de transcripción, fragmentos publicados y purga automática siguen pendientes; esta tarea permanece abierta.
+
 Dependencias: TASK-002; implementar formatos/límites de DEC-015 y retirada/papelera/purga de DEC-017. Aceptación: SCN-02, SCN-04, SCN-10 y SCN-12.
 
 ### TASK-004
@@ -69,6 +71,8 @@ Dependencias: TASK-006; aplicar DEC-016, DEC-017 y DEC-024. Aceptación: SCN-03,
 - [ ] Generar adaptaciones textuales versionadas.
 
 Construir selección de memoria principal, revisión de hechos, idioma y perfil lector. Generar páginas con respaldo verificable y contexto documental separado. Conservar versiones y detectar dependencias alteradas.
+
+Avance implementado: preparación privada y retomable con memoria principal, selección de fuentes autorizadas, idioma, perfil lector, páginas e indicaciones. No representa texto generado ni una versión publicable. Revisión de hechos y generación siguen pendientes.
 
 Dependencias: TASK-007; usar gpt-6.1-sol, los presets ajustables de DEC-020 y los topes de DEC-023. Aceptación: SCN-02, SCN-07, SCN-08 y SCN-14.
 

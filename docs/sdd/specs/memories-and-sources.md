@@ -4,7 +4,7 @@
 
 Capturar recuerdos conservando sus originales y el vínculo con toda interpretación posterior. Participan el adulto que registra, el narrador, el administrador y el lector de fragmentos publicados.
 
-Acuerdos: [DEC-003](../decisions.md#dec-003), [DEC-004](../decisions.md#dec-004), [DEC-011](../decisions.md#dec-011), [DEC-015](../decisions.md#dec-015) y [DEC-017](../decisions.md#dec-017). El entorno local y los límites están decididos; la implementación de captura y almacenamiento sigue pendiente.
+Acuerdos: [DEC-003](../decisions.md#dec-003), [DEC-004](../decisions.md#dec-004), [DEC-011](../decisions.md#dec-011), [DEC-015](../decisions.md#dec-015) y [DEC-017](../decisions.md#dec-017). La captura básica, originales privados y contexto manual están implementados; procesamiento, validación completa, fragmentos y purga siguen pendientes, según la [adaptación de UX](../../ux-reference-adaptation.md).
 
 ## Flujo y estados propuestos
 

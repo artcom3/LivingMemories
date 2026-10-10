@@ -22,6 +22,7 @@
     "auth:check": "auth check schema --config ./src/lib/auth.ts",
     "pilot:bootstrap": "node --env-file=.env --env-file-if-exists=.env.local --conditions=react-server --import=tsx scripts/pilot/bootstrap.mts",
     "test:access": "node --import=tsx scripts/test-access.mts",
+    "test:content": "node --import=tsx scripts/test-access.mts tests/content.integration.test.ts",
     "docker:env": "node scripts/docker/setup-env.mjs",
     "docker:up": "node scripts/docker/up.mjs",
     "docker:down": "docker compose -f docker-compose.dev.yml down",

@@ -54,7 +54,7 @@ export async function actor(request: Request) {
     );
   return session.user.id;
 }
-export async function body(request: Request): Promise<Input> {
+export function checkOrigin(request: Request) {
   const expected = new URL(
     process.env.BETTER_AUTH_URL || "http://localhost:3000",
   ).origin;
@@ -64,6 +64,9 @@ export async function body(request: Request): Promise<Input> {
       "INVALID_ORIGIN",
       "La solicitud no está permitida.",
     );
+}
+export async function body(request: Request): Promise<Input> {
+  checkOrigin(request);
   if (
     request.headers.get("content-type")?.split(";")[0].trim() !==
     "application/json"
