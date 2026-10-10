@@ -12,12 +12,19 @@ import {
 } from "@/components/ui/native-select";
 import { useConfirmation } from "@/components/private/confirmation-provider";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, ViewTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { MemoryDetail } from "@/lib/memories/service";
-import { hasContext, sourceLabels } from "@/lib/memories/shared";
+import {
+  hasContext,
+  memoryCoverSource,
+  sourceLabels,
+} from "@/lib/memories/shared";
 import { mutate } from "@/lib/families/client";
 import { AudioRecorder } from "./audio-recorder";
+import { AnimatePresence } from "motion/react";
+import { RevealItem, RevealList } from "@/components/motion/reveal";
+import { useCelebrate } from "@/components/motion/celebrate";
 import {
   ArrowLeft,
   BookOpen,
@@ -60,6 +67,8 @@ export function MemoryEditor({
   }[];
 }) {
   const confirm = useConfirmation();
+  const celebrate = useCelebrate();
+  const uploadButton = useRef<HTMLButtonElement>(null);
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
@@ -72,6 +81,8 @@ export function MemoryEditor({
   const base = "/api/families/" + familyId + "/content/memories/" + memory.id;
   const familyBase = "/families/" + familyId;
   const source = memory.sources.find((item) => item.id === editingSource);
+  // The memory card's cover grows into this photo (memory-card.tsx).
+  const coverId = memoryCoverSource(memory.sources)?.id;
   async function save(
     path: string,
     method: string,
@@ -156,8 +167,12 @@ export function MemoryEditor({
       item.type === filter,
   );
   return (
-    <div className="memory-workspace">
-      <Link className="memory-back-link" href={familyBase}>
+    <div className="memory-workspace reveal-blocks">
+      <Link
+        className="memory-back-link"
+        href={familyBase}
+        transitionTypes={["nav-back"]}
+      >
         <ArrowLeft aria-hidden="true" />
         Back to memories
       </Link>
@@ -194,7 +209,7 @@ export function MemoryEditor({
           {error}
         </Feedback>
       ) : null}
-      <div className="memory-editor-layout">
+      <div className="memory-editor-layout reveal-blocks">
         <aside className="memory-capture" aria-label="Memory actions">
           <Card>
             <CardHeader>
@@ -218,11 +233,14 @@ export function MemoryEditor({
                 onChange={async (event) => {
                   const input = event.currentTarget;
                   const files = Array.from(input.files || []);
-                  if (files.length && (await uploadMany(files)))
+                  if (files.length && (await uploadMany(files))) {
                     input.value = "";
+                    celebrate(uploadButton.current);
+                  }
                 }}
               />
               <Button
+                ref={uploadButton}
                 disabled={busy || memory.sources.length >= 20}
                 onClick={() => fileInput.current?.click()}
               >
@@ -275,7 +293,10 @@ export function MemoryEditor({
             Added by {memory.createdBy.name}
           </p>
         </aside>
-        <section className="memory-materials" aria-labelledby="materials-title">
+        <section
+          className="memory-materials keep-visible"
+          aria-labelledby="materials-title"
+        >
           <div className="content-toolbar">
             <div>
               <h2 id="materials-title">
@@ -319,42 +340,58 @@ export function MemoryEditor({
               </FormField>
             ) : null}
           </div>
-          <div className="source-list">
-            {filtered.length ? (
-              filtered.map((item) => (
-                <article className="source-entry" key={item.id}>
-                  <div className="source-original">
-                    {item.type === "PHOTO" &&
-                    ["image/jpeg", "image/png", "image/webp"].includes(
-                      item.mimeType || "",
-                    ) ? (
-                      // Private originals require the session cookie; they bypass image optimization.
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={base + "/sources/" + item.id}
-                        alt={sourceDisplayName(item.originalName)}
-                        loading="lazy"
-                      />
-                    ) : item.type === "AUDIO" ? (
-                      <audio
-                        src={base + "/sources/" + item.id}
-                        controls
-                        preload="metadata"
-                      />
-                    ) : item.type === "VIDEO" ? (
-                      <video
-                        src={base + "/sources/" + item.id}
-                        controls
-                        preload="metadata"
-                      />
-                    ) : item.type === "TEXT" ? (
-                      <blockquote>{item.originalText}</blockquote>
-                    ) : (
-                      <p className="muted">
-                        The original photo is available to download.
-                      </p>
-                    )}
-                  </div>
+          <RevealList as="div" className="source-list">
+            <AnimatePresence mode="popLayout">
+              {filtered.map((item, index) => (
+                <RevealItem
+                  as="article"
+                  presence
+                  className="source-entry"
+                  key={item.id}
+                  index={index}
+                >
+                  <ViewTransition
+                    name={
+                      item.id === coverId
+                        ? `memory-cover-${memory.id}`
+                        : undefined
+                    }
+                    share="morph"
+                    default="none"
+                  >
+                    <div className="source-original">
+                      {item.type === "PHOTO" &&
+                      ["image/jpeg", "image/png", "image/webp"].includes(
+                        item.mimeType || "",
+                      ) ? (
+                        // Private originals require the session cookie; they bypass image optimization.
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={base + "/sources/" + item.id}
+                          alt={sourceDisplayName(item.originalName)}
+                          loading={item.id === coverId ? "eager" : "lazy"}
+                        />
+                      ) : item.type === "AUDIO" ? (
+                        <audio
+                          src={base + "/sources/" + item.id}
+                          controls
+                          preload="metadata"
+                        />
+                      ) : item.type === "VIDEO" ? (
+                        <video
+                          src={base + "/sources/" + item.id}
+                          controls
+                          preload="metadata"
+                        />
+                      ) : item.type === "TEXT" ? (
+                        <blockquote>{item.originalText}</blockquote>
+                      ) : (
+                        <p className="muted">
+                          The original photo is available to download.
+                        </p>
+                      )}
+                    </div>
+                  </ViewTransition>
                   <div className="source-details">
                     <span className="eyebrow">{sourceLabels[item.type]}</span>
                     <h3>{sourceDisplayName(item.originalName)}</h3>
@@ -424,9 +461,10 @@ export function MemoryEditor({
                       </Button>
                     </div>
                   </div>
-                </article>
-              ))
-            ) : (
+                </RevealItem>
+              ))}
+            </AnimatePresence>
+            {!filtered.length ? (
               <EmptyState className="empty-state">
                 <h3>
                   {memory.sources.length
@@ -444,8 +482,8 @@ export function MemoryEditor({
                   </Button>
                 ) : null}
               </EmptyState>
-            )}
-          </div>
+            ) : null}
+          </RevealList>
         </section>
       </div>
       <Dialog
@@ -480,6 +518,8 @@ export function MemoryEditor({
                 onSubmit={async (event) => {
                   event.preventDefault();
                   const form = event.currentTarget;
+                  const origin =
+                    (event.nativeEvent as SubmitEvent).submitter ?? form;
                   if (
                     await save(
                       "/text",
@@ -488,6 +528,7 @@ export function MemoryEditor({
                       "Written account saved as original material.",
                     )
                   ) {
+                    celebrate(origin);
                     form.reset();
                     setCapture(null);
                   }

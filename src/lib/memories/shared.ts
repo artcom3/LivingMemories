@@ -15,10 +15,10 @@ export function hasContext(source: {
 }) {
   return Boolean(
     source.contextDescription ||
-    source.peopleContext ||
-    source.locationContext ||
-    source.dateContext ||
-    source.emotionContext,
+      source.peopleContext ||
+      source.locationContext ||
+      source.dateContext ||
+      source.emotionContext,
   );
 }
 export const sourceLabels = {
@@ -27,3 +27,13 @@ export const sourceLabels = {
   AUDIO: "Audio",
   TEXT: "Written account",
 } as const;
+const coverMimeTypes = ["image/jpeg", "image/png", "image/webp"];
+/** The photo that stands for a memory: its first browser-viewable photo. */
+export function memoryCoverSource<
+  T extends { type: string; mimeType?: string | null },
+>(sources: T[]): T | undefined {
+  return sources.find(
+    (source) =>
+      source.type === "PHOTO" && coverMimeTypes.includes(source.mimeType || ""),
+  );
+}

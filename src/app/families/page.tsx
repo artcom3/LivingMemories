@@ -24,7 +24,7 @@ export default async function FamiliesPage({
   const action = isLandingAction(go) ? go : null;
   return (
     <AppShell userName={session.user.name} families={families}>
-      <div className="groups-page">
+      <div className="groups-page reveal-blocks">
         <div className="groups-heading">
           <div>
             <span className="eyebrow">YOUR MEMORIES, TOGETHER</span>

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, ViewTransition } from "react";
 import { ArrowRight, FileText, ImageIcon, Mic, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { MemoryOverview } from "@/lib/memories/service";
-import { hasContext } from "@/lib/memories/shared";
+import { hasContext, memoryCoverSource } from "@/lib/memories/shared";
+
+// Opening a memory goes one level deeper: the page slides in from the right
+// and the cover grows into the photo on the memory page (memory-editor.tsx).
+const forward = ["nav-forward"];
 
 const resourceTypes = [
   { type: "PHOTO", icon: ImageIcon, singular: "photo", plural: "photos" },
@@ -32,11 +36,7 @@ export function MemoryCard({
 }) {
   const base = `/families/${familyId}`;
   const href = `${base}/memories/${memory.id}`;
-  const cover = memory.sources.find(
-    (source) =>
-      source.type === "PHOTO" &&
-      ["image/jpeg", "image/png", "image/webp"].includes(source.mimeType || ""),
-  );
+  const cover = memoryCoverSource(memory.sources);
   const coverSrc = cover
     ? `/api/families/${familyId}/content/memories/${memory.id}/sources/${cover.id}`
     : null;
@@ -49,27 +49,36 @@ export function MemoryCard({
   return (
     <Card className="memory-card" data-cover={showCover ? "true" : undefined}>
       {showCover ? (
-        <Link
-          href={href}
-          className="memory-card-cover"
-          tabIndex={-1}
-          aria-hidden="true"
+        <ViewTransition
+          name={`memory-cover-${memory.id}`}
+          share="morph"
+          default="none"
         >
-          <Image
-            src={coverSrc}
-            alt=""
-            fill
-            unoptimized
-            loading="lazy"
-            sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
-            onError={() => setFailedSrc(coverSrc)}
-          />
-        </Link>
+          <Link
+            href={href}
+            transitionTypes={forward}
+            className="memory-card-cover"
+            tabIndex={-1}
+            aria-hidden="true"
+          >
+            <Image
+              src={coverSrc}
+              alt=""
+              fill
+              unoptimized
+              loading="lazy"
+              sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
+              onError={() => setFailedSrc(coverSrc)}
+            />
+          </Link>
+        </ViewTransition>
       ) : null}
       <CardHeader>
         <CardTitle>
           <h2>
-            <Link href={href}>{memory.title}</Link>
+            <Link href={href} transitionTypes={forward}>
+              {memory.title}
+            </Link>
           </h2>
         </CardTitle>
         {memory.description?.trim() ? (
@@ -125,14 +134,17 @@ export function MemoryCard({
       </CardContent>
       <CardFooter>
         <Button asChild variant="outline">
-          <Link href={href}>
+          <Link href={href} transitionTypes={forward}>
             Open memory
             <ArrowRight data-icon="inline-end" aria-hidden="true" />
           </Link>
         </Button>
         {memory.sources.length ? (
           <Button asChild variant="ghost">
-            <Link href={`${base}/stories/new?memory=${memory.id}`}>
+            <Link
+              href={`${base}/stories/new?memory=${memory.id}`}
+              transitionTypes={forward}
+            >
               Prepare story
             </Link>
           </Button>

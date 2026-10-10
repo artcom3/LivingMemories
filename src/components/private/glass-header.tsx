@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import * as m from "motion/react-m";
+import { fluidSlow } from "@/lib/motion";
 import {
   BookOpen,
   ChevronDown,
@@ -94,6 +96,14 @@ export function GlassHeader({
         },
       ].filter((link) => role !== "READER" || !link.write)
     : [];
+  const activeHref = links.find((link) => link.active)?.href;
+  const activeIndex = links.findIndex((link) => link.active);
+  const direction = (index: number) =>
+    activeIndex >= 0 && index < activeIndex ? ["nav-back"] : ["nav-forward"];
+  // A clicked tab only counts as pending until the route changes.
+  const [pending, setPending] = useState<{ href: string; from: string }>();
+  const pendingHref = pending?.from === pathname ? pending.href : undefined;
+  const setPendingHref = (href: string) => setPending({ href, from: pathname });
   const familyPicker =
     families.length > 1 ? (
       <DropdownMenu>
@@ -184,6 +194,8 @@ export function GlassHeader({
       style={{
         backdropFilter: "var(--library-glass-filter)",
         WebkitBackdropFilter: "var(--library-glass-filter)",
+        // Stays put while page content slides (globals.css, site-header).
+        viewTransitionName: "site-header",
       }}
     >
       <div className="library-toolbar">
@@ -265,13 +277,25 @@ export function GlassHeader({
         </div>
       </div>
       <nav className="desktop-family-nav" aria-label="Family sections">
-        {links.map((link) => (
+        {links.map((link, index) => (
           <Link
             key={link.href}
             href={link.href}
+            transitionTypes={link.active ? undefined : direction(index)}
             aria-current={link.active ? "page" : undefined}
+            onClick={() => setPendingHref(link.href)}
           >
             {link.label}
+            {/* The underline glides to the tab you click, before the page
+                arrives, then stays with the active section. */}
+            {(pendingHref ?? activeHref) === link.href ? (
+              <m.span
+                layoutId="family-nav-indicator"
+                transition={fluidSlow}
+                className="desktop-family-nav-indicator"
+                aria-hidden="true"
+              />
+            ) : null}
           </Link>
         ))}
       </nav>

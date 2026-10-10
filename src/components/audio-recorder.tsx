@@ -2,6 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { Feedback } from "@/components/private/content-primitives";
 import { useEffect, useRef, useState } from "react";
+import { useCelebrate } from "@/components/motion/celebrate";
+import { LiveWave } from "@/components/motion/live-wave";
 export function AudioRecorder({
   disabled,
   onSave,
@@ -9,9 +11,12 @@ export function AudioRecorder({
   disabled: boolean;
   onSave: (file: File) => Promise<boolean>;
 }) {
+  const celebrate = useCelebrate();
   const recorder = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
   const [recording, setRecording] = useState(false);
+  // The open microphone, for the live wave while recording.
+  const [liveStream, setLiveStream] = useState<MediaStream | null>(null);
   const [audio, setAudio] = useState<Blob | null>(null);
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
@@ -75,6 +80,7 @@ export function AudioRecorder({
       next.onstop = () => {
         preview(new Blob(chunks, { type: next.mimeType }));
         setRecording(false);
+        setLiveStream(null);
         stream.current?.getTracks().forEach((track) => track.stop());
       };
       recorder.current = next;
@@ -83,6 +89,7 @@ export function AudioRecorder({
       recordingStarted.current = Date.now();
       next.start();
       setRecording(true);
+      setLiveStream(stream.current);
     } catch (error) {
       stream.current?.getTracks().forEach((track) => track.stop());
       setError(
@@ -119,13 +126,15 @@ export function AudioRecorder({
           </Button>
         )}
       </div>
+      {recording && liveStream ? <LiveWave stream={liveStream} /> : null}
       {url ? (
         <>
           <audio src={url} controls />
           <Button
             type="button"
             disabled={disabled}
-            onClick={async () => {
+            onClick={async (event) => {
+              const button = event.currentTarget;
               const extension = audio!.type.includes("mp4") ? "m4a" : "webm";
               if (
                 await onSave(
@@ -136,6 +145,7 @@ export function AudioRecorder({
                   ),
                 )
               ) {
+                celebrate(button);
                 preview(null);
               }
             }}

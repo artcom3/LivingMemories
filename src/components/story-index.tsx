@@ -1,4 +1,5 @@
 "use client";
+import { RevealItem, RevealList } from "@/components/motion/reveal";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -80,7 +81,7 @@ export function StoryIndex({
     setFilter("all");
   };
   return (
-    <section className="stories-index">
+    <section className="stories-index reveal-blocks">
       <div className="memories-heading">
         <div>
           <span className="eyebrow">{familyName} · Private group</span>
@@ -154,7 +155,7 @@ export function StoryIndex({
             </>
           )}
           {visible.length ? (
-            <div className="memory-card-grid">
+            <RevealList as="div" className="memory-card-grid">
               {visible.map((story) => {
                 const latest = story.creations[0];
                 const status = latest?.status;
@@ -178,98 +179,103 @@ export function StoryIndex({
                   (memory) => memory.id === story.memory.id,
                 );
                 return (
-                  <Card className="story-card" key={story.id}>
-                    <CardHeader>
-                      <Badge
-                        variant={
-                          currentStage === "failed"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                        className="story-status"
-                      >
-                        {status
-                          ? creationStatusLabels[status]
-                          : "In preparation"}
-                      </Badge>
-                      <CardTitle>
-                        <h2>
-                          <Link href={storyHref}>{story.title}</Link>
-                        </h2>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="story-card-content">
-                      <div className="story-origin">
-                        <span className="form-hint">Based on your memory</span>
-                        <Link href={`${base}/memories/${story.memory.id}`}>
-                          {story.memory.title}
-                        </Link>
-                        {memory?.narrator && (
-                          <span className="muted">
-                            Told by {memory.narrator.name}
+                  <RevealItem as="div" className="reveal-cell" key={story.id}>
+                    <Card className="story-card">
+                      <CardHeader>
+                        <Badge
+                          variant={
+                            currentStage === "failed"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                          className="story-status"
+                        >
+                          {status
+                            ? creationStatusLabels[status]
+                            : "In preparation"}
+                        </Badge>
+                        <CardTitle>
+                          <h2>
+                            <Link href={storyHref}>{story.title}</Link>
+                          </h2>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="story-card-content">
+                        <div className="story-origin">
+                          <span className="form-hint">
+                            Based on your memory
                           </span>
-                        )}
-                      </div>
-                      <dl className="story-facts">
-                        <div>
-                          <dt>
-                            <Users aria-hidden="true" />
-                            Reader
-                          </dt>
-                          <dd>
-                            {readerProfiles[
-                              story.readerProfile as ReaderProfile
-                            ]?.label || story.readerProfile}
-                          </dd>
+                          <Link href={`${base}/memories/${story.memory.id}`}>
+                            {story.memory.title}
+                          </Link>
+                          {memory?.narrator && (
+                            <span className="muted">
+                              Told by {memory.narrator.name}
+                            </span>
+                          )}
                         </div>
-                        <div>
-                          <dt>
-                            <Globe aria-hidden="true" />
-                            Language
-                          </dt>
-                          <dd>
-                            {story.language === "en"
-                              ? "English"
-                              : story.language === "es"
-                                ? "Spanish"
-                                : story.language}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt>
-                            <BookOpen aria-hidden="true" />
-                            Planned length
-                          </dt>
-                          <dd>
-                            {story.pages} {story.pages === 1 ? "page" : "pages"}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt>
-                            <FileText aria-hidden="true" />
-                            Selected materials
-                          </dt>
-                          <dd>{story.sources.length}</dd>
-                        </div>
-                      </dl>
-                    </CardContent>
-                    <CardFooter>
-                      <Button asChild variant="outline">
-                        <Link href={storyHref}>
-                          {action}
-                          <ArrowRight aria-hidden="true" />
-                        </Link>
-                      </Button>
-                      {status === "READY" && (
-                        <Button asChild variant="ghost">
-                          <Link href={preparationHref}>Edit preparation</Link>
+                        <dl className="story-facts">
+                          <div>
+                            <dt>
+                              <Users aria-hidden="true" />
+                              Reader
+                            </dt>
+                            <dd>
+                              {readerProfiles[
+                                story.readerProfile as ReaderProfile
+                              ]?.label || story.readerProfile}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>
+                              <Globe aria-hidden="true" />
+                              Language
+                            </dt>
+                            <dd>
+                              {story.language === "en"
+                                ? "English"
+                                : story.language === "es"
+                                  ? "Spanish"
+                                  : story.language}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>
+                              <BookOpen aria-hidden="true" />
+                              Planned length
+                            </dt>
+                            <dd>
+                              {story.pages}{" "}
+                              {story.pages === 1 ? "page" : "pages"}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>
+                              <FileText aria-hidden="true" />
+                              Selected materials
+                            </dt>
+                            <dd>{story.sources.length}</dd>
+                          </div>
+                        </dl>
+                      </CardContent>
+                      <CardFooter>
+                        <Button asChild variant="outline">
+                          <Link href={storyHref}>
+                            {action}
+                            <ArrowRight aria-hidden="true" />
+                          </Link>
                         </Button>
-                      )}
-                    </CardFooter>
-                  </Card>
+                        {status === "READY" && (
+                          <Button asChild variant="ghost">
+                            <Link href={preparationHref}>Edit preparation</Link>
+                          </Button>
+                        )}
+                      </CardFooter>
+                    </Card>
+                  </RevealItem>
                 );
               })}
-            </div>
+            </RevealList>
           ) : (
             <Empty className="stories-empty">
               <EmptyHeader>

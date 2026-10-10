@@ -3,9 +3,6 @@
    these unlayered values win. Only engine-specific tokens stay scoped here. */
 .landing-page,
 .landing-page .sw-root {
-  /* Spring-like curve for every UI transition (landing-page-design B7). */
-  --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
-
   --sw-bg: var(--paper);
   --sw-ink: var(--ink);
   --sw-ink-soft: var(--ink-soft);

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { mutate } from "@/lib/families/client";
+import { useCelebrate } from "@/components/motion/celebrate";
 export function MemoryCreateForm({
   familyId,
   profiles,
@@ -30,6 +31,7 @@ export function MemoryCreateForm({
   collectionId?: string;
 }) {
   const router = useRouter();
+  const celebrate = useCelebrate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [narrator, setNarrator] = useState("");
@@ -38,6 +40,9 @@ export function MemoryCreateForm({
       className="form-stack"
       onSubmit={async (event) => {
         event.preventDefault();
+        // The save button, read before awaiting (currentTarget clears).
+        const origin =
+          (event.nativeEvent as SubmitEvent).submitter ?? event.currentTarget;
         setBusy(true);
         setError("");
         const data = new FormData(event.currentTarget);
@@ -50,6 +55,7 @@ export function MemoryCreateForm({
               narratorProfileId: narrator === "new" ? "" : narrator,
             },
           );
+          celebrate(origin);
           router.push("/families/" + familyId + "/memories/" + result.id);
           router.refresh();
         } catch (error) {

@@ -24,6 +24,8 @@ import {
   type ReaderProfile,
 } from "@/lib/memories/shared";
 import { mutate } from "@/lib/families/client";
+import { AnimatePresence } from "motion/react";
+import { RevealItem, RevealList } from "@/components/motion/reveal";
 export function MemoryIndex({
   familyId,
   familyName,
@@ -65,7 +67,7 @@ export function MemoryIndex({
   const currentAlbum = data.collections.find((a) => a.id === editingAlbum);
   if (role === "READER")
     return (
-      <section>
+      <section className="reveal-blocks">
         {showCards ? (
           <div className="memories-heading">
             <div>
@@ -84,7 +86,7 @@ export function MemoryIndex({
     );
   if (section === "stories")
     return (
-      <section>
+      <section className="reveal-blocks">
         <div className="section-heading">
           <h2>Stories in preparation</h2>
           <p className="muted">
@@ -136,7 +138,7 @@ export function MemoryIndex({
       </section>
     );
   return (
-    <section>
+    <section className="reveal-blocks">
       {showCards ? (
         <div className="memories-heading">
           <div>
@@ -417,93 +419,101 @@ export function MemoryIndex({
               </Button>
             </div>
           ) : null}
-          <div
+          <RevealList
+            as="div"
             className={
               showCards && visible.length ? "memory-card-grid" : "memory-list"
             }
           >
-            {visible.length ? (
-              visible.map((memory) =>
-                showCards ? (
-                  <MemoryCard
-                    key={memory.id}
-                    memory={memory}
-                    familyId={familyId}
-                  />
-                ) : (
-                  <article className="family-entry" key={memory.id}>
-                    <InitialAvatar>{memory.title.slice(0, 1)}</InitialAvatar>
-                    <div className="memory-entry-body">
-                      <h3>{memory.title}</h3>
-                      <p className="muted">
-                        {memory.narrator?.name || "Storyteller to be added"}
-                        {memory.collection
-                          ? " · " + memory.collection.name
-                          : ""}
-                      </p>
-                      <span className="form-hint">
-                        {memory.sources.length}{" "}
-                        {memory.sources.length === 1 ? "material" : "materials"}{" "}
-                        · {memory.sources.filter(hasContext).length} with
-                        context
-                      </span>
-                      <div className="row-actions">
-                        {trash ? (
-                          <Button
-                            disabled={busy}
-                            onClick={async () => {
-                              setBusy(true);
-                              try {
-                                await mutate(
-                                  "/api/families/" +
-                                    familyId +
-                                    "/content/memories/" +
-                                    memory.id +
-                                    "/restore",
-                                  "POST",
-                                );
-                                router.refresh();
-                              } catch (error) {
-                                setFeedback(
-                                  error instanceof Error
-                                    ? error.message
-                                    : "We could not restore this memory.",
-                                );
-                              } finally {
-                                setBusy(false);
-                              }
-                            }}
-                            variant="outline"
-                            type="button"
-                          >
-                            Restore memory
-                          </Button>
-                        ) : (
-                          <>
-                            <Button asChild variant="ghost">
-                              <Link href={base + "/memories/" + memory.id}>
-                                Continue memory
-                              </Link>
+            <AnimatePresence mode="popLayout">
+              {visible.map((memory, index) => (
+                <RevealItem
+                  as="div"
+                  presence
+                  className="reveal-cell"
+                  key={memory.id}
+                  index={index}
+                >
+                  {showCards ? (
+                    <MemoryCard memory={memory} familyId={familyId} />
+                  ) : (
+                    <article className="family-entry">
+                      <InitialAvatar>{memory.title.slice(0, 1)}</InitialAvatar>
+                      <div className="memory-entry-body">
+                        <h3>{memory.title}</h3>
+                        <p className="muted">
+                          {memory.narrator?.name || "Storyteller to be added"}
+                          {memory.collection
+                            ? " · " + memory.collection.name
+                            : ""}
+                        </p>
+                        <span className="form-hint">
+                          {memory.sources.length}{" "}
+                          {memory.sources.length === 1
+                            ? "material"
+                            : "materials"}{" "}
+                          · {memory.sources.filter(hasContext).length} with
+                          context
+                        </span>
+                        <div className="row-actions">
+                          {trash ? (
+                            <Button
+                              disabled={busy}
+                              onClick={async () => {
+                                setBusy(true);
+                                try {
+                                  await mutate(
+                                    "/api/families/" +
+                                      familyId +
+                                      "/content/memories/" +
+                                      memory.id +
+                                      "/restore",
+                                    "POST",
+                                  );
+                                  router.refresh();
+                                } catch (error) {
+                                  setFeedback(
+                                    error instanceof Error
+                                      ? error.message
+                                      : "We could not restore this memory.",
+                                  );
+                                } finally {
+                                  setBusy(false);
+                                }
+                              }}
+                              variant="outline"
+                              type="button"
+                            >
+                              Restore memory
                             </Button>
-                            {memory.sources.length ? (
+                          ) : (
+                            <>
                               <Button asChild variant="ghost">
-                                <Link
-                                  href={
-                                    base + "/stories/new?memory=" + memory.id
-                                  }
-                                >
-                                  Prepare story
+                                <Link href={base + "/memories/" + memory.id}>
+                                  Continue memory
                                 </Link>
                               </Button>
-                            ) : null}
-                          </>
-                        )}
+                              {memory.sources.length ? (
+                                <Button asChild variant="ghost">
+                                  <Link
+                                    href={
+                                      base + "/stories/new?memory=" + memory.id
+                                    }
+                                  >
+                                    Prepare story
+                                  </Link>
+                                </Button>
+                              ) : null}
+                            </>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                ),
-              )
-            ) : (
+                    </article>
+                  )}
+                </RevealItem>
+              ))}
+            </AnimatePresence>
+            {!visible.length ? (
               <EmptyState className="empty-state">
                 <h3>
                   {trash
@@ -536,8 +546,8 @@ export function MemoryIndex({
                   </Button>
                 ) : null}
               </EmptyState>
-            )}
-          </div>
+            ) : null}
+          </RevealList>
           {feedback ? (
             <Feedback role="alert" className="error">
               {feedback}

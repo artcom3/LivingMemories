@@ -1,4 +1,5 @@
 "use client";
+import { RevealItem, RevealList } from "@/components/motion/reveal";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -163,7 +164,7 @@ export function MusicIndex({
       ),
   );
   return (
-    <section>
+    <section className="reveal-blocks">
       <div className="memories-heading">
         <div>
           <span className="eyebrow">{familyName} · Private group</span>
@@ -234,7 +235,7 @@ export function MusicIndex({
             </>
           )}
           {visible.length ? (
-            <div className="memory-card-grid">
+            <RevealList as="div" className="memory-card-grid">
               {visible.map((piece) => {
                 const status = piece.creations[0]?.status;
                 const currentStage = stage(piece);
@@ -248,102 +249,104 @@ export function MusicIndex({
                         ? "Review and retry"
                         : "Continue preparation";
                 return (
-                  <Card className="story-card music-card" key={piece.id}>
-                    <CardHeader>
-                      <Badge
-                        variant={
-                          status === "FAILED" ? "destructive" : "secondary"
-                        }
-                        className="story-status"
-                      >
-                        {status === "READY"
-                          ? "Ready to listen"
-                          : status
-                            ? creationStatusLabels[status]
-                            : "In preparation"}
-                      </Badge>
-                      <CardTitle>
-                        <h2>
-                          <Link href={href}>{piece.title}</Link>
-                        </h2>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="music-style">
-                        <Music aria-hidden="true" />
-                        {musicStyles[piece.style as keyof typeof musicStyles]
-                          ?.label || piece.style}
-                      </p>
-                      <dl className="story-facts">
-                        <div>
-                          <dt>
-                            <Clock aria-hidden="true" />
-                            Planned duration
-                          </dt>
-                          <dd>{piece.durationSeconds} seconds</dd>
-                        </div>
-                        <div>
-                          <dt>
-                            <Music aria-hidden="true" />
-                            Format
-                          </dt>
-                          <dd>
-                            {piece.instrumental
-                              ? "Instrumental"
-                              : "With lyrics"}
-                          </dd>
-                        </div>
-                        {!piece.instrumental && (
+                  <RevealItem as="div" className="reveal-cell" key={piece.id}>
+                    <Card className="story-card music-card">
+                      <CardHeader>
+                        <Badge
+                          variant={
+                            status === "FAILED" ? "destructive" : "secondary"
+                          }
+                          className="story-status"
+                        >
+                          {status === "READY"
+                            ? "Ready to listen"
+                            : status
+                              ? creationStatusLabels[status]
+                              : "In preparation"}
+                        </Badge>
+                        <CardTitle>
+                          <h2>
+                            <Link href={href}>{piece.title}</Link>
+                          </h2>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="music-style">
+                          <Music aria-hidden="true" />
+                          {musicStyles[piece.style as keyof typeof musicStyles]
+                            ?.label || piece.style}
+                        </p>
+                        <dl className="story-facts">
                           <div>
                             <dt>
-                              <Globe aria-hidden="true" />
-                              Lyrics language
+                              <Clock aria-hidden="true" />
+                              Planned duration
+                            </dt>
+                            <dd>{piece.durationSeconds} seconds</dd>
+                          </div>
+                          <div>
+                            <dt>
+                              <Music aria-hidden="true" />
+                              Format
                             </dt>
                             <dd>
-                              {piece.language === "es"
-                                ? "Spanish"
-                                : piece.language === "en"
-                                  ? "English"
-                                  : piece.language}
+                              {piece.instrumental
+                                ? "Instrumental"
+                                : "With lyrics"}
                             </dd>
                           </div>
+                          {!piece.instrumental && (
+                            <div>
+                              <dt>
+                                <Globe aria-hidden="true" />
+                                Lyrics language
+                              </dt>
+                              <dd>
+                                {piece.language === "es"
+                                  ? "Spanish"
+                                  : piece.language === "en"
+                                    ? "English"
+                                    : piece.language}
+                              </dd>
+                            </div>
+                          )}
+                          <div>
+                            <dt>
+                              <FileText aria-hidden="true" />
+                              Selected materials
+                            </dt>
+                            <dd>{piece.sources.length}</dd>
+                          </div>
+                        </dl>
+                      </CardContent>
+                      <CardFooter>
+                        {status === "READY" ? (
+                          <>
+                            <Button
+                              className="w-full"
+                              onClick={() => setListening(piece)}
+                            >
+                              <Play aria-hidden="true" />
+                              Listen
+                            </Button>
+                            <Button asChild variant="ghost">
+                              <Link href={href}>Edit preparation</Link>
+                            </Button>
+                          </>
+                        ) : (
+                          <Button asChild variant="outline">
+                            <Link href={href}>
+                              {action}
+                              <ArrowRight aria-hidden="true" />
+                            </Link>
+                          </Button>
                         )}
-                        <div>
-                          <dt>
-                            <FileText aria-hidden="true" />
-                            Selected materials
-                          </dt>
-                          <dd>{piece.sources.length}</dd>
-                        </div>
-                      </dl>
-                    </CardContent>
-                    <CardFooter>
-                      {status === "READY" ? (
-                        <>
-                          <Button
-                            className="w-full"
-                            onClick={() => setListening(piece)}
-                          >
-                            <Play aria-hidden="true" />
-                            Listen
-                          </Button>
-                          <Button asChild variant="ghost">
-                            <Link href={href}>Edit preparation</Link>
-                          </Button>
-                        </>
-                      ) : (
-                        <Button asChild variant="outline">
-                          <Link href={href}>
-                            {action}
-                            <ArrowRight aria-hidden="true" />
-                          </Link>
-                        </Button>
-                      )}
-                    </CardFooter>
-                  </Card>
+                      </CardFooter>
+                    </Card>
+                  </RevealItem>
                 );
               })}
-            </div>
+            </RevealList>
           ) : (
             <Empty className="stories-empty">
               <EmptyHeader>
