@@ -10,8 +10,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate",
-    "db:up": "docker compose -f docker-compose.dev.yml up -d --wait",
-    "db:down": "docker compose -f docker-compose.dev.yml down",
+    "db:up": "node scripts/docker/up.mjs --db-only",
+    "db:down": "docker compose -f docker-compose.dev.yml stop db",
     "db:logs": "docker compose -f docker-compose.dev.yml logs -f db",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -19,7 +19,14 @@
     "db:status": "prisma migrate status",
     "db:studio": "prisma studio",
     "auth:generate": "auth generate --config ./src/lib/auth.ts --output ./prisma/schema.prisma",
-    "auth:check": "auth check schema --config ./src/lib/auth.ts"
+    "auth:check": "auth check schema --config ./src/lib/auth.ts",
+    "docker:env": "node scripts/docker/setup-env.mjs",
+    "docker:up": "node scripts/docker/up.mjs",
+    "docker:down": "docker compose -f docker-compose.dev.yml down",
+    "docker:logs": "docker compose -f docker-compose.dev.yml logs -f",
+    "docker:check": "docker compose -f docker-compose.dev.yml exec -T worker node --conditions=react-server --import=tsx scripts/docker/check.mts",
+    "docker:check:apis": "docker compose -f docker-compose.dev.yml exec -T worker node --conditions=react-server --import=tsx scripts/docker/check-external.mts",
+    "worker": "node --env-file=.env --env-file-if-exists=.env.local --conditions=react-server --import=tsx src/worker/index.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1149.0",
@@ -30,7 +37,9 @@
     "@prisma/client": "7.10.0",
     "better-auth": "1.7.7",
     "next": "16.4.0",
+    "nodemailer": "10.0.16",
     "pg": "8.23.1",
+    "pg-boss": "12.37.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "0.0.1"
@@ -38,6 +47,7 @@
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "8.0.2",
     "@types/pg": "8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",

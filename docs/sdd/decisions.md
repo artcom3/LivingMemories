@@ -82,7 +82,7 @@ Las propuestas conservan su identificador para trazabilidad. Las reglas adoptada
 
 ### PROP-006
 
-**Almacenamiento privado S3 en Docker.** La elección técnica inicial es Garage para ofrecer S3 compatible dentro del entorno local acordado en DEC-021. Mantener el adaptador permite alojarlo después en otro servicio mediante una decisión explícita. Límites: DEC-015; permisos: DEC-016; retirada: DEC-017. No hay integración de almacenamiento implementada.
+**Almacenamiento privado S3 en Docker.** MinIO sustituye la propuesta inicial de Garage por instrucción expresa del usuario en DEC-025. El bucket privado y usuario de aplicación se inicializan automáticamente; el cliente S3 ya está conectado. Los permisos de familia y gestión de fuentes siguen en TASK-003. Límites: DEC-015; permisos: DEC-016; retirada: DEC-017.
 
 ### PROP-007
 
@@ -144,7 +144,7 @@ Resuelve Q-007. Confirmada por el usuario el 2026-10-09. Sin fotografías se per
 
 **Docker local y piloto supervisado.** El entorno inicial reúne Nginx, app, worker, PostgreSQL con búsqueda vectorial, almacenamiento S3 compatible y correo de prueba en Docker. La AI se consume por API externa. El primer piloto se realiza de forma local y supervisada; acceso remoto público y contratación de hosting quedan fuera de esa entrega.
 
-Resuelve Q-008. Confirmada por el usuario el 2026-10-09. Elecciones técnicas de desarrollo: pgvector, pg-boss, Garage y Mailpit. Los volúmenes son persistentes, los puertos se limitan al equipo local y Nginx enruta hacia la app, sin publicar originales ni la administración de la base. Con procesamiento local se consulta el estado de las generaciones; no se requiere un callback público de ElevenLabs.
+Resuelve Q-008. Confirmada por el usuario el 2026-10-09. Elecciones técnicas actuales: pgvector, pg-boss, MinIO y Mailpit; MinIO reemplaza Garage conforme a DEC-025. Los volúmenes persisten, los puertos se limitan al equipo local y Nginx enruta hacia la app sin publicar originales. El entorno está implementado; las generaciones AI siguen pendientes y no necesitan un callback público en esta fase local.
 
 ### DEC-022
 
@@ -175,6 +175,12 @@ Resuelve Q-004. Confirmada por el usuario el 2026-10-09. Las ilustraciones usan 
 
 Antes de llamadas reales se comprueban claves, permisos, precios, modalidades y condiciones de retención. Se valida el conjunto seleccionado con las mismas fuentes en español e inglés, incluyendo incertidumbre, contradicciones y referencias fotográficas. La configuración de cuentas y esta evaluación son tareas técnicas pendientes; no dejan abierta la elección de proveedores ni acreditan calidad todavía.
 
+### DEC-025
+
+**MinIO y arranque completo con servicios conectados.** Por instrucción del usuario se usa MinIO en lugar de Garage. Docker inicializa bucket privado y un usuario de app separado del administrador; coordina migraciones, worker, app y Nginx mediante condiciones de salud. El arranque comprueba conexiones locales y procesa un trabajo de diagnóstico. PostgreSQL conserva el volumen existente y añade pgvector sobre la misma base PostgreSQL/Alpine.
+
+Confirmada por el usuario el 2026-10-09. Las variables de OpenAI y ElevenLabs quedan preparadas y las claves se incorporarán después, también por decisión expresa del usuario. Los módulos familiares, controles de consumo y handlers AI no se consideran implementados por haber levantado la infraestructura. MinIO y su cliente se construyen desde etiquetas fijadas de código oficial para no depender de imágenes comunitarias retiradas del registro.
+
 ## Referencias oficiales
 
 Estas referencias respaldan capacidades de los productos seleccionados y opciones técnicas, no promesas de precisión o costo del piloto. Los precios, planes, límites y accesos se volverán a verificar al implementar las conexiones. No hay un benchmark de rendimiento del proyecto ni pruebas pagadas ejecutadas en esta entrega documental.
@@ -189,7 +195,7 @@ Estas referencias respaldan capacidades de los productos seleccionados y opcione
 | [OpenAI GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) | Modelo seleccionado para entrevistas y respuestas |
 | [OpenAI embeddings](https://developers.openai.com/api/docs/guides/embeddings) | Embeddings y dimensiones para búsqueda |
 | [OpenAI GPT-Image-2.5 Flare](https://developers.openai.com/api/docs/models/gpt-image-2.5-flare) | Generación/edición con entradas de imagen para las ilustraciones |
-| [Garage inicio local](https://garagehq.deuxfleurs.fr/documentation/quick-start/) | Almacenamiento S3 compatible de desarrollo; un nodo no ofrece redundancia de producción |
+| [MinIO oficial](https://github.com/minio/minio) | Almacenamiento elegido; distribución comunitaria desde fuente usada en las imágenes locales |
 | [Mailpit en Docker](https://mailpit.axllent.org/docs/install/docker/) | Captura de correo de prueba local, no entrega de correo público |
 | [Better Auth con Next.js](https://better-auth.com/docs/integrations/next) | Handler, sesiones y cookies; la política de invitaciones y familia debe implementarse en la app |
 | [Prisma 7](https://www.prisma.io/docs/orm/v7) | Referencia de la rama instalada; no implica migrar automáticamente a otra versión mayor |

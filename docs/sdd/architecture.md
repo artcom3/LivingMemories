@@ -4,7 +4,7 @@
 
 El repositorio contiene Next.js 16.4.0 con App Router, React 19.3.0, Prisma 7.10.0, PostgreSQL 18.6 en Compose y Better Auth 1.7.7. El esquema actual contiene únicamente los modelos de autenticación. La ruta `/api/auth/[...all]` y los clientes de autenticación y Prisma ya existen.
 
-No hay todavía modelos familiares, almacenamiento multimedia, worker, índices de recuperación ni proveedores de AI integrados. Están instalados los SDK de ElevenLabs y S3 como dependencias preparatorias, sin conexiones implementadas. Los acuerdos de producto, entorno y modelos están fijados en [decisions.md](decisions.md); las entidades y contratos siguientes son el diseño para implementarlos.
+El entorno Docker implementa PostgreSQL con pgvector, MinIO privado, Mailpit, worker/pg-boss, app y Nginx, con migraciones e inicialización coordinadas. El worker procesa una cola de diagnóstico real y los clientes locales de S3/SMTP/base están conectados. No hay todavía modelos familiares, índices de contenido ni handlers de generación; las claves AI se incorporarán después. Los acuerdos y modelos están fijados en [decisions.md](decisions.md); los contratos de producto siguientes siguen como diseño de implementación.
 
 ## Componentes y estado
 
@@ -13,12 +13,12 @@ No hay todavía modelos familiares, almacenamiento multimedia, worker, índices 
 | Aplicación Next.js | Captura, revisión, biblioteca, libro por páginas y consultas | Base existente; experiencia pendiente |
 | Servicios de dominio | Permisos, revisiones, versiones y publicación | Propuesto |
 | PostgreSQL y Prisma | Metadatos, relaciones, evidencia y estado de procesos | Base existente; modelos de producto pendientes |
-| Almacenamiento privado Garage | S3 compatible local para originales, fragmentos y medios | Elección técnica de DEC-021; pendiente |
-| Worker Node.js y pg-boss | Transcripción, OCR, extracción, generación e indexación | Entorno confirmado; implementación pendiente |
-| PostgreSQL textual y pgvector | Pasajes relevantes con permisos y procedencia | Extensión/índice pendientes |
+| Almacenamiento privado MinIO | S3 compatible local para originales, fragmentos y medios | Bucket privado, usuario de app y conexión implementados; dominio de fuentes pendiente |
+| Worker Node.js y pg-boss | Base para transcripción, OCR, generación e indexación | Cola de diagnóstico implementada; handlers de producto pendientes |
+| PostgreSQL textual y pgvector | Pasajes relevantes con permisos y procedencia | Extensión activada; índices/documentos pendientes |
 | Adaptadores OpenAI y ElevenLabs | Contratos por capacidad, modelos de DEC-024 | Integraciones pendientes |
-| Nginx | Entrada a app y servicios autorizados | Configuración Docker pendiente |
-| Mailpit | Captura local de invitaciones/correos de prueba | Configuración Docker pendiente |
+| Nginx | Entrada a app y servicios autorizados | Configurado para la app local |
+| Mailpit | Captura local de invitaciones/correos de prueba | Conexión SMTP y captura probadas; envío de invitaciones pendiente |
 
 Next.js conserva las comprobaciones de sesión y permisos junto a las operaciones de servidor. Un identificador familiar enviado por el navegador se valida contra la membresía; no se confía en el cliente para declarar autoría o privilegios. Los servicios de dominio deben reutilizar la misma política en APIs, worker, búsquedas y reproducción de archivos.
 
@@ -74,7 +74,7 @@ Las descargas privadas del lector pasan por una operación que comprueba permiso
 
 ## Recuperación de contexto
 
-La recuperación combina búsqueda textual de PostgreSQL y pgvector con `text-embedding-3-small` de 1.536 dimensiones. La extensión, índices y compatibilidad se validan en TASK-007; no hay extensión instalada ni migración vectorial en esta entrega. Los cambios de modelo/dimensiones requieren una reindexación explícita.
+La recuperación combinará búsqueda textual de PostgreSQL y pgvector con `text-embedding-3-small` de 1.536 dimensiones. La extensión ya está instalada y activada mediante una migración; índices, documentos y recuperación con permisos siguen en TASK-007. Los cambios de modelo/dimensiones requieren reindexación explícita.
 
 1. Validar sesión, familia activa, contexto del cuento y permisos de consulta.
 2. Recuperar candidatos filtrados por familia, visibilidad, estado y versión. La política se aplica dentro de la recuperación, no después de entregar contenido al modelo.
@@ -103,7 +103,7 @@ Los contratos definen capacidades, no SDKs ni modelos obligatorios. Se validan c
 
 Las interfaces de la aplicación cubrirán cargas, turnos de entrevista, revisiones, procesos de generación, publicación y reproducción de evidencia. Sus rutas y estructuras HTTP definitivas se diseñan en cada tarea; no se confunden con el único endpoint de autenticación ya existente.
 
-El entorno local usa un bucket privado de Garage/S3, fuera de `public/`, con autorización previa y confirmación de cada carga. Los límites de DEC-015 se comprueban antes de iniciar procesos costosos: tipo real/decodificación, bytes, duración, páginas y cantidad de fuentes, también ante cargas concurrentes. Cuando haga falta, HEIC se convierte en un derivado compatible conservando el original.
+El entorno local usa un bucket privado de MinIO/S3 fuera de `public/`. La infraestructura autentica al cliente S3; la autorización por familia y el flujo de cargas se implementarán en TASK-003. Allí se comprobarán los límites de DEC-015 antes de procesos costosos, incluidas cargas concurrentes. El worker ya incluye herramientas para audio, PDF, OCR español/inglés y conversión HEIC; todavía no están conectadas a procesadores de memorias.
 
 ## Procesamiento, errores y costo
 

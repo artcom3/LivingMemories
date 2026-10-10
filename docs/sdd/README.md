@@ -4,7 +4,7 @@ LivingMemories ayuda a las familias a conservar sus recuerdos y convertirlos en 
 
 **Versión:** 0.2. **Estado:** las 11 decisiones iniciales del piloto están resueltas; implementación y validación de los módulos pendientes. **Fecha:** 2026-10-09.
 
-La aplicación existente tiene la base de Next.js, PostgreSQL, Prisma y Better Auth. Los módulos de familias, memorias, biblioteca, generación y asistente descritos aquí todavía no están implementados. Una casilla del backlog solo se completa con evidencia de implementación y validación.
+La aplicación tiene la base de Next.js, Prisma y Better Auth y un entorno Docker con PostgreSQL/pgvector, MinIO, Mailpit, Nginx y worker/pg-boss. La [guía de Docker](../docker.md) describe su arranque y diagnóstico. Los módulos de familias, memorias, biblioteca, generación y asistente todavía no están implementados; las claves AI se incorporarán después. Una casilla del backlog solo se completa con evidencia de implementación y validación.
 
 ## Ruta de lectura
 

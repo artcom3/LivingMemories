@@ -34,7 +34,9 @@ Dependencias: TASK-002; implementar formatos/límites de DEC-015 y retirada/pape
 
 - [ ] Construir procesamiento recuperable y contratos de proveedores.
 
-Implementar worker/pg-boss y estados, resultados, conciliación, contratos y adaptadores por capacidad. Registrar proveedor/modelo, instrucciones y costo disponible; reservar saldo en los niveles versión/adulto/familia/app y controlar regeneraciones. Probar primero con proveedores simulados. Preparar el entorno Docker acordado sin afirmar que las conexiones externas ya están configuradas.
+Implementar estados, resultados, conciliación, contratos y adaptadores por capacidad sobre el worker/pg-boss. Registrar proveedor/modelo, instrucciones y costo disponible; reservar saldo en los niveles versión/adulto/familia/app y controlar regeneraciones. Probar primero con proveedores simulados.
+
+Base completada: [entorno Docker](../docker.md), conexiones locales y cola de diagnóstico. Los handlers de producto, contratos AI y controles de consumo continúan pendientes; las claves externas se añadirán después conforme a DEC-025. Esta tarea permanece abierta.
 
 Dependencias: TASK-003; aplicar DEC-021, DEC-023 y DEC-024 antes de llamadas reales. Aceptación: SCN-13 y SCN-17.
 

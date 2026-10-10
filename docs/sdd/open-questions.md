@@ -54,7 +54,7 @@ Responsable de implementación: desarrollo y diseño. Acuerdo: [DEC-020](decisio
 
 **Resuelta: primer piloto local supervisado.** Docker reúne Nginx, app, worker, PostgreSQL con búsqueda vectorial, almacenamiento compatible con S3 y correo de prueba. Los servicios de AI siguen siendo externos. La prueba inicial es supervisada localmente; no implica acceso público remoto ni contratación de Supabase, AWS o un VPS.
 
-Responsable de implementación: desarrollo y operación. Acuerdo: [DEC-021](decisions.md#dec-021). Se implementa en [TASK-004](tasks.md#task-004), [TASK-007](tasks.md#task-007) y [TASK-012](tasks.md#task-012). La configuración actual de Compose solo contiene PostgreSQL; el resto del entorno aún se debe construir.
+Responsable de implementación: desarrollo y operación. Acuerdos: [DEC-021](decisions.md#dec-021) y [DEC-025](decisions.md#dec-025). El entorno Docker completo está implementado con MinIO por elección del usuario; modelos familiares, índices de contenido, handlers AI y evaluación del piloto siguen pendientes en las tareas.
 
 ### Q-009
 

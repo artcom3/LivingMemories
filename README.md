@@ -4,28 +4,37 @@ Proyecto con Next.js 16, React 19, PostgreSQL, Prisma 7.10.0 y Better Auth 1.7.7
 
 ## Especificaciones del producto
 
-El [SDD de LivingMemories](docs/sdd/README.md) reúne las decisiones de producto, las especificaciones funcionales, el diseño técnico, las tareas y los escenarios de aceptación. Las 11 decisiones iniciales del piloto están resueltas: será local y supervisado en Docker, con OpenAI para texto/búsqueda/ilustraciones y ElevenLabs para audio. Los módulos y conexiones siguen pendientes de implementación.
+El [SDD de LivingMemories](docs/sdd/README.md) reúne las decisiones de producto, las especificaciones funcionales, el diseño técnico, las tareas y los escenarios de aceptación. Las 11 decisiones iniciales están resueltas. La infraestructura Docker local está implementada; los módulos familiares y las conexiones AI siguen en el backlog.
+
+## Arranque completo con Docker
+
+```bash
+pnpm install
+pnpm docker:up
+```
+
+El comando prepara secretos locales, respalda la base existente, construye y levanta app, worker, PostgreSQL con pgvector, MinIO, Nginx y Mailpit; aplica migraciones, inicializa el bucket privado y prueba sus conexiones. Abrir [http://localhost:8081](http://localhost:8081).
+
+Las claves de OpenAI y ElevenLabs se pueden agregar después en `.env.local`; su ausencia no impide el entorno local. Consultar la [guía de Docker](docs/docker.md) para puertos, diagnósticos, persistencia y trabajo en ramas.
 
 ## Desarrollo local
 
-Requisitos: Node.js compatible con Prisma 7 (20.19+, 22.12+ o 24+) y Docker con Compose. El proyecto usa pnpm 12.9.1.
+Requisitos: Node.js 22.12+ para el proyecto y worker, Docker con Compose 2.24.0+ y pnpm 12.9.1. Los contenedores usan Node.js 24.18.0.
 
-1. Crear las variables locales:
-
-   ```bash
-   cp .env.example .env
-   openssl rand -base64 32
-   ```
-
-   Copiar el secreto generado en `BETTER_AUTH_SECRET` dentro de `.env`. Mantener `DATABASE_URL` sincronizado con `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` y `POSTGRES_PORT`.
-
-2. Instalar las dependencias y levantar la base de datos:
+1. Instalar las dependencias:
 
    ```bash
    pnpm install
+   ```
+
+2. Preparar las variables locales y levantar solo la base de datos:
+
+   ```bash
    pnpm db:up
    pnpm db:migrate
    ```
+
+   `db:up` crea `.env` y genera los secretos locales que falten. Mantener `DATABASE_URL` sincronizado con `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` y `POSTGRES_PORT` para los procesos nativos.
 
 3. Iniciar la app:
 
@@ -37,7 +46,7 @@ Abrir [http://localhost:3000](http://localhost:3000). Si se cambia el puerto de 
 
 ## Base de datos
 
-`docker-compose.dev.yml` levanta únicamente PostgreSQL 18.6; Next.js se ejecuta localmente. La base está disponible en `localhost:5433`, para poder usarla junto a Solutec ERP en el puerto 5432. El puerto se puede cambiar mediante `POSTGRES_PORT` y `DATABASE_URL`.
+`docker-compose.dev.yml` levanta el entorno completo. Para Next.js nativo se puede ejecutar `pnpm dev` usando los servicios de Docker. PostgreSQL 18.6 con pgvector queda en `localhost:5433`, junto a Solutec ERP en 5432. Si se cambia el puerto, ajustar `POSTGRES_PORT` y la URL de la app nativa; los contenedores se conectan a `db:5432`.
 
 Los datos persisten en el volumen `livingmemories-dev_postgres_data`. `pnpm db:down` detiene el servicio y conserva ese volumen. Compose utiliza `.env`; Prisma y Next.js también admiten `.env.local`. Si se usan variables de base de datos en `.env.local`, deben apuntar a la misma instancia configurada para Compose.
 
