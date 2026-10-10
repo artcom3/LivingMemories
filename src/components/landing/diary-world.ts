@@ -25,10 +25,13 @@ export const diaryWorld: ScrollWorldConfig = {
   pageScroll: 1,
   // Presentation mode: arrows / PageUp / PageDown step scene by scene.
   keyboardSteps: true,
-  // ~13 s of footage per step (half dive, page turn, half dive) at ~3x speed.
-  stepDuration: 4000,
+  // Constant pace, no easing: scroll length is proportional to clip length
+  // (dives 8.04 s, connectors 5.04 s), so the footage always plays at the same
+  // rate (~6.2 s of film per viewport height) and a constant scroll speed gives
+  // a constant film speed. 0.45 vh/s plays it at ~2.8x real time.
+  stepSpeed: 0.45,
   diveScroll: 1.3,
-  connScroll: 0.9,
+  connScroll: (1.3 * 5.04) / 8.04,
   sections: [
     {
       id: "portada",
@@ -36,8 +39,6 @@ export const diaryWorld: ScrollWorldConfig = {
       still: still("portada"),
       clip: clip("portada"),
       accent: accent.terracota,
-      scroll: 1.6,
-      linger: 0.4,
       eyebrow: "Family diary",
       title: "Your family, told for generations",
       body: "Keep your elders' voices and turn them into stories your children can read and listen to.",
@@ -93,8 +94,6 @@ export const diaryWorld: ScrollWorldConfig = {
       still: still("final"),
       clip: clip("final"),
       accent: accent.terracota,
-      scroll: 1.6,
-      linger: 0.4,
       eyebrow: "Private pilot",
       title: "Open your family's diary",
       body: "We are inviting a small group of families to try it first.",

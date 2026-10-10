@@ -44,8 +44,13 @@ export interface ScrollWorldConfig {
    * the rest, then the content after the journey). Off by default.
    */
   keyboardSteps?: boolean;
-  /** Duration of one step in ms, whatever the distance. Default 1600. */
+  /** Duration of one step in ms, whatever the distance, sine eased. Default 1600. */
   stepDuration?: number;
+  /**
+   * Constant step speed in viewport heights per second, with no easing; when
+   * set it replaces stepDuration and each step lasts as long as its distance.
+   */
+  stepSpeed?: number;
   /** Ignore prefers-reduced-motion. For development previews only. */
   forceMotion?: boolean;
   sections: ScrollWorldSection[];

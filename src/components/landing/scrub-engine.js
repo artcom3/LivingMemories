@@ -239,12 +239,13 @@ function mountScrollWorld(container, config) {
   // Each section has a rest position: the top of the page for the first one (its
   // copy greets on landing), mid-dive for the rest (copy at full opacity, camera
   // settled). The last step is the end of the journey, i.e. the content after it.
-  // Steps are animated over a fixed time so a presenter gets the same pace every
-  // time, whatever the distance.
+  // Pacing, so a presenter gets the same feel every time:
+  //   stepSpeed (viewport heights per second): constant velocity, no easing at
+  //     all; a step lasts as long as its distance needs.
+  //   otherwise stepDuration (ms): every step takes the same time, sine eased.
+  const STEP_SPEED = config.stepSpeed || 0;
   const STEP_MS = config.stepDuration || 1600;
-  // Sine ease: gentle start and stop, peak speed only ~1.6x the average (a cubic
-  // peaks at 3x), so the film never surges mid-step.
-  const stepEase = x => (1 - Math.cos(Math.PI * x)) / 2;
+  const stepEase = STEP_SPEED ? (x => x) : (x => (1 - Math.cos(Math.PI * x)) / 2);
   let anim = null, animRaf = 0;
 
   function stepPositions() {
@@ -256,14 +257,16 @@ function mountScrollWorld(container, config) {
   function animateTo(y) {
     y = clamp(y, 0, Math.max(0, document.documentElement.scrollHeight - window.innerHeight));
     if (reduce) { cancelStep(); window.scrollTo(0, y); return; }
-    anim = { from: window.scrollY, to: y, t0: performance.now() };
+    const from = window.scrollY;
+    const ms = STEP_SPEED ? Math.abs(y - from) / (STEP_SPEED * vh) * 1000 : STEP_MS;
+    anim = { from, to: y, t0: performance.now(), ms: Math.max(ms, 1) };
     if (!animRaf) animRaf = requestAnimationFrame(stepFrame);
   }
 
   function stepFrame(now) {
     animRaf = 0;
     if (!anim) return;
-    const p = clamp((now - anim.t0) / STEP_MS);
+    const p = clamp((now - anim.t0) / anim.ms);
     window.scrollTo(0, anim.from + (anim.to - anim.from) * stepEase(p));
     if (p < 1) animRaf = requestAnimationFrame(stepFrame); else anim = null;
   }
