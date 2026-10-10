@@ -144,10 +144,14 @@
   font-size: 12px;
   line-height: 16px;
 }
-.sw-copy__title {
+/* Scoped to the page so it outranks globals.css `h2:not([data-slot])`, which
+   would otherwise set the private app's 28px semibold headings here. */
+.landing-page .sw-copy__title {
   margin-top: 8px;
   font-size: 30px;
   line-height: 36px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
   text-shadow: none;
   text-wrap: balance;
 }
