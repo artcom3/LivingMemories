@@ -1,11 +1,15 @@
 // Builds the 16:9 canvas for a scene: the knocked-out book on a flat fill of
-// its own background colour, right-aligned so the copy card on the left never
-// covers it. The canvas is both the video start_frame and the page poster.
+// its own background colour. The book is the page's central axis, so it is
+// centred and every scene shares the same framing; the video page turns then
+// hand off between identical compositions. The canvas is both the video
+// start_frame and the page poster.
 //
-// Usage: node scripts/landing/make-canvas.mjs <in.png> <id> [--height 0.76] [--right 0.03] [--down 0.03]
-//   --height  book height as a fraction of the canvas (default 0.76)
-//   --right   right margin as a fraction of the canvas width (default 0.03)
-//   --down    vertical offset from centre as a fraction of the height (default 0.03)
+// Usage: node scripts/landing/make-canvas.mjs <in.png> <id> [--align center] [--height 0.6] [--right 0.03] [--down -0.06]
+//   --align   center (default) or right
+//   --height  book height as a fraction of the canvas (default 0.6)
+//   --right   right margin as a fraction of the width, with --align right (default 0.03)
+//   --down    vertical offset from centre as a fraction of the height (default -0.06, i.e. raised
+//             so the copy card at the bottom left only grazes the book's corner)
 //
 // Writes landing-src/canvas/<id>.png (1920x1080, for ElevenLabs) and
 // public/landing/scenes/<id>-wide.webp (poster).
@@ -19,12 +23,13 @@ const W = 1920;
 const H = 1080;
 
 const args = process.argv.slice(2);
-const heightFrac = Number(takeOption(args, "--height", "0.76"));
+const align = takeOption(args, "--align", "center");
+const heightFrac = Number(takeOption(args, "--height", "0.6"));
 const rightFrac = Number(takeOption(args, "--right", "0.03"));
-const downFrac = Number(takeOption(args, "--down", "0.03"));
+const downFrac = Number(takeOption(args, "--down", "-0.06"));
 const [input, id] = args;
-if (!input || !id) {
-  console.error("Usage: node scripts/landing/make-canvas.mjs <in.png> <id> [--height 0.76] [--right 0.03] [--down 0.03]");
+if (!input || !id || !["center", "right"].includes(align)) {
+  console.error("Usage: node scripts/landing/make-canvas.mjs <in.png> <id> [--align center|right] [--height 0.6] [--right 0.03] [--down -0.06]");
   process.exit(1);
 }
 
@@ -37,7 +42,7 @@ const scene = await knockout(input);
 const bookH = Math.round(H * heightFrac);
 const book = await rgbaImage(scene).resize({ height: bookH }).png().toBuffer();
 const { width: bookW } = await sharp(book).metadata();
-const left = Math.round(W - bookW - W * rightFrac);
+const left = Math.round(align === "center" ? (W - bookW) / 2 : W - bookW - W * rightFrac);
 const top = Math.round((H - bookH) / 2 + H * downFrac);
 if (left < 0 || top < 0 || top + bookH > H) {
   throw new Error(`Book ${bookW}x${bookH} at ${left},${top} does not fit the ${W}x${H} canvas`);

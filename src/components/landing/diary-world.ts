@@ -21,6 +21,7 @@ export const diaryWorld: ScrollWorldConfig = {
   hint: "Desliza para abrir el diario",
   atmosphere: false,
   stillTransition: "page",
+  stillOffset: 0, // the book is the page's central axis
   pageScroll: 1,
   diveScroll: 1.3,
   connScroll: 0.9,

@@ -36,6 +36,8 @@ export interface ScrollWorldConfig {
   stillTransition?: "crossfade" | "page";
   /** Viewport heights of scroll per page turn. Default 0.9. */
   pageScroll?: number;
+  /** Horizontal nudge of the stills in vw. Default: +2 on desktop, -2 on phones. */
+  stillOffset?: number;
   /** Ignore prefers-reduced-motion. For development previews only. */
   forceMotion?: boolean;
   sections: ScrollWorldSection[];

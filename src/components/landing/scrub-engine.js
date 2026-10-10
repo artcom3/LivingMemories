@@ -223,7 +223,9 @@ function mountScrollWorld(container, config) {
   function layout() {
     vh = window.innerHeight;
     laidOutW = window.innerWidth;
-    stageX = window.innerWidth > 860 ? 4 : 0;
+    // Horizontal nudge of the stills in vw: the engine default leans them right on
+    // desktop (+2vw) and left on phones (-2vw); `stillOffset` pins it instead.
+    stageX = config.stillOffset != null ? config.stillOffset + 2 : (window.innerWidth > 860 ? 4 : 0);
     let off = 0;
     SEGMENTS.forEach(s => { s.start = off * vh; off += s.w; s.end = off * vh; });
     totalW = off;

@@ -53,19 +53,22 @@
   display: none;
 }
 
-/* Full-bleed scenes, like the scroll-world demo. Posters and clips are 16:9
-   canvases with the book on the right (scripts/landing/make-canvas.mjs), so
-   anchoring right keeps the book clear of the copy card on any aspect ratio.
-   Leaf faces share the class, so page turns hand off the same framing. */
+/* Full-bleed scenes, like the scroll-world demo. The book is the page's central
+   axis: posters and clips are 16:9 canvases with the book centred
+   (scripts/landing/make-canvas.mjs), so the still zoom and the video camera both
+   head into it. Leaf faces share the class, so page turns keep the framing.
+   On phones the scene takes the top half, feathered into the paper. */
 .sw-scene__still,
 .sw-scene__video {
   object-fit: cover;
-  object-position: right center;
+  object-position: center;
 }
 @media (max-width: 860px) {
   .sw-scene__still,
   .sw-scene__video {
-    object-position: 72% 30%;
+    top: 64px;
+    height: 50%;
+    mask-image: linear-gradient(to bottom, #000 80%, transparent);
   }
 }
 
@@ -136,14 +139,17 @@
   scale: 0.98;
 }
 
-/* Scene copy: a flat translucent paper card instead of the gradient scrim. */
+/* Scene copy: a compact flat translucent paper card, bottom left, so the centred
+   book stays the focus (it only grazes the book's lower left corner). */
 .sw-copylayer::before {
   display: none;
 }
 .sw-copy {
-  translate: 0 -50%;
-  width: min(42vw, 460px);
-  padding: 32px;
+  top: auto;
+  bottom: 40px;
+  translate: none;
+  width: min(30vw, 340px);
+  padding: 24px;
   border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
   border-radius: 24px;
   background: color-mix(in srgb, var(--paper) 78%, transparent);
@@ -161,15 +167,15 @@
 }
 .sw-copy__title {
   margin-top: 8px;
-  font-size: 36px;
-  line-height: 40px;
+  font-size: 30px;
+  line-height: 36px;
   text-shadow: none;
   text-wrap: balance;
 }
 /* Hero heading: the one sanctioned text gradient (landing-page-design B5). */
 .sw-copy:first-child .sw-copy__title {
-  font-size: 48px;
-  line-height: 1;
+  font-size: 36px;
+  line-height: 40px;
   background: linear-gradient(90deg, #000000, #666666);
   background-clip: text;
   -webkit-background-clip: text;
@@ -177,14 +183,14 @@
 }
 .sw-copy__body {
   max-width: none;
-  margin-top: 16px;
-  font-size: 18px;
-  line-height: 28px;
+  margin-top: 12px;
+  font-size: 16px;
+  line-height: 24px;
   text-shadow: none;
   text-wrap: pretty;
 }
 .sw-copy__tags {
-  margin-top: 24px;
+  margin-top: 16px;
 }
 .sw-copy__tags li {
   padding: 4px 12px;
@@ -281,22 +287,14 @@
   .sw-topbar {
     top: 16px;
   }
+  /* Clear the home indicator and collapsing URL bar, like the engine default. */
   .sw-copy {
-    translate: none;
+    bottom: calc(64px + env(safe-area-inset-bottom));
     width: auto;
-    padding: 24px;
-  }
-  .sw-copy__title {
-    font-size: 30px;
-    line-height: 36px;
   }
   .sw-copy:first-child .sw-copy__title {
-    font-size: 36px;
-    line-height: 40px;
-  }
-  .sw-copy__body {
-    font-size: 16px;
-    line-height: 24px;
+    font-size: 30px;
+    line-height: 36px;
   }
 }
 
