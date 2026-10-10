@@ -1,9 +1,10 @@
 import type { ScrollWorldConfig } from "./scrub-engine";
 
 // Copy and scene order come from docs/landing/brief.md.
-// Stills are the 16:9 canvases built from the ElevenLabs renders
-// (scripts/landing/make-canvas.mjs); they double as the clips' first frames.
-// Add `clip` per section and `connectors` once the video phase is done.
+// Each scene has a FLUX 3 Video "dive" clip rendered on ElevenLabs from its
+// centred 16:9 canvas (scripts/landing/make-canvas.mjs); the still is that canvas
+// cropped to the clip aspect (scripts/landing/poster.sh), so it matches frame 0.
+// See docs/landing/video-prompts.md for the pipeline.
 const accent = {
   terracota: "#C8735A",
   salvia: "#8FA98A",
@@ -12,6 +13,7 @@ const accent = {
 };
 
 const still = (id: string) => `/landing/scenes/${id}-wide.webp`;
+const clip = (id: string) => `/landing/video/${id}.mp4`;
 
 export const diaryWorld: ScrollWorldConfig = {
   brand: { name: "LivingMemories", href: "#top" },
@@ -28,6 +30,7 @@ export const diaryWorld: ScrollWorldConfig = {
       id: "portada",
       label: "Portada",
       still: still("portada"),
+      clip: clip("portada"),
       accent: accent.terracota,
       scroll: 1.6,
       linger: 0.4,
@@ -40,6 +43,7 @@ export const diaryWorld: ScrollWorldConfig = {
       id: "grabaciones",
       label: "Grabaciones",
       still: still("grabaciones"),
+      clip: clip("grabaciones"),
       accent: accent.ocre,
       eyebrow: "Graba su voz",
       title: "Cada historia empieza con una voz",
@@ -50,6 +54,7 @@ export const diaryWorld: ScrollWorldConfig = {
       id: "recuerdos",
       label: "Recuerdos",
       still: still("recuerdos"),
+      clip: clip("recuerdos"),
       accent: accent.azul,
       eyebrow: "Reúne las pistas",
       title: "Fotos, cartas y notas en un lugar",
@@ -60,6 +65,7 @@ export const diaryWorld: ScrollWorldConfig = {
       id: "historias",
       label: "Historias",
       still: still("historias"),
+      clip: clip("historias"),
       accent: accent.salvia,
       eyebrow: "Biblioteca familiar",
       title: "Generaciones en una misma página",
@@ -70,6 +76,7 @@ export const diaryWorld: ScrollWorldConfig = {
       id: "cuento",
       label: "El cuento",
       still: still("cuento"),
+      clip: clip("cuento"),
       accent: accent.terracota,
       eyebrow: "Para los más pequeños",
       title: "Un cuento hecho con su historia real",
@@ -80,6 +87,7 @@ export const diaryWorld: ScrollWorldConfig = {
       id: "final",
       label: "Tu diario",
       still: still("final"),
+      clip: clip("final"),
       accent: accent.terracota,
       scroll: 1.6,
       linger: 0.4,
