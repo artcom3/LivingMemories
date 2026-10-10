@@ -23,15 +23,27 @@ Los textos solo prometen funciones del [producto](../sdd/product.md). La landing
 
 | Tema | Decisión |
 | --- | --- |
-| Estética | Libro pop-up pintado en acuarela suave, la misma estética que el SDD fija para los cuentos |
+| Estética | Libro pop-up de cartulina, colorido, poblado por figuritas chibi de arcilla mate (revisado el 2026-10-09; sustituye a la acuarela) |
 | Cámara | `CAMERA = fly-through`, arquitectura B: la cámara entra en cada escena y sale con un paso de página hacia la siguiente |
+| Transición sin video | Pase de página 3D ligado al scroll; la portada se abre como la tapa. Los connectors de video lo reemplazan cuando existan |
 | Versión móvil | Solo escritorio (16:9). En móvil el motor recorta al centro |
 | Escenas | 6, por lo que el video completo son 11 clips: 6 entradas y 5 pasos de página |
 | Canciones | Fusionadas con Grabaciones; el SDD no tiene una función de canciones |
 
 ## Identidad visual
 
-| Nombre | Hex | Uso |
+La interfaz usa la paleta de papel y tinta. Las escenas usan la paleta vibrante del libro pop-up sobre el mismo papel, para que la imagen se funda con la página:
+
+| Escenas | Hex |
+| --- | --- |
+| Rosa | `#E8547A` |
+| Amarillo | `#F5C342` |
+| Naranja | `#F28C38` |
+| Rojo | `#D9443A` |
+| Turquesa | `#3FB7B0` |
+| Morado | `#7B5BA6` |
+
+| Interfaz | Hex | Uso |
 | --- | --- | --- |
 | Papel | `#F6EFE3` | Fondo de página y de escenas (`--sw-bg`) |
 | Tinta | `#2B2A33` | Texto (`--sw-ink`) |
@@ -72,26 +84,37 @@ Debajo del recorrido van las secciones de `landing-page-design`:
 
 ## Prompts de las escenas
 
-El preámbulo de estilo se repite idéntico en cada imagen para que el mundo sea coherente:
+El estilo se describe en el prompt; no se suben como referencia ni la captura de la demo de scroll-world ni la foto del libro comercial. El preámbulo se repite idéntico en cada imagen para que el mundo sea coherente:
 
 ```text
-An open handmade pop-up book lying flat on a plain solid #F6EFE3 background with a soft
-contact shadow beneath it. Rising from its pages, a small paper pop-up scene painted in
-soft watercolor: visible paper fibers, delicate ink outlines, gentle washes and color
-blooms, soft shadows between the paper layers, warm natural light, tilt-shift miniature
-look. Cohesive color palette of paper #F6EFE3, ink #2B2A33, terracotta #C8735A, sage
-#8FA98A, watercolor blue #6E8FB5, ochre #D9A45B. Highly detailed, centered composition,
-absolutely no text, no letters, no numbers, no logos.
+A colorful children's paper pop-up book lying open on a plain solid #F6EFE3 background
+with a soft contact shadow, seen from a three-quarter elevated angle. Rising from the
+pages, a pop-up scene of cut and folded thick cardstock with printed patterns and
+embossed dots, populated by small cute chibi figurines in soft matte clay: oversized
+round heads, simple dot eyes, rosy cheeks, rounded toy-like bodies. Warm studio light,
+soft shadows, tilt-shift miniature look, highly detailed. Palette: pink #E8547A, yellow
+#F5C342, orange #F28C38, red #D9443A, turquoise #3FB7B0, purple #7B5BA6 on cream paper
+#F6EFE3. Centered composition, absolutely no text, no letters, no numbers, no logos.
+```
+
+La familia se describe siempre con las mismas palabras y, una vez aprobada su hoja de personajes, esa imagen va como referencia en cada escena:
+
+```text
+The recurring Latin American family, always drawn the same way: a grandmother with a gray
+bun, round glasses and a colorful embroidered shawl; a grandfather with a white mustache
+and a straw hat; a mother with a long dark braid; a father with short dark hair and a
+denim shirt; a boy about 8 in a striped t-shirt; a girl about 5 with pigtails and a
+yellow dress. Warm brown skin tones.
 ```
 
 | Id | `Subject:` |
 | --- | --- |
-| `portada` | A large closed family diary with a worn fabric cover resting on a wooden kitchen table, surrounded by a few old photographs, a cup of tea and reading glasses; the cover is slightly lifting as if about to open. *(Replaces the "open pop-up book" sentence of the preamble.)* |
-| `grabaciones` | A cozy home recording corner: a Latin American grandmother singing and telling a memory into a small microphone, her grandson holding a phone to record her, an old guitar leaning nearby, soft watercolor ribbons rising like sound waves. |
-| `recuerdos` | An open shoebox of old photographs, handwritten letters and an open album, the photos lifting out and arranging themselves into neat rows, thin threads linking some photos to tiny places on a small folded map. |
-| `historias` | A page filled with many small people from different generations, each standing on a little paper stage with a tiny glowing scene from their life floating above them, arranged like a branching family tree. |
-| `cuento` | A child and their grandfather sitting together on a sofa reading an illustrated picture book, soft watercolor illustrations floating up out of the book, the child wearing small headphones. |
-| `final` | The family diary fully open, every page showing the previous pop-up scenes as tiny glowing miniatures, warm golden light spilling from the pages. |
+| `portada` | A closed children's pop-up book with a thick, colorful patterned cardstock cover, slightly ajar; the chibi family peeks out from between the cover and the pages, the grandmother waving, the two children climbing on the cover's edge. *(Replaces the "lying open" sentence of the preamble.)* |
+| `grabaciones` | A cozy home recording corner rises from the pages: the grandmother sings into a small microphone on a stand while the boy holds up a phone to record her and the girl claps along; an old guitar leans on a patterned armchair, and paper musical notes and sound wave ribbons pop up in an arc above them. |
+| `recuerdos` | A pop-up attic corner: the mother and father kneel beside an open shoebox of old photographs and letters, the photos lifting out on paper tabs and arranging into neat rows, thin threads linking some photos to tiny places on a folded paper map. |
+| `historias` | A pop-up village square crowded with many chibi people of different generations, each standing on a little paper stage with a tiny pop-up vignette of their life above them; the family stands at the center like the trunk of a branching family tree. |
+| `cuento` | A pop-up living room: the grandfather and the girl sit on a sofa reading an illustrated picture book, the girl wearing small headphones, paper cut-out illustrations of a mountain village rising out of the book around them. |
+| `final` | The pop-up book fully open, every previous scene rising from its pages in miniature like a little paper town, the whole chibi family waving from the center, warm golden light spilling from the pages. |
 
 Prompts de cámara: los de [prompts.md](../../.claude/skills/scroll-world/references/prompts.md), con estas adaptaciones:
 
@@ -105,7 +128,7 @@ Se usa el MCP de ElevenLabs en lugar de Higgsfield y Monid.
 
 | Pieza | Modelo | Notas |
 | --- | --- | --- |
-| Imágenes | `gpt-image-2` | Mismo modelo que la skill recomienda; 3:2, 2K, hasta 10 referencias para fijar el estilo |
+| Imágenes | `gpt-image-2` o `gemini-3-pro-image`, según una comparación con la misma escena | 3:2, 2K. Referencias: la hoja de personajes y la primera escena aprobada. Un solo modelo para toda la serie |
 | Video | Un solo modelo con fotograma inicial y final | Candidatos: `bytedance-seedance-v2.5-us` (el mismo que usa la skill con Monid) o `veo-3.1-generate-001`; 16:9, 1080p |
 
 Reglas:
@@ -117,7 +140,7 @@ Reglas:
 
 ## Fases
 
-1. **Sin video (ahora).** Generar las 6 imágenes con ElevenLabs, integrar `scrub-engine.js` en Next.js con zoom y fundido entre imágenes, y construir las secciones inferiores y el formulario.
+1. **Sin video (ahora).** Generar la hoja de personajes y las 6 imágenes con ElevenLabs, integrar `scrub-engine.js` en Next.js con pase de página 3D entre imágenes, pulir la interfaz y construir las secciones inferiores y el formulario.
 2. **Con video.** Mejorar el plan de ElevenLabs, estimar el costo de los 11 clips, generarlos, codificarlos y añadir sus rutas a la configuración, sin rehacer la página.
 3. **QA.** Revisar las costuras, el modo de movimiento reducido y el comportamiento en móvil.
 
