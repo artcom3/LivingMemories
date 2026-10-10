@@ -242,6 +242,9 @@ function mountScrollWorld(container, config) {
   // Steps are animated over a fixed time so a presenter gets the same pace every
   // time, whatever the distance.
   const STEP_MS = config.stepDuration || 1600;
+  // Sine ease: gentle start and stop, peak speed only ~1.6x the average (a cubic
+  // peaks at 3x), so the film never surges mid-step.
+  const stepEase = x => (1 - Math.cos(Math.PI * x)) / 2;
   let anim = null, animRaf = 0;
 
   function stepPositions() {
@@ -261,7 +264,7 @@ function mountScrollWorld(container, config) {
     animRaf = 0;
     if (!anim) return;
     const p = clamp((now - anim.t0) / STEP_MS);
-    window.scrollTo(0, anim.from + (anim.to - anim.from) * easeInOut(p));
+    window.scrollTo(0, anim.from + (anim.to - anim.from) * stepEase(p));
     if (p < 1) animRaf = requestAnimationFrame(stepFrame); else anim = null;
   }
 

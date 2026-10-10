@@ -25,7 +25,8 @@ export const diaryWorld: ScrollWorldConfig = {
   pageScroll: 1,
   // Presentation mode: arrows / PageUp / PageDown step scene by scene.
   keyboardSteps: true,
-  stepDuration: 1800,
+  // ~13 s of footage per step (half dive, page turn, half dive) at ~3x speed.
+  stepDuration: 4000,
   diveScroll: 1.3,
   connScroll: 0.9,
   sections: [
