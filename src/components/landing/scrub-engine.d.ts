@@ -32,6 +32,13 @@ export interface ScrollWorldConfig {
   diveScroll?: number;
   connScroll?: number;
   crossfade?: number;
+  /**
+   * Copy timing in viewport heights. When set, each section's copy holds at
+   * full opacity and hands off to the next one at the middle of the transit
+   * between them, fading over this width. Default: copy rises and falls across
+   * its own dive.
+   */
+  copyFade?: number;
   /** Seams with no connector clip: dissolve (default) or a 3D page turn. */
   stillTransition?: "crossfade" | "page";
   /** Viewport heights of scroll per page turn. Default 0.9. */

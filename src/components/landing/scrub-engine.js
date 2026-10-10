@@ -85,6 +85,10 @@ function mountScrollWorld(container, config) {
   const DIVE_W = config.diveScroll || 1.3;
   const CONN_W = config.connScroll || 0.9;
   const CROSSFADE = (config.crossfade != null) ? config.crossfade : 0.12;  // seam dissolve width (vh)
+  // Copy timing. Default: each section's copy rises and falls across its own dive.
+  // `copyFade` (vh): copy holds at full opacity and hands off to the next section
+  // at the middle of the transit between them, with short fades of this width.
+  const COPY_FADE = config.copyFade || 0;
   // Seams without a connector clip: 'crossfade' (default) or 'page' — a scroll-driven
   // 3D page turn hinged on the left edge. A connector clip, when present, always wins.
   const PAGE_TURN = config.stillTransition === 'page';
@@ -220,6 +224,7 @@ function mountScrollWorld(container, config) {
   // mid-scene pause. f(0)=0, f(1)=1 always, so seam frames are untouched.
   const lingerEase = (x, L) => { L = clamp(L); const c = x - 0.5; return (1 - L) * x + L * (4 * c * c * c + 0.5); };
   let vh = window.innerHeight, stageX = 0, totalW = 0, activeIndex = -1, ticking = false;
+  let handoff = [];   // copy hand-off scroll positions, see layout()
   let laidOutW = window.innerWidth;   // width the current layout was computed at (see onResize)
 
   function layout() {
@@ -231,6 +236,12 @@ function mountScrollWorld(container, config) {
     let off = 0;
     SEGMENTS.forEach(s => { s.start = off * vh; off += s.w; s.end = off * vh; });
     totalW = off;
+    // Copy hand-off points: the middle of the connector or page turn after each
+    // section's dive, or the seam itself when two dives meet directly.
+    handoff = SECTIONS.slice(0, -1).map(s => {
+      const next = SEGMENTS[SEGMENTS.indexOf(s._seg) + 1];
+      return next.kind === 'dive' ? s._seg.end : (next.start + next.end) / 2;
+    });
     track.style.height = (totalW * vh + vh) + 'px';   // +1vh so the last flight completes
     read();
   }
@@ -352,7 +363,13 @@ function mountScrollWorld(container, config) {
       const pr = clamp((y - seg.start) / (seg.end - seg.start), 0, 1);
       const before = y < seg.start, after = y > seg.end;
       let cop;
-      if (i === 0) cop = after ? 0 : smooth(1 - pr / 0.62);            // greets on landing
+      if (COPY_FADE) {
+        const f = COPY_FADE * vh;
+        const fadeIn = i === 0 ? 1 : smooth((y - handoff[i - 1]) / f);
+        const fadeOut = i === N - 1 ? 1 : smooth((handoff[i] - y) / f);
+        cop = Math.min(fadeIn, fadeOut);
+      }
+      else if (i === 0) cop = after ? 0 : smooth(1 - pr / 0.62);       // greets on landing
       else if (i === N - 1) cop = before ? 0 : smooth(pr / 0.4);       // holds CTA at the end
       else cop = (before || after) ? 0 : smooth(1 - Math.abs(pr - 0.5) / 0.5);
       const c = copies[i];

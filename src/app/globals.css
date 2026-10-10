@@ -214,23 +214,24 @@
   translate: 0 -2px;
 }
 
-/* Staggered reveal of the active scene's copy. */
+/* Staggered reveal of the active scene's copy: quick, so the next scene's
+   text is readable right after the hand-off (about 0.65 s for the whole card). */
 .sw-copy > * {
   transition:
-    opacity 800ms var(--ease-fluid),
-    translate 800ms var(--ease-fluid),
-    filter 800ms var(--ease-fluid);
+    opacity 500ms var(--ease-fluid),
+    translate 500ms var(--ease-fluid),
+    filter 500ms var(--ease-fluid);
 }
 .sw-copy:not(.is-active) > * {
   opacity: 0;
-  translate: 0 16px;
-  filter: blur(6px);
+  translate: 0 12px;
+  filter: blur(4px);
 }
-.sw-copy > :nth-child(2) { transition-delay: 80ms; }
-.sw-copy > :nth-child(3) { transition-delay: 160ms; }
-.sw-copy > :nth-child(4) { transition-delay: 240ms; }
-.sw-copy > :nth-child(5) { transition-delay: 320ms; }
-.sw-copy > :nth-child(6) { transition-delay: 400ms; }
+.sw-copy > :nth-child(2) { transition-delay: 40ms; }
+.sw-copy > :nth-child(3) { transition-delay: 80ms; }
+.sw-copy > :nth-child(4) { transition-delay: 120ms; }
+.sw-copy > :nth-child(5) { transition-delay: 160ms; }
+.sw-copy > :nth-child(6) { transition-delay: 200ms; }
 
 /* Route rail as bookmark ribbons in each scene's colour. */
 .sw-route {

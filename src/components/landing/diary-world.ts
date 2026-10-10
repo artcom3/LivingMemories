@@ -30,6 +30,8 @@ export const diaryWorld: ScrollWorldConfig = {
   // rate (~6.2 s of film per viewport height) and a constant scroll speed gives
   // a constant film speed. 0.45 vh/s plays it at ~2.8x real time.
   stepSpeed: 0.45,
+  // Copy stays up through its scene and swaps mid page turn (~0.3 s fades).
+  copyFade: 0.15,
   diveScroll: 1.3,
   connScroll: (1.3 * 5.04) / 8.04,
   sections: [
