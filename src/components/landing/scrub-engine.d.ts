@@ -38,6 +38,14 @@ export interface ScrollWorldConfig {
   pageScroll?: number;
   /** Horizontal nudge of the stills in vw. Default: +2 on desktop, -2 on phones. */
   stillOffset?: number;
+  /**
+   * Arrow keys and PageUp/PageDown move one section at a time: an animated
+   * scroll to the next rest position (top for the first section, mid-dive for
+   * the rest, then the content after the journey). Off by default.
+   */
+  keyboardSteps?: boolean;
+  /** Duration of one step in ms, whatever the distance. Default 1600. */
+  stepDuration?: number;
   /** Ignore prefers-reduced-motion. For development previews only. */
   forceMotion?: boolean;
   sections: ScrollWorldSection[];

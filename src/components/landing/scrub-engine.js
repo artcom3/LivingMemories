@@ -4,8 +4,10 @@
    LivingMemories copy of .claude/skills/scroll-world/references/scrub-engine.js
    (v0.8.0). Local changes: ES module export; mountScrollWorld() returns a
    destroy() that removes listeners, stops the rAF loop and revokes blob URLs so
-   React can unmount it (Strict Mode double mount, Fast Refresh); and the
-   `stillTransition: 'page'` option, a 3D page turn for seams without a clip.
+   React can unmount it (Strict Mode double mount, Fast Refresh); the
+   `stillTransition: 'page'` option, a 3D page turn for seams without a clip;
+   and `keyboardSteps`, fixed-duration section steps for arrows/PageUp/PageDown
+   (nav and route clicks use the same animation).
    ----------------------------------------------------------------------------
    Framework-agnostic. Vanilla JS, zero dependencies. It builds its own DOM and
    injects its own (namespaced) CSS into a container you give it, so it drops into
@@ -233,9 +235,60 @@ function mountScrollWorld(container, config) {
     read();
   }
 
-  function jumpTo(i) {
-    const seg = SECTIONS[i]._seg;
-    window.scrollTo({ top: seg.start + (seg.end - seg.start) * 0.5, behavior: reduce ? 'auto' : 'smooth' });
+  // ---- stepped navigation ----
+  // Each section has a rest position: the top of the page for the first one (its
+  // copy greets on landing), mid-dive for the rest (copy at full opacity, camera
+  // settled). The last step is the end of the journey, i.e. the content after it.
+  // Steps are animated over a fixed time so a presenter gets the same pace every
+  // time, whatever the distance.
+  const STEP_MS = config.stepDuration || 1600;
+  let anim = null, animRaf = 0;
+
+  function stepPositions() {
+    const pos = SECTIONS.map((s, i) => i === 0 ? 0 : s._seg.start + (s._seg.end - s._seg.start) * 0.5);
+    pos.push(container.getBoundingClientRect().top + window.scrollY + track.offsetHeight);
+    return pos;
+  }
+
+  function animateTo(y) {
+    y = clamp(y, 0, Math.max(0, document.documentElement.scrollHeight - window.innerHeight));
+    if (reduce) { cancelStep(); window.scrollTo(0, y); return; }
+    anim = { from: window.scrollY, to: y, t0: performance.now() };
+    if (!animRaf) animRaf = requestAnimationFrame(stepFrame);
+  }
+
+  function stepFrame(now) {
+    animRaf = 0;
+    if (!anim) return;
+    const p = clamp((now - anim.t0) / STEP_MS);
+    window.scrollTo(0, anim.from + (anim.to - anim.from) * easeInOut(p));
+    if (p < 1) animRaf = requestAnimationFrame(stepFrame); else anim = null;
+  }
+
+  function cancelStep() { anim = null; if (animRaf) { cancelAnimationFrame(animRaf); animRaf = 0; } }
+
+  function jumpTo(i) { animateTo(stepPositions()[i]); }
+
+  function onKey(e) {
+    if (!config.keyboardSteps || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+    const t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    let dir = 0;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') dir = 1;
+    else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') dir = -1;
+    else return;
+    const pos = stepPositions();
+    const exit = pos[pos.length - 1];
+    // Chain presses: step from where the running animation is heading.
+    const y = anim ? anim.to : window.scrollY;
+    if (y > exit + 2) return;   // past the journey: native scrolling
+    let target = -1;
+    if (dir > 0) target = pos.findIndex(p => p > y + 2);
+    else for (let k = pos.length - 1; k >= 0; k--) if (pos[k] < y - 2) { target = k; break; }
+    if (target < 0) return;   // no step that way (top, or the end of the journey)
+    e.preventDefault();
+    if (e.repeat && anim) return;   // a held key doesn't race through the film
+    animateTo(pos[target]);
   }
 
   function loadClip(s) {
@@ -388,12 +441,17 @@ function mountScrollWorld(container, config) {
   on(window, 'resize', onResize);
   on(window, 'orientationchange', layout);
   on(window, 'load', layout);
+  on(window, 'keydown', onKey);
+  // Any manual scroll input takes over from a running step.
+  on(window, 'wheel', cancelStep, { passive: true });
+  on(window, 'touchstart', cancelStep, { passive: true });
   layout();
   rafId = requestAnimationFrame(raf);
 
   return function destroy() {
     destroyed = true;
     cancelAnimationFrame(rafId);
+    cancelStep();
     listeners.forEach(([target, type, fn, opts]) => target.removeEventListener(type, fn, opts));
     SEGMENTS.forEach(s => { if (s.video) { try { s.video.pause(); } catch (e) {} s.video.removeAttribute('src'); } });
     blobUrls.forEach(u => URL.revokeObjectURL(u));

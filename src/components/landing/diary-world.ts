@@ -23,6 +23,9 @@ export const diaryWorld: ScrollWorldConfig = {
   stillTransition: "page",
   stillOffset: 0, // the book is the page's central axis
   pageScroll: 1,
+  // Presentation mode: arrows / PageUp / PageDown step scene by scene.
+  keyboardSteps: true,
+  stepDuration: 1800,
   diveScroll: 1.3,
   connScroll: 0.9,
   sections: [
