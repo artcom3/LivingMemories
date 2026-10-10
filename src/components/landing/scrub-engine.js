@@ -6,8 +6,10 @@
    destroy() that removes listeners, stops the rAF loop and revokes blob URLs so
    React can unmount it (Strict Mode double mount, Fast Refresh); the
    `stillTransition: 'page'` option, a 3D page turn for seams without a clip;
-   and `keyboardSteps`, fixed-duration section steps for arrows/PageUp/PageDown
-   (nav and route clicks use the same animation).
+   `keyboardSteps` (with stepSpeed/stepDuration) for arrows/PageUp/PageDown, also
+   used by nav and route clicks; `copyFade`/`copySlide` copy timing and motion;
+   `stillOffset`; `links`, secondary top bar links before the CTA; and
+   `route: false` / `copyNumbers: false` to drop the side rail and card counters.
    ----------------------------------------------------------------------------
    Framework-agnostic. Vanilla JS, zero dependencies. It builds its own DOM and
    injects its own (namespaced) CSS into a container you give it, so it drops into
@@ -30,7 +32,7 @@
                           // (exactly where the copy peaks) and moves quicker at the
                           // edges. 0 = linear (default). Keep ≤ 0.6; 1 = full pause.
            eyebrow, title, body, tags:[…],
-           cta:{ primary:{label,href}, secondary:{label,href} } }, // last section only
+           cta:{ primary:{label,href}, secondary:{label,href} } }, // optional, any section
          …
        ],
        connectors: [clipUrl, …],          // length = sections.length - 1 (nulls allowed)
@@ -89,6 +91,7 @@ function mountScrollWorld(container, config) {
   // `copyFade` (vh): copy holds at full opacity and hands off to the next section
   // at the middle of the transit between them, with short fades of this width.
   const COPY_FADE = config.copyFade || 0;
+  const COPY_SLIDE = config.copySlide || 0;   // px of leftward drift while fading
   // Seams without a connector clip: 'crossfade' (default) or 'page' — a scroll-driven
   // 3D page turn hinged on the left edge. A connector clip, when present, always wins.
   const PAGE_TURN = config.stillTransition === 'page';
@@ -148,10 +151,17 @@ function mountScrollWorld(container, config) {
     topbar.appendChild(brand);
   }
   const nav = el('nav', 'sw-nav'); if (config.nav !== false) topbar.appendChild(nav);
+  // Right-hand actions: optional secondary links (e.g. sign in), then the CTA.
+  const actions = el('div', 'sw-topactions');
+  (config.links || []).forEach(l => {
+    const a = el('a', 'sw-toplink'); a.href = l.href || '#'; a.textContent = l.label;
+    actions.appendChild(a);
+  });
   if (config.cta && config.cta.label) {
     const c = el('a', 'sw-topcta'); c.href = config.cta.href || '#'; c.textContent = config.cta.label;
-    topbar.appendChild(c);
+    actions.appendChild(c);
   }
+  if (actions.childElementCount) topbar.appendChild(actions);
 
   const stage = el('div', 'sw-stage');
   const copylayer = el('div', 'sw-copylayer');
@@ -161,7 +171,9 @@ function mountScrollWorld(container, config) {
   hint.appendChild(el('i'));
   const track = el('div', 'sw-track');
 
-  [sky, scrollbar, topbar, stage, copylayer, route, hint, track].forEach(n => container.appendChild(n));
+  // `route: false` leaves the side rail out of the DOM (its dots still exist, unmounted).
+  [sky, scrollbar, topbar, stage, copylayer, config.route === false ? null : route, hint, track]
+    .forEach(n => { if (n) container.appendChild(n); });
 
   // segment scenes
   const stillImg = src => {
@@ -198,7 +210,7 @@ function mountScrollWorld(container, config) {
   SECTIONS.forEach((s, i) => {
     const c = el('article', 'sw-copy'); c.style.setProperty('--sw-accent', s.accent || '');
     c.innerHTML =
-      `<span class="sw-copy__num">${pad(i + 1)} / ${pad(N)}</span>` +
+      (config.copyNumbers === false ? '' : `<span class="sw-copy__num">${pad(i + 1)} / ${pad(N)}</span>`) +
       (s.eyebrow ? `<span class="sw-copy__eyebrow">${esc(s.eyebrow)}</span>` : '') +
       (s.title ? `<h2 class="sw-copy__title">${esc(s.title)}</h2>` : '') +
       (s.body ? `<p class="sw-copy__body">${esc(s.body)}</p>` : '') +
@@ -374,7 +386,10 @@ function mountScrollWorld(container, config) {
       else cop = (before || after) ? 0 : smooth(1 - Math.abs(pr - 0.5) / 0.5);
       const c = copies[i];
       c.style.opacity = cop;
-      c.style.transform = reduce ? 'none' : `translateY(${(0.5 - pr) * 4}vh)`;
+      // With copySlide, copy drifts off to the left as it fades out and comes
+      // back in from the left as it fades in (scroll driven, so it reverses too).
+      const slideX = COPY_SLIDE ? -(1 - cop) * COPY_SLIDE : 0;
+      c.style.transform = reduce ? 'none' : `translate(${slideX.toFixed(1)}px, ${(0.5 - pr) * 4}vh)`;
       c.style.pointerEvents = cop > 0.5 ? 'auto' : 'none';
     }
 
@@ -539,6 +554,8 @@ function injectCSS() {
   .sw-nav__item{font:inherit;font-size:.82rem;color:var(--sw-ink-soft);border:0;background:transparent;cursor:pointer;padding:7px 14px;border-radius:999px;transition:color .25s,background .25s;}
   .sw-nav__item:hover{color:var(--sw-ink);} .sw-nav__item.is-active{color:#fff;background:var(--sw-accent);}
   .sw-topcta{text-decoration:none;font-weight:600;font-size:.9rem;color:#fff;background:var(--sw-ink);padding:10px 20px;border-radius:999px;white-space:nowrap;}
+  .sw-topactions{display:flex;align-items:center;gap:4px;}
+  .sw-toplink{text-decoration:none;font-weight:600;font-size:.9rem;color:var(--sw-ink);padding:10px 16px;border-radius:999px;white-space:nowrap;}
   .sw-stage{position:fixed;inset:0;z-index:10;pointer-events:none;}
   .sw-scene{position:absolute;inset:0;opacity:0;overflow:hidden;will-change:opacity;}
   .sw-scene__video,.sw-scene__still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;}
@@ -557,7 +574,7 @@ function injectCSS() {
   .sw-copy__body{margin-top:18px;font-size:clamp(1rem,1.25vw,1.14rem);line-height:1.55;color:color-mix(in srgb,var(--sw-ink) 78%,var(--sw-ink-soft));max-width:40ch;text-shadow:0 1px 12px color-mix(in srgb,var(--sw-bg) 90%,transparent);}
   .sw-copy__tags{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 0;padding:0;}
   .sw-copy__tags li{font-size:.82rem;font-weight:600;color:color-mix(in srgb,var(--sw-accent) 70%,#000);padding:7px 14px;border-radius:999px;background:color-mix(in srgb,var(--sw-accent) 14%,#fff);border:1px solid color-mix(in srgb,var(--sw-accent) 30%,transparent);}
-  .sw-copy__cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px;pointer-events:auto;}
+  .sw-copy__cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px;pointer-events:inherit;}
   .sw-btn{text-decoration:none;font-weight:600;font-size:.95rem;padding:13px 24px;border-radius:999px;transition:transform .2s;}
   .sw-btn--primary{color:#fff;background:var(--sw-ink);} .sw-btn--primary:hover{transform:translateY(-2px);}
   .sw-btn--ghost{color:var(--sw-ink);border:1.5px solid color-mix(in srgb,var(--sw-ink) 25%,transparent);} .sw-btn--ghost:hover{transform:translateY(-2px);}

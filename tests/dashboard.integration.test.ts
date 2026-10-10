@@ -262,6 +262,19 @@ test("empty family has a valid empty dashboard", async () => {
   assert.equal(result.hasActiveCreations, false);
 });
 test("login destinations admit the dashboard and reject external or malformed URLs", () => {
+  for (const action of ["diary", "record", "albums", "write", "stories"]) {
+    assert.equal(loginDestination(`/go/${action}`), `/go/${action}`);
+  }
+  for (const invalid of [
+    "/go/unknown",
+    "/go/__proto__",
+    "/go/record?next=https://evil.test",
+    "/go/../families",
+    "//evil.test/go/diary",
+  ]) {
+    assert.equal(loginDestination(invalid), "/families");
+  }
+
   assert.equal(
     loginDestination(`/families/${family}/dashboard`),
     `/families/${family}/dashboard`,

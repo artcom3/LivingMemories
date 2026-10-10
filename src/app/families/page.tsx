@@ -7,25 +7,42 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { listFamilies } from "@/lib/families/service";
 import { roleLabels } from "@/lib/families/validation";
+import { isLandingAction } from "@/lib/landing/actions";
 import { AppShell } from "@/components/app-shell";
 import { FamilyCreateForm } from "@/components/family-create-form";
-export default async function FamiliesPage() {
+export default async function FamiliesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ go?: string }>;
+}) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/login");
   const families = await listFamilies(session.user.id);
+  // Coming from a landing call to action with several families: each family
+  // continues to that action instead of its home.
+  const { go } = await searchParams;
+  const action = isLandingAction(go) ? go : null;
   return (
     <AppShell userName={session.user.name} families={families}>
       <div className="page-heading">
         <span className="eyebrow">OUR CONNECTIONS</span>
         <h1>Your families</h1>
-        <p className="muted">Every family has its own private space.</p>
+        <p className="muted">
+          {action
+            ? "Choose the family you want to continue with."
+            : "Every family has its own private space."}
+        </p>
       </div>
       {families.length ? (
         <div className="family-list">
           {families.map(({ family, role }) => (
             <Link
               key={family.id}
-              href={"/families/" + family.id + "/dashboard"}
+              href={
+                action
+                  ? `/go/${action}?family=${family.id}`
+                  : `/families/${family.id}/dashboard`
+              }
               className="family-entry"
             >
               <InitialAvatar>{family.name.slice(0, 1)}</InitialAvatar>

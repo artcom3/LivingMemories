@@ -19,9 +19,6 @@ export default async function Home() {
     <div className="landing-page" lang="en">
       <div id="top" />
       <ScrollWorld config={diaryWorld} />
-      <Link className="landing-sign-in" href="/login">
-        Sign in
-      </Link>
       <main className="landing-invitation" id="invitation">
         <h2>Join the private pilot</h2>
         <p>

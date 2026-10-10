@@ -103,6 +103,21 @@
 .sw-topcta:hover {
   translate: 0 -2px;
 }
+/* Secondary top bar link (Sign in): quiet next to the CTA. */
+.sw-toplink {
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ink);
+  transition: background-color 700ms var(--ease-fluid);
+}
+.sw-toplink:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+.sw-toplink:active {
+  scale: 0.98;
+}
 .sw-topcta:active,
 .sw-btn:active,
 .sw-nav__item:active {
@@ -110,7 +125,9 @@
 }
 
 /* Scene copy: a compact flat translucent paper card, bottom left, so the centred
-   book stays the focus (it only grazes the book's lower left corner). */
+   book stays the focus (it only grazes the book's lower left corner). Each card
+   is tinted with its scene's accent (set inline by the engine as --sw-accent),
+   so the hand-off between scenes reads as a change of colour, not just text. */
 .sw-copylayer::before {
   display: none;
 }
@@ -120,18 +137,19 @@
   translate: none;
   width: min(30vw, 340px);
   padding: 24px;
-  border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sw-accent) 30%, transparent);
   border-radius: 24px;
-  background: color-mix(in srgb, var(--paper) 78%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--sw-accent) 14%,
+    color-mix(in srgb, var(--paper) 80%, transparent)
+  );
   backdrop-filter: blur(24px) saturate(1.2);
-  box-shadow: 0 24px 64px -32px color-mix(in srgb, var(--ink) 35%, transparent);
+  box-shadow: 0 24px 64px -32px color-mix(in srgb, var(--sw-accent) 60%, transparent);
 }
-.sw-copy__num {
-  font-size: 12px;
-  line-height: 16px;
-}
+/* No "01 / 06" counter (copyNumbers: false): the eyebrow opens the card. */
 .sw-copy__eyebrow {
-  margin-top: 16px;
+  margin-top: 0;
   font-size: 12px;
   line-height: 16px;
 }
@@ -159,33 +177,56 @@
   text-shadow: none;
   text-wrap: pretty;
 }
-.sw-copy__tags {
+/* Card calls to action (the cards carry no tag chips, only this action): a compact ink pill with an arrow in the scene's accent,
+   so it reads on every tint, plus a quiet ghost link for a secondary action. */
+.sw-copy__cta {
+  gap: 8px;
   margin-top: 16px;
 }
-.sw-copy__tags li {
-  padding: 4px 12px;
+.sw-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
   font-size: 14px;
   line-height: 20px;
-}
-.sw-copy__cta {
-  margin-top: 24px;
-}
-.sw-btn {
-  padding: 8px 12px;
-  font-size: 16px;
-  line-height: 24px;
+  font-weight: 600;
   transition:
     translate 700ms var(--ease-fluid),
-    scale 700ms var(--ease-fluid);
+    scale 700ms var(--ease-fluid),
+    background-color 700ms var(--ease-fluid);
+}
+.sw-btn--primary {
+  background: var(--ink);
+}
+.sw-btn--primary::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: var(--sw-accent);
+  /* Phosphor arrow-right (bold), MIT. */
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><path d='M224.49,136.49l-72,72a12,12,0,0,1-17-17L187,140H40a12,12,0,0,1,0-24H187L135.51,64.48a12,12,0,0,1,17-17l72,72A12,12,0,0,1,224.49,136.49Z'/></svg>")
+    center / contain no-repeat;
+  transition: translate 700ms var(--ease-fluid);
 }
 .sw-btn--primary:hover,
 .sw-btn--ghost:hover {
   transform: none;
   translate: 0 -2px;
 }
+.sw-btn--primary:hover::after {
+  translate: 2px 0;
+}
+.sw-btn--ghost {
+  border: 0;
+}
+.sw-btn--ghost:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
 
 /* Staggered reveal of the active scene's copy: quick, so the next scene's
-   text is readable right after the hand-off (about 0.65 s for the whole card). */
+   text is readable right after the hand-off (about 0.65 s for the whole card).
+   Lines enter from the left, matching the card's own slide (copySlide). */
 .sw-copy > * {
   transition:
     opacity 500ms var(--ease-fluid),
@@ -194,7 +235,7 @@
 }
 .sw-copy:not(.is-active) > * {
   opacity: 0;
-  translate: 0 12px;
+  translate: -16px 0;
   filter: blur(4px);
 }
 .sw-copy > :nth-child(2) {
@@ -213,52 +254,15 @@
   transition-delay: 200ms;
 }
 
-/* Route rail as bookmark ribbons in each scene's colour. */
-.sw-route {
-  gap: 12px;
-}
-.sw-route::before {
-  display: none;
-}
-.sw-route__dot {
-  width: 16px;
-  height: 32px;
-  place-items: start center;
-}
-.sw-route__dot i {
-  width: 12px;
-  height: 20px;
-  border-radius: 2px 2px 0 0;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
-  background: color-mix(in srgb, var(--sw-accent) 45%, transparent);
-  box-shadow: none;
-  transition:
-    height 700ms var(--ease-fluid),
-    background-color 700ms var(--ease-fluid);
-}
-.sw-route__dot:hover i,
-.sw-route__dot.is-active i {
-  transform: none;
-  box-shadow: none;
-  background: var(--sw-accent);
-}
-.sw-route__dot.is-active i {
-  height: 32px;
-}
-.sw-route__label {
-  padding: 4px 8px;
-  font-size: 12px;
-  line-height: 16px;
-}
 .sw-hint {
   font-size: 12px;
   line-height: 16px;
 }
 
 .sw-nav__item:focus-visible,
+.sw-toplink:focus-visible,
 .sw-topcta:focus-visible,
 .sw-btn:focus-visible,
-.sw-route__dot:focus-visible,
 .sw-brand:focus-visible {
   outline: 2px solid var(--terracota);
   outline-offset: 2px;
@@ -336,22 +340,30 @@
   text-decoration: none;
   font-weight: 600;
 }
-.landing-access:focus-visible,
-.landing-sign-in:focus-visible {
+.landing-access:focus-visible {
   outline: 2px solid var(--terracota);
   outline-offset: 3px;
 }
-.landing-sign-in {
+
+/* Leaving for the app (scroll-world.tsx): a paper veil fades in over the film
+   while the active card drifts left like the scene hand-offs; the destination
+   then fades in (src/app/template.tsx). */
+.landing-veil {
   position: fixed;
-  z-index: 80;
-  right: 20px;
-  bottom: 20px;
-  border-radius: 999px;
-  padding: 0.6rem 1rem;
-  background: var(--ink);
-  color: var(--paper);
-  text-decoration: none;
-  font-weight: 600;
+  inset: 0;
+  z-index: 90;
+  background: var(--paper);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 450ms var(--ease-fluid);
+}
+.landing-page--leaving .landing-veil {
+  opacity: 1;
+  pointer-events: auto;
+}
+.landing-page--leaving .sw-copy.is-active {
+  translate: -24px 0;
+  transition: translate 450ms var(--ease-fluid);
 }
 
 /* Explicit link colors keep the app's inherited link reset from hiding CTAs. */
@@ -359,7 +371,8 @@
 .landing-page .sw-btn--primary {
   color: var(--paper);
 }
-.landing-page .sw-btn--ghost {
+.landing-page .sw-btn--ghost,
+.landing-page .sw-toplink {
   color: var(--ink);
 }
 
@@ -367,5 +380,25 @@
   /* The copy card already fills the lower half; keep the hint off its tags. */
   .landing-page .sw-hint {
     display: none;
+  }
+}
+
+@media (min-width: 861px) and (max-width: 1080px) {
+  /* Small laptops show the full section nav: tighten its pills to fit. */
+  .sw-nav__item {
+    padding: 8px 8px;
+  }
+}
+@media (max-width: 1080px) {
+  /* Icon-only brand below 1080px so the section nav (desktop) or Sign in and
+     the CTA (phones) fit the island nav. The name stays available to screen
+     readers. */
+  .sw-brand__name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
