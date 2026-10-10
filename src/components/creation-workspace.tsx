@@ -1,4 +1,6 @@
 "use client";
+import { Badge } from "@/components/ui/badge";
+import { BookOpen, ArrowRight } from "lucide-react";
 import { Feedback } from "@/components/private/content-primitives";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,6 +60,7 @@ export function CreationWorkspace({
   preparationId: string;
 }) {
   const base = `/api/families/${familyId}/content`;
+  const [loaded, setLoaded] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
   const [run, setRun] = useState<Run | null>(null);
   const [draft, setDraft] = useState<CreativeDraft | null>(null);
@@ -76,14 +79,17 @@ export function CreationWorkspace({
     ])
       .then(([records, setup]) => {
         if (active) {
+          setLoaded(true);
           setVersions(records);
           setConfig(setup);
           if (records[0]) setRun({ id: records[0].id } as Run);
         }
       })
       .catch(() => {
-        if (active)
+        if (active) {
+          setLoaded(true);
           setError("We could not check the generations. Refresh the page.");
+        }
       });
     return () => {
       active = false;
@@ -191,15 +197,8 @@ export function CreationWorkspace({
     );
     setConfirmed(false);
   }
-  return (
-    <section className="creation-preview">
-      <div className="section-heading">
-        <h2>Create and review</h2>
-        <p className="muted">
-          The draft uses the latest saved preparation and preserves the source
-          context as it was when generation started.
-        </p>
-      </div>
+  const generationControls = (
+    <>
       {config && !config.canGenerate ? (
         <Feedback className="feedback">
           Connect OpenAI or Gemini to enable generation. Audio also requires
@@ -211,7 +210,10 @@ export function CreationWorkspace({
         <p className="form-hint">
           New drafts will use{" "}
           {config.textProvider === "gemini" ? "Gemini" : "OpenAI"} to interpret
-          the sources and create text and illustrations.
+          the sources and{" "}
+          {kind === "music"
+            ? "shape the musical proposal."
+            : "create text and illustrations."}
         </p>
       ) : null}
       <p className="form-hint">
@@ -224,6 +226,7 @@ export function CreationWorkspace({
         disabled={
           busy ||
           !!pending ||
+          !loaded ||
           !config?.canGenerate ||
           versions.filter((v) => v.hasDraft).length >= 3
         }
@@ -237,11 +240,18 @@ export function CreationWorkspace({
             ? "Create another draft with your saved changes"
             : "Create a draft to review"}
       </Button>
-      {error ? (
-        <Feedback className="feedback error" role="alert">
-          {error}
-        </Feedback>
-      ) : null}
+    </>
+  );
+  return (
+    <section className="creation-preview">
+      <div className="section-heading">
+        <h2>{kind === "stories" ? "Story versions" : "Music versions"}</h2>
+        <p className="muted">
+          {kind === "stories"
+            ? "Read your finished story or review the draft of a new version."
+            : "Listen to a finished piece or review the musical proposal for a new version."}
+        </p>
+      </div>
       {versions.length ? (
         <FormField
           control={
@@ -269,19 +279,79 @@ export function CreationWorkspace({
           Versions
         </FormField>
       ) : null}
-      {run?.status ? (
-        <p className="selection-summary" role="status">
-          {creationStatusLabels[run.status]}
+      {versions.length > 0 && (
+        <div className="story-version-actions">
+          {run?.status && (
+            <Badge
+              variant={run.status === "FAILED" ? "destructive" : "secondary"}
+              role="status"
+            >
+              {creationStatusLabels[run.status]}
+            </Badge>
+          )}
+          {kind === "stories" &&
+          run?.status === "READY" &&
+          run.draft?.pages.length ? (
+            <Button asChild>
+              <Link href={`/story-mode/${familyId}/${run.id}`} prefetch={false}>
+                <BookOpen aria-hidden="true" />
+                Open story
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
+          ) : null}
+          {!run?.status && !error && versions.length > 0 && (
+            <p className="muted" role="status">
+              Loading this version…
+            </p>
+          )}
+        </div>
+      )}
+      {kind === "music" &&
+        run?.status === "READY" &&
+        run.artifacts?.some((asset) => asset.type === "MUSIC") && (
+          <div className="music-ready-player">
+            <h3>Your music is ready</h3>
+            <p className="muted">Press play to listen to this version.</p>
+            {run.artifacts
+              .filter((asset) => asset.type === "MUSIC")
+              .map((asset) => (
+                <audio
+                  key={asset.id}
+                  controls
+                  preload="none"
+                  src={assetUrl(asset.id)}
+                  aria-label={`Listen to ${draft?.title || "your music"}`}
+                />
+              ))}
+          </div>
+        )}
+      {!loaded && !error && (
+        <p className="muted" role="status">
+          Loading versions…
         </p>
-      ) : null}
-      {kind === "stories" &&
-      run?.status === "READY" &&
-      run.draft?.pages.length ? (
-        <Button asChild variant="outline">
-          <Link href={`/story-mode/${familyId}/${run.id}`} prefetch={false}>
-            Open story
-          </Link>
-        </Button>
+      )}
+      {loaded && !versions.length && !error && (
+        <p className="music-first-draft">
+          {kind === "music"
+            ? "Your preparation is saved. Create a proposal to review before generating the audio."
+            : "Your preparation is saved. Create a draft to review before generating illustrations or narration."}
+        </p>
+      )}
+      {versions.length > 0 ? (
+        <Disclosure
+          className="story-generation-options"
+          title={<>Create another version</>}
+        >
+          <div className="form-stack">{generationControls}</div>
+        </Disclosure>
+      ) : (
+        <>{generationControls}</>
+      )}
+      {error ? (
+        <Feedback className="feedback error" role="alert">
+          {error}
+        </Feedback>
       ) : null}
       {pending ? (
         <p className="form-hint">
@@ -306,189 +376,193 @@ export function CreationWorkspace({
               ))}
             </Feedback>
           ) : null}
-          {draft.pages.map((page, index) => (
-            <article className="creation-page" key={index}>
-              <h3>Page {index + 1}</h3>
-              {run.status === "REVIEW" ? (
-                <>
-                  <FormField
-                    control={
-                      <Textarea
-                        value={page.text}
-                        maxLength={6000}
-                        onChange={(e) =>
-                          pageEdit(index, "text", e.target.value)
-                        }
-                      />
-                    }
-                  >
-                    Text
-                  </FormField>
-                  <FieldSet className="source-choices">
-                    <FieldLegend>
-                      Sources supporting this page&apos;s text
-                    </FieldLegend>
-                    <p className="form-hint">
-                      Select the sources that support this account. A visual
-                      reference photo does not by itself confirm names, places,
-                      or events.
-                    </p>
-                    {run.evidence.map((source) => (
-                      <FormField
-                        className="check-label"
-                        key={source.sourceId}
-                        control={
-                          <Checkbox
-                            checked={page.sourceIds.includes(source.sourceId)}
-                            onCheckedChange={() => {
-                              setDraft((d) =>
-                                d
-                                  ? {
-                                      ...d,
-                                      pages: d.pages.map((p, i) =>
-                                        i === index
-                                          ? {
-                                              ...p,
-                                              sourceIds: p.sourceIds.includes(
-                                                source.sourceId,
-                                              )
-                                                ? p.sourceIds.filter(
-                                                    (id) =>
-                                                      id !== source.sourceId,
-                                                  )
-                                                : [
-                                                    ...p.sourceIds,
-                                                    source.sourceId,
-                                                  ],
-                                            }
-                                          : p,
-                                      ),
-                                    }
-                                  : d,
-                              );
-                              setConfirmed(false);
-                            }}
-                          />
-                        }
-                        checkbox
-                      >
-                        {sourceDisplayName(source.originalName)}
-                      </FormField>
-                    ))}
-                  </FieldSet>
-                  {run.settings.illustrate ? (
+          <DraftPages collapsed={kind === "stories" && run.status === "READY"}>
+            {draft.pages.map((page, index) => (
+              <article className="creation-page" key={index}>
+                <h3>Page {index + 1}</h3>
+                {run.status === "REVIEW" ? (
+                  <>
                     <FormField
                       control={
                         <Textarea
-                          value={page.illustrationPrompt}
-                          maxLength={3000}
+                          value={page.text}
+                          maxLength={6000}
                           onChange={(e) =>
-                            pageEdit(
-                              index,
-                              "illustrationPrompt",
-                              e.target.value,
-                            )
+                            pageEdit(index, "text", e.target.value)
                           }
                         />
                       }
                     >
-                      Illustration scene
+                      Text
                     </FormField>
-                  ) : null}
-                </>
-              ) : (
-                <p className="creation-evidence">{page.text}</p>
-              )}
-              {run.artifacts
-                ?.filter((a) => a.page === index)
-                .map((asset) =>
-                  asset.type === "IMAGE" ? (
-                    // Generated files remain behind the family permission endpoint.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      key={asset.id}
-                      src={assetUrl(asset.id)}
-                      alt={`Illustration for page ${index + 1}`}
-                    />
-                  ) : (
-                    <audio
-                      key={asset.id}
-                      controls
-                      src={assetUrl(asset.id)}
-                      preload="none"
-                    />
-                  ),
+                    <FieldSet className="source-choices">
+                      <FieldLegend>
+                        Sources supporting this page&apos;s text
+                      </FieldLegend>
+                      <p className="form-hint">
+                        Select the sources that support this account. A visual
+                        reference photo does not by itself confirm names,
+                        places, or events.
+                      </p>
+                      {run.evidence.map((source) => (
+                        <FormField
+                          className="check-label"
+                          key={source.sourceId}
+                          control={
+                            <Checkbox
+                              checked={page.sourceIds.includes(source.sourceId)}
+                              onCheckedChange={() => {
+                                setDraft((d) =>
+                                  d
+                                    ? {
+                                        ...d,
+                                        pages: d.pages.map((p, i) =>
+                                          i === index
+                                            ? {
+                                                ...p,
+                                                sourceIds: p.sourceIds.includes(
+                                                  source.sourceId,
+                                                )
+                                                  ? p.sourceIds.filter(
+                                                      (id) =>
+                                                        id !== source.sourceId,
+                                                    )
+                                                  : [
+                                                      ...p.sourceIds,
+                                                      source.sourceId,
+                                                    ],
+                                              }
+                                            : p,
+                                        ),
+                                      }
+                                    : d,
+                                );
+                                setConfirmed(false);
+                              }}
+                            />
+                          }
+                          checkbox
+                        >
+                          {sourceDisplayName(source.originalName)}
+                        </FormField>
+                      ))}
+                    </FieldSet>
+                    {run.settings.illustrate ? (
+                      <FormField
+                        control={
+                          <Textarea
+                            value={page.illustrationPrompt}
+                            maxLength={3000}
+                            onChange={(e) =>
+                              pageEdit(
+                                index,
+                                "illustrationPrompt",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        }
+                      >
+                        Illustration scene
+                      </FormField>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="creation-evidence">{page.text}</p>
                 )}
-              <p className="form-hint">
-                Sources:{" "}
-                {page.sourceIds
-                  .map((id) =>
-                    sourceDisplayName(
-                      run.evidence.find((e) => e.sourceId === id)
-                        ?.originalName || "Source removed",
-                    ),
-                  )
-                  .join(" · ")}
-              </p>
-            </article>
-          ))}
-          {run.settings.kind === "MUSIC" ? (
-            <div className="creation-page">
-              <h3>Music proposal</h3>
-              <p className="form-hint">
-                Musical direction can be in English for the generator. Lyrics
-                use the selected language.
-              </p>
-              {run.status === "REVIEW" ? (
-                <>
-                  <FormField
-                    control={
-                      <Textarea
-                        value={draft.musicPrompt}
-                        maxLength={3000}
-                        onChange={(e) => {
-                          setDraft({ ...draft, musicPrompt: e.target.value });
-                          setConfirmed(false);
-                        }}
+                {run.artifacts
+                  ?.filter((a) => a.page === index)
+                  .map((asset) =>
+                    asset.type === "IMAGE" ? (
+                      // Generated files remain behind the family permission endpoint.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={asset.id}
+                        src={assetUrl(asset.id)}
+                        alt={`Illustration for page ${index + 1}`}
                       />
-                    }
-                  >
-                    Musical direction
-                  </FormField>
-                  {!run.settings.instrumental ? (
+                    ) : (
+                      <audio
+                        key={asset.id}
+                        controls
+                        src={assetUrl(asset.id)}
+                        preload="none"
+                      />
+                    ),
+                  )}
+                <p className="form-hint">
+                  Sources:{" "}
+                  {page.sourceIds
+                    .map((id) =>
+                      sourceDisplayName(
+                        run.evidence.find((e) => e.sourceId === id)
+                          ?.originalName || "Source removed",
+                      ),
+                    )
+                    .join(" · ")}
+                </p>
+              </article>
+            ))}
+          </DraftPages>
+          {run.settings.kind === "MUSIC" ? (
+            <MusicProposal collapsed={run.status === "READY"}>
+              <div className="creation-page">
+                <h3>Music proposal</h3>
+                <p className="form-hint">
+                  Musical direction can be in English for the generator. Lyrics
+                  use the selected language.
+                </p>
+                {run.status === "REVIEW" ? (
+                  <>
                     <FormField
                       control={
                         <Textarea
-                          value={draft.lyrics}
-                          maxLength={2000}
+                          value={draft.musicPrompt}
+                          maxLength={3000}
                           onChange={(e) => {
-                            setDraft({ ...draft, lyrics: e.target.value });
+                            setDraft({ ...draft, musicPrompt: e.target.value });
                             setConfirmed(false);
                           }}
                         />
                       }
                     >
-                      Lyrics
+                      Musical direction
                     </FormField>
-                  ) : null}
-                </>
-              ) : (
-                <>
-                  <p>{draft.musicPrompt}</p>
-                  <p className="creation-evidence">{draft.lyrics}</p>
-                </>
-              )}
-              {run.artifacts
-                ?.filter((a) => a.type === "MUSIC")
-                .map((a) => (
-                  <audio
-                    key={a.id}
-                    controls
-                    src={assetUrl(a.id)}
-                    preload="none"
-                  />
-                ))}
-            </div>
+                    {!run.settings.instrumental ? (
+                      <FormField
+                        control={
+                          <Textarea
+                            value={draft.lyrics}
+                            maxLength={2000}
+                            onChange={(e) => {
+                              setDraft({ ...draft, lyrics: e.target.value });
+                              setConfirmed(false);
+                            }}
+                          />
+                        }
+                      >
+                        Lyrics
+                      </FormField>
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    <p>{draft.musicPrompt}</p>
+                    <p className="creation-evidence">{draft.lyrics}</p>
+                  </>
+                )}
+                {run.artifacts
+                  ?.filter((a) => a.type === "MUSIC" && run.status !== "READY")
+                  .map((a) => (
+                    <audio
+                      key={a.id}
+                      controls
+                      src={assetUrl(a.id)}
+                      preload="none"
+                    />
+                  ))}
+              </div>
+            </MusicProposal>
           ) : null}
           <Disclosure
             className="source-choices"
@@ -611,5 +685,40 @@ export function CreationWorkspace({
         </>
       ) : null}
     </section>
+  );
+}
+
+function DraftPages({
+  collapsed,
+  children,
+}: {
+  collapsed: boolean;
+  children: React.ReactNode;
+}) {
+  return collapsed ? (
+    <Disclosure
+      title={<>Read text and page details</>}
+      className="story-page-details"
+    >
+      {children}
+    </Disclosure>
+  ) : (
+    <>{children}</>
+  );
+}
+
+function MusicProposal({
+  collapsed,
+  children,
+}: {
+  collapsed: boolean;
+  children: React.ReactNode;
+}) {
+  return collapsed ? (
+    <Disclosure title={<>Read musical proposal and lyrics</>}>
+      {children}
+    </Disclosure>
+  ) : (
+    <>{children}</>
   );
 }

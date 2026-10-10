@@ -36,12 +36,12 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 export function MemoryEditor({
   familyId,
   memory,
@@ -448,22 +448,22 @@ export function MemoryEditor({
           </div>
         </section>
       </div>
-      <Sheet
+      <Dialog
         open={capture !== null}
         onOpenChange={(open) => {
           if (!open) setCapture(null);
         }}
       >
-        <SheetContent className="overflow-y-auto sm:max-w-lg">
-          <SheetHeader>
-            <SheetTitle>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 sm:max-w-xl">
+          <DialogHeader className="pr-10">
+            <DialogTitle>
               {capture === "audio" ? "Record audio" : "Write an account"}
-            </SheetTitle>
-            <SheetDescription>
+            </DialogTitle>
+            <DialogDescription>
               Save an original material for {memory.title}.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="memory-panel-body">
+            </DialogDescription>
+          </DialogHeader>
+          <div className="memory-dialog-body">
             {error ? (
               <Feedback role="alert" className="error">
                 {error}
@@ -527,23 +527,23 @@ export function MemoryEditor({
               </form>
             ) : null}
           </div>
-        </SheetContent>
-      </Sheet>
-      <Sheet
+        </DialogContent>
+      </Dialog>
+      <Dialog
         open={Boolean(source)}
         onOpenChange={(open) => {
           if (!open) setEditingSource(null);
         }}
       >
-        <SheetContent className="overflow-y-auto sm:max-w-lg">
-          <SheetHeader>
-            <SheetTitle>Describe this material</SheetTitle>
-            <SheetDescription>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 sm:max-w-xl">
+          <DialogHeader className="pr-10">
+            <DialogTitle>Describe this material</DialogTitle>
+            <DialogDescription>
               {source ? sourceDisplayName(source.originalName) : ""} · The
               original stays unchanged.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="memory-panel-body">
+            </DialogDescription>
+          </DialogHeader>
+          <div className="memory-dialog-body">
             {error ? (
               <Feedback role="alert" className="error">
                 {error}
@@ -638,17 +638,17 @@ export function MemoryEditor({
               </form>
             ) : null}
           </div>
-        </SheetContent>
-      </Sheet>
-      <Sheet open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <SheetContent className="overflow-y-auto sm:max-w-lg">
-          <SheetHeader>
-            <SheetTitle>Edit memory details</SheetTitle>
-            <SheetDescription>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 sm:max-w-xl">
+          <DialogHeader className="pr-10">
+            <DialogTitle>Edit memory details</DialogTitle>
+            <DialogDescription>
               Give this memory a title, a note, and a place in your collection.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="memory-panel-body">
+            </DialogDescription>
+          </DialogHeader>
+          <div className="memory-dialog-body">
             {error ? (
               <Feedback role="alert" className="error">
                 {error}
@@ -769,8 +769,8 @@ export function MemoryEditor({
               </Button>
             </div>
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

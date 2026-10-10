@@ -35,12 +35,18 @@ export function MusicPreparationForm({
   preparation,
   initialMemory,
   initialAlbum,
+  compact = false,
+  onSaved,
+  onCancel,
 }: {
   familyId: string;
   memories: MemoryOverview["memories"];
   preparation?: Preparation;
   initialMemory?: string;
   initialAlbum?: string;
+  compact?: boolean;
+  onSaved?: () => void;
+  onCancel?: () => void;
 }) {
   const router = useRouter();
   const starting =
@@ -62,6 +68,7 @@ export function MusicPreparationForm({
   );
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [error, setError] = useState("");
   const base = `/families/${familyId}`;
   if (!memories.length)
     return (
@@ -75,25 +82,25 @@ export function MusicPreparationForm({
     );
   return (
     <>
-      <div className="section-heading">
-        <span className="eyebrow">MEMORIES IN MUSIC</span>
-        <h2>{preparation ? "Resume music proposal" : "Prepare music"}</h2>
-        <p className="muted">
-          Turn the atmosphere and context of your memories into an original
-          piece.
-        </p>
-      </div>
-      {preparation?.sources.some((s) => !available.has(s.sourceId)) ? (
-        <Feedback className="feedback error">
-          Some materials were removed. Review and save your current selection.
-        </Feedback>
-      ) : null}
+      {!compact && (
+        <div className="section-heading">
+          <span className="eyebrow">MEMORIES IN MUSIC</span>
+          <h2>{preparation ? "Resume music proposal" : "Prepare music"}</h2>
+          <p className="muted">
+            Turn the atmosphere and context of your memories into an original
+            piece.
+          </p>
+        </div>
+      )}
       <form
-        className="form-stack story-preparation"
+        className={
+          compact ? "preparation-dialog-form" : "form-stack story-preparation"
+        }
         onSubmit={async (event) => {
           event.preventDefault();
           setBusy(true);
           setFeedback("");
+          setError("");
           try {
             const data = Object.fromEntries(new FormData(event.currentTarget));
             const result = await mutate(
@@ -107,8 +114,9 @@ export function MusicPreparationForm({
                 "Proposal saved. Your changes will be used in the next draft.",
               );
             router.refresh();
+            if (preparation) onSaved?.();
           } catch (error) {
-            setFeedback(
+            setError(
               error instanceof Error
                 ? error.message
                 : "We could not save the proposal.",
@@ -118,7 +126,16 @@ export function MusicPreparationForm({
           }
         }}
       >
-        <FieldGroup>
+        <FieldGroup
+          className={compact ? "preparation-dialog-scroll" : undefined}
+        >
+          {preparation?.sources.some((s) => !available.has(s.sourceId)) ? (
+            <Feedback className="feedback error">
+              Some materials were removed. Review and save your current
+              selection.
+            </Feedback>
+          ) : null}
+
           <FieldSet className="preparation-step">
             <FieldLegend>1 · Your albums and materials</FieldLegend>
             <AlbumSourcePicker
@@ -227,19 +244,38 @@ export function MusicPreparationForm({
               What feeling or detail would you like to capture?
             </FormField>
           </FieldSet>
-          {feedback ? (
-            <Feedback role="status" className="feedback">
-              {feedback}
-            </Feedback>
-          ) : null}
-          <Button disabled={busy} variant="default">
-            {busy ? "Saving\u2026" : "Save music proposal"}
-          </Button>
           <p className="muted">
             Save your changes before creating a draft. Review the proposal and
             lyrics before generating audio.
           </p>
         </FieldGroup>
+        <div className={compact ? "preparation-dialog-footer" : undefined}>
+          {error && (
+            <Feedback role="alert" className="error">
+              {error}
+            </Feedback>
+          )}
+          {feedback ? (
+            <Feedback role="status" className="feedback">
+              {feedback}
+            </Feedback>
+          ) : null}
+          <div className={compact ? "preparation-dialog-buttons" : undefined}>
+            {compact && onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+            )}
+            <Button type="submit" disabled={busy} variant="default">
+              {busy ? "Saving\u2026" : "Save music proposal"}
+            </Button>
+          </div>
+        </div>
       </form>
     </>
   );

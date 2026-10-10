@@ -284,6 +284,11 @@ export function FamilyPageHeading({ family }: { family: Family }) {
   if (
     pathname === base ||
     pathname === `${base}/dashboard` ||
+    pathname === `${base}/albums` ||
+    pathname === `${base}/stories` ||
+    pathname === `${base}/music` ||
+    (pathname.startsWith(`${base}/music/`) && !pathname.endsWith("/new")) ||
+    (pathname.startsWith(`${base}/stories/`) && !pathname.endsWith("/new")) ||
     (pathname.startsWith(`${base}/memories/`) && !pathname.endsWith("/new"))
   )
     return null;

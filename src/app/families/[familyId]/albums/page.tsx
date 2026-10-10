@@ -1,4 +1,4 @@
-import { MemoryIndex } from "@/components/memory-index";
+import { AlbumIndex } from "@/components/album-index";
 import { familyPageContext } from "@/lib/memories/page-context";
 import { memoryOverview } from "@/lib/memories/service";
 export default async function Page({
@@ -17,14 +17,13 @@ export default async function Page({
     : "";
   return (
     <>
-      <MemoryIndex
+      <AlbumIndex
         key={initialAlbum}
         initialAlbum={initialAlbum}
         familyId={familyId}
+        familyName={view.family.name}
         role={view.role}
         data={data}
-        section="albums"
-        trash={false}
       />
     </>
   );

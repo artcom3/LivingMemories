@@ -109,6 +109,12 @@ export async function memoryOverview(
       include: {
         memory: { select: { id: true, title: true } },
         sources: { select: { sourceId: true } },
+        creations: {
+          where: scope,
+          select: { id: true, status: true },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
       },
       orderBy: { updatedAt: "desc" },
     });

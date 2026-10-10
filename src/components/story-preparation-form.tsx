@@ -45,12 +45,16 @@ export function StoryPreparationForm({
   initialMemory = "",
   preparation,
   initialAlbum,
+  compact = false,
+  onSaved,
 }: {
   familyId: string;
   memories: MemoryOverview["memories"];
   initialMemory?: string;
   preparation?: Preparation;
   initialAlbum?: string;
+  compact?: boolean;
+  onSaved?: () => void;
 }) {
   const router = useRouter();
   const starting =
@@ -94,14 +98,16 @@ export function StoryPreparationForm({
     );
   return (
     <>
-      <div className="section-heading">
-        <span className="eyebrow">FROM MEMORY TO STORY</span>
-        <h2>{preparation ? "Continue preparation" : "Prepare a story"}</h2>
-        <p className="muted">
-          Choose the main memory, its materials, and who you want to tell the
-          story to.
-        </p>
-      </div>
+      {!compact && (
+        <div className="section-heading">
+          <span className="eyebrow">FROM MEMORY TO STORY</span>
+          <h2>{preparation ? "Continue preparation" : "Prepare a story"}</h2>
+          <p className="muted">
+            Choose the main memory, its materials, and who you want to tell the
+            story to.
+          </p>
+        </div>
+      )}
       {preparation?.sources.some(
         (source) => !available.has(source.sourceId),
       ) ? (
@@ -138,6 +144,7 @@ export function StoryPreparationForm({
             if (preparation) {
               setSaved(true);
               router.refresh();
+              onSaved?.();
             } else {
               router.push(base + "/stories/" + result.id);
               router.refresh();

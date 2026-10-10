@@ -129,7 +129,15 @@ export async function musicPreparations(actorId: string, familyId: string) {
     if (member.role === "READER") return [];
     return tx.musicPreparation.findMany({
       where: { familyId, ...scope(actorId, member.role) },
-      include: { sources: { select: { sourceId: true } } },
+      include: {
+        sources: { select: { sourceId: true } },
+        creations: {
+          where: { familyId, ...scope(actorId, member.role) },
+          select: { id: true, status: true },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+      },
       orderBy: { updatedAt: "desc" },
     });
   });
