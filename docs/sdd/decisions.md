@@ -223,3 +223,15 @@ Para escribir código de Next.js se consultará primero la documentación de la 
 **Prueba de desarrollo, 2026-10-10:** se permite seleccionar `GEMINI_API_MODE=generate_content` de forma explícita, además de Interactions. En la cuenta actual funcionó con gemini-3.5-flash-lite; los fallos anteriores no prueban que todo el nivel gratuito estuviera agotado. La selección queda en la versión y no cambia automáticamente tras errores. Los intentos fallidos sin borrador no son regeneraciones de contenido, pero conservan su reserva.
 
 **Petición del usuario:** probar ilustraciones mediante el MCP de ElevenLabs. Conexión y cuatro variaciones completadas; no se importaron ni se automatizó la API de imágenes. La clave API de la app es Creator y recibió `402 paid_plan_required`; la automatización sigue pendiente de un proveedor con acceso. [Evidencia](../testing/real-story-flow.md).
+
+### DEC-025
+
+**Asistente compartido, RAG y voz en tiempo real.** Aprobado el 2026-10-10 mediante el plan de integración solicitado por el usuario. Se amplía DEC-024 únicamente para incorporar ElevenLabs Agents con Custom LLM propio y el SDK de React. Las respuestas continúan usando `gpt-6-luna` y los embeddings `text-embedding-3-small`; no se activa clonación ni se cambian los modelos de generación existentes.
+
+La primera entrega consulta, explica y navega; no entrevista ni escribe/publica recuerdos. La voz tiene sesión privada con firma de un uso, credencial temporal, máximo de cinco minutos y un minuto de silencio. El contexto de página pertenece al servidor; cambiarlo finaliza la sesión de voz y evita reproducir respuestas de la página anterior. La narración se pausa conservando posición y solo se reanuda con una acción del lector.
+
+La activación exige endpoint HTTPS, comprobación de configuración privada/retención y tarifa verificada. Audio completo no se almacena en la app. Las pruebas simuladas no acreditan calidad real ni despliegue. DEC-018, DEC-019 y los topes de DEC-023 se mantienen. Implementación, límites y conciliación: [integración del asistente](../assistant-integration.md).
+
+#### Activación local de voz — 2026-10-10
+
+El usuario autorizó un túnel HTTPS temporal limitado al endpoint de voz. Se configuró un agente privado con firma de un uso, secreto de integración separado de la clave OpenAI, grabación desactivada y borrado a siete días. Una prueba real acotada confirmó transcripción, respuesta con gpt-6-luna, audio en español y conciliación del costo reportado. El túnel no publica la biblioteca ni originales. No se contrataron suscripciones ni se desplegó la app. Los topes de DEC-023 están desactivados temporalmente por instrucción del usuario; la contabilidad permanece.

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { MemoryOverview } from "@/lib/memories/service";
 import {
@@ -23,6 +23,8 @@ import { AlbumSourcePicker } from "./album-source-picker";
 import { narrativeStyles, visualStyles } from "@/lib/creations/shared";
 import { mutate } from "@/lib/families/client";
 type Preparation = {
+  musicMoment?: unknown;
+  episodeId?: string | null;
   id: string;
   memoryId: string;
   title: string;
@@ -78,6 +80,13 @@ export function StoryPreparationForm({
   const [pages, setPages] = useState(
     preparation?.pages || readerProfiles.AGE_5_8.pages,
   );
+  const initialMoment = preparation?.musicMoment as {mode:string;afterPage:number;creationId?:string}|null;
+  const [musicMode,setMusicMode] = useState(initialMoment?.mode || "NONE");
+  const [afterPage,setAfterPage] = useState(initialMoment?.afterPage || Math.min(2,pages));
+  const [songId,setSongId] = useState(initialMoment?.creationId || "");
+  const [songs,setSongs] = useState<{id:string;title:string;previewUrl:string}[]>([]);
+  const [songError,setSongError] = useState("");
+  useEffect(()=>{const controller=new AbortController();fetch(`/api/families/${familyId}/content/story-songs`,{signal:controller.signal,cache:"no-store"}).then(async response=>{if(!response.ok)throw new Error("Could not load songs.");setSongs(await response.json());}).catch(()=>{if(!controller.signal.aborted)setSongError("Could not load existing songs. Reopen the preparation to try again.");});return()=>controller.abort();},[familyId]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -132,6 +141,7 @@ export function StoryPreparationForm({
               preparation ? "PATCH" : "POST",
               {
                 ...data,
+                musicMoment: musicMode === "NONE" ? null : {mode:musicMode,afterPage, ...(musicMode === "EXISTING" ? {creationId:songId} : {})},
                 memoryId,
                 readerProfile: profile,
                 pages,
@@ -205,6 +215,7 @@ export function StoryPreparationForm({
           </FieldSet>
           <FieldSet className="preparation-step">
             <FieldLegend>2 · Materials you want to use</FieldLegend>
+            {preparation?.episodeId ? <p className="feedback">This preparation uses the exact fragment of a reviewed story. Its original source stays linked; other episodes in that material will not be included.</p> : (
             <AlbumSourcePicker
               familyId={familyId}
               memories={memories}
@@ -213,6 +224,7 @@ export function StoryPreparationForm({
               primaryMemoryId={memoryId}
               initialAlbum={initialAlbum}
             />
+            )}
             {pending ? (
               <p className="form-hint">
                 {pending}{" "}
@@ -220,6 +232,15 @@ export function StoryPreparationForm({
                 no context. You can save this preparation and add it later.
               </p>
             ) : null}
+          </FieldSet>
+          <FieldSet className="preparation-step">
+            <FieldLegend>A musical moment</FieldLegend>
+            <label>Music in this book<NativeSelect value={musicMode} onChange={e=>setMusicMode(e.target.value)}><NativeSelectOption value="NONE">No music</NativeSelectOption><NativeSelectOption value="NEW">Create a song from this story</NativeSelectOption><NativeSelectOption value="EXISTING">Choose an existing song</NativeSelectOption></NativeSelect></label>
+            {musicMode !== "NONE" ? <>
+              <label>Play after page<Input type="number" min={1} max={pages} required value={afterPage} onChange={e=>setAfterPage(Number(e.target.value))}/></label>
+              {musicMode === "EXISTING" ? <><label>Song<NativeSelect value={songId} onChange={e=>setSongId(e.target.value)} required><NativeSelectOption value="">Choose a finished song</NativeSelectOption>{songs.map(song=><NativeSelectOption key={song.id} value={song.id}>{song.title}</NativeSelectOption>)}</NativeSelect></label>{songs.find(song=>song.id===songId)?.previewUrl ? <audio controls preload="metadata" src={songs.find(song=>song.id===songId)!.previewUrl} aria-label="Preview selected song"/> : null}{songError ? <p role="alert">{songError}</p> : !songs.length ? <p>No finished songs are available yet. You can create a new song instead.</p> : null}</> : <p className="form-hint">A one-minute song with lyrics in the book’s language. Review its lyrics and musical direction with the story draft.</p>}
+              <p className="form-hint">Narration pauses after this page. The song plays, then reading continues. Readers can switch music off or skip it.</p>
+            </> : null}
           </FieldSet>
           <FieldSet className="preparation-step">
             <FieldLegend>3 · Who the story is for</FieldLegend>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Manrope, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { AssistantProvider } from "@/components/assistant/provider";
 const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin"],
@@ -21,7 +22,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${manrope.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col"><AssistantProvider enabled={process.env.ASSISTANT_TEXT_ENABLED === "true"} voiceEnabled={process.env.ASSISTANT_VOICE_ENABLED === "true"}>{children}</AssistantProvider></body>
     </html>
   );
 }

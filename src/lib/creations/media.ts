@@ -33,6 +33,8 @@ export async function sourceMedia(
       const source = sources.find((s) => s.id === item.sourceId);
       if (!source) throw new Error("Source no longer available");
       if (item.type === "TEXT") continue;
+      // Episode preparations already carry the approved transcript fragment.
+      if (item.type === "AUDIO" && transcribe && item.transcript !== undefined) continue;
       await check();
       const object = await storage().send(
         new GetObjectCommand({

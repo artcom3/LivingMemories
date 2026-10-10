@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MusicPreparationForm } from "@/components/music-preparation-form";
 import { familyPageContext } from "@/lib/memories/page-context";
@@ -16,6 +17,7 @@ export default async function NewMusicPage({
   const { memory, album } = await searchParams;
   return (
     <>
+      <p className="form-hint">You can also <Link href={`/families/${familyId}/stories/discovered`}>choose a detected story from your memories</Link>.</p>
       <MusicPreparationForm
         familyId={familyId}
         memories={data.memories}

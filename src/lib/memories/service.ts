@@ -1,3 +1,6 @@
+import { existingStorySong, validateMusicMoment } from "../creations/music-moment";
+import { queueStoryAnalysis } from "../episodes/queue";
+import { episodeFragment } from "../episodes/fragments";
 import "server-only";
 import { randomUUID } from "node:crypto";
 import {
@@ -381,12 +384,13 @@ export async function addText(
           "Written account",
         originalText,
       },
-      select: { id: true },
+      select: { id: true, type: true, updatedAt: true },
     });
     await tx.memory.update({
       where: { id: memoryId },
       data: { updatedAt: new Date() },
     });
+    await queueStoryAnalysis(tx, source, actorId);
     return source;
   });
 }
@@ -470,13 +474,14 @@ export async function uploadSource(
           byteSize: file.size,
           fileKey: key,
         },
-        select: { id: true },
+        select: { id: true, type: true, updatedAt: true },
       });
       await tx.memory.update({
         where: { id: memoryId },
         data: { updatedAt: new Date() },
       });
-      return source;
+      await queueStoryAnalysis(tx, source, actorId);
+    return source;
     });
   } catch (error) {
     await storage()
@@ -654,8 +659,16 @@ export async function prepareStory(
       }))
     )
       throw unavailable();
+    const linkedEpisodeId = input.episodeId ? String(input.episodeId) : id ? (await tx.storyPreparation.findUnique({where:{id},select:{episodeId:true}}))?.episodeId : null;
+    if (linkedEpisodeId) await episodeFragment(tx, actorId, familyId, member.role, linkedEpisodeId, sourceIds);
+    const previousMoment = id ? (await tx.storyPreparation.findUnique({where:{id},select:{musicMoment:true}}))?.musicMoment : null;
+    const musicMoment = validateMusicMoment(input.musicMoment === undefined ? previousMoment : input.musicMoment, pages);
+    if (musicMoment && input.narrate === false) throw new AccessError(400,"MUSIC_NARRATION","Enable narration to include a musical moment.");
+    if (musicMoment?.mode === "EXISTING") await existingStorySong(tx,actorId,familyId,member.role,musicMoment.creationId!);
     const data = {
+      musicMoment: musicMoment ? musicMoment as Prisma.InputJsonValue : Prisma.DbNull,
       title,
+      ...(input.episodeId ? { episodeId: String(input.episodeId) } : {}),
       memoryId: memory.id,
       language: input.language as string,
       readerProfile: profile,

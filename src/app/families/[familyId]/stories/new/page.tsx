@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { StoryPreparationForm } from "@/components/story-preparation-form";
 import { familyPageContext } from "@/lib/memories/page-context";
 import { memoryOverview } from "@/lib/memories/service";
@@ -16,6 +17,7 @@ export default async function NewStoryPage({
   const { memory, album } = await searchParams;
   return (
     <>
+      <p className="form-hint">You can also <Link href={`/families/${familyId}/stories/discovered`}>choose a detected story from your memories</Link>.</p>
       <StoryPreparationForm
         familyId={familyId}
         memories={data.memories}

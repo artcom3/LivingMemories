@@ -9,6 +9,7 @@ export type StoryBook = {
   title: string;
   language: string;
   pages: StoryBookPage[];
+  musicMoment?: { afterPage: number; title: string; url: string };
 };
 
 /** Only the reader projection crosses the server/client boundary. */
@@ -21,7 +22,9 @@ export function storyBook(
 ): StoryBook {
   const assetUrl = (id: string) =>
     `/api/families/${encodeURIComponent(familyId)}/content/creations/${encodeURIComponent(creationId)}/assets/${encodeURIComponent(id)}`;
+  const music = artifacts.find(a=>a.type === "MUSIC");
   return {
+    ...(draft.musicMoment && music ? {musicMoment:{afterPage:draft.musicMoment.afterPage,title:draft.musicMoment.title,url:assetUrl(music.id)}} : {}),
     title: draft.title,
     language,
     pages: draft.pages.map((page, index) => {

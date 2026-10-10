@@ -148,8 +148,10 @@ export function GlassHeader({
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>{userName}</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-60 max-w-[calc(100vw-2rem)]">
+        <DropdownMenuLabel className="truncate" title={userName}>
+          {userName}
+        </DropdownMenuLabel>
         {role ? (
           <DropdownMenuLabel className="account-role">
             {roleLabels[role]}

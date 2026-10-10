@@ -95,3 +95,12 @@
 @media (prefers-reduced-motion:reduce) { .story-mode *, .story-mode *::before, .story-mode *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 
 .story-picture-expand { position: absolute; bottom: 8px; right: 8px; border-radius: 999px; background: var(--album); box-shadow: 0 2px 10px #2b2a3320; }
+
+/* The optional song control stays on its own row so mobile navigation fits. */
+.story-reader-status { flex-wrap: wrap; max-width: min(100%, 640px); text-align: center; }
+.story-reader-status > span { overflow-wrap: anywhere; }
+.story-skip-song { border-radius: 999px; flex-shrink: 0; }
+
+@media (max-width:700px) {
+  body:has(.assistant-trigger) .story-mode[data-has-music="true"] { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+}

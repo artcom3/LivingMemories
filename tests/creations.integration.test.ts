@@ -423,7 +423,7 @@ test("failed providers are explicit, preserve drafts, and never replay an ambigu
   assert.equal(calls, 1);
   assert.match(result.errorMessage!, /API key or access/);
   assert.doesNotMatch(result.errorMessage!, /Sensitive/);
-  // A rejected attempt without a draft is not a regenerated story. It remains in the allowance ledger.
+  // A rejected attempt without a draft is not a regenerated story. It keeps its generation history.
   await prisma.creation.createMany({
     data: Array.from({ length: 2 }, () => ({
       familyId: family,
@@ -442,7 +442,7 @@ test("failed providers are explicit, preserve drafts, and never replay an ambigu
     data: { status: "FAILED", reservedCents: 0 },
   });
 });
-test("concurrent requests obey the shared monthly family and adult allowance", async () => {
+test("concurrent requests stay serialized and development creations ignore monthly reservations", async () => {
   const prep = await prepareMusic(adult, family, {
     title: "Cupo",
     language: "es",
@@ -470,10 +470,20 @@ test("concurrent requests obey the shared monthly family and adult allowance", a
     style: "PIANO",
     durationSeconds: 30,
   });
-  await assert.rejects(
-    beginCreation(adult, family, "MUSIC", next.id),
-    /monthly reservation/,
-  );
+  await prisma.creation.updateMany({
+    where: { familyId: family },
+    data: { reservedCents: 10000 },
+  });
+  const previousFlag = process.env.CREATION_RESERVATION_LIMITS_ENABLED;
+  try {
+    process.env.CREATION_RESERVATION_LIMITS_ENABLED = "false";
+    const created = await beginCreation(adult, family, "MUSIC", next.id);
+    const saved = await prisma.creation.findUniqueOrThrow({ where: { id: created.id } });
+    assert.equal(saved.reservedCents, 0);
+  } finally {
+    if (previousFlag === undefined) delete process.env.CREATION_RESERVATION_LIMITS_ENABLED;
+    else process.env.CREATION_RESERVATION_LIMITS_ENABLED = previousFlag;
+  }
 });
 test("ElevenLabs adapter guarantees instrumental mode and sends reviewed lyrics through a v2 composition plan", async () => {
   const saved = globalThis.fetch;

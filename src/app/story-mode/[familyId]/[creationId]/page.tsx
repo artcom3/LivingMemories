@@ -43,6 +43,8 @@ export default async function StoryModePage({
   return (
     <StoryExperience
       key={creationId}
+      familyId={familyId}
+      creationId={creationId}
       book={storyBook(
         familyId,
         creationId,

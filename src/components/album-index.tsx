@@ -1,4 +1,5 @@
 "use client";
+import { AssistantScope } from "./assistant/provider";
 import { AnimatePresence } from "motion/react";
 import { RevealItem, RevealList } from "@/components/motion/reveal";
 
@@ -278,6 +279,7 @@ export function AlbumIndex({
 
   return (
     <section className="albums-page reveal-blocks">
+      <AssistantScope familyId={familyId} screen={selected ? "album" : undefined} resourceId={selected?.id} />
       {selected ? (
         <Link
           className="memory-back-link"

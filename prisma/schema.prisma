@@ -164,6 +164,15 @@ model PersonProfile {
   name         String
   relationship String?
   biography    String?
+  voiceId      String?
+  voiceStatus  String    @default("NONE")
+  voiceOperation String?
+  voiceStartedAt DateTime?
+  voiceLanguage String?
+  voiceSampleKey String?
+  voicePreviewKey String?
+  voiceConsentAt DateTime?
+  voiceConsentById String?
   createdById  String
   archivedAt   DateTime?
   createdAt    DateTime  @default(now())
@@ -242,12 +251,15 @@ model MemorySource {
   preparations       StoryPreparationSource[]
   musicPreparations  MusicPreparationSource[]
   creations          CreationSource[]
+  storyAnalysis      SourceStoryAnalysis?
+  episodes           MemoryEpisode[]
 
   @@index([memoryId, withdrawnAt])
   @@map("memory_source")
 }
 
 model StoryPreparation {
+  musicMoment Json?
   id                String                   @id @default(cuid())
   familyId          String
   createdById       String
@@ -272,6 +284,9 @@ model StoryPreparation {
 
   @@index([familyId, createdById])
   @@map("story_preparation")
+  episodeId String?
+  episode MemoryEpisode? @relation(fields: [episodeId], references: [id], onDelete: Restrict)
+
 }
 
 model StoryPreparationSource {
@@ -303,6 +318,9 @@ model MusicPreparation {
 
   @@index([familyId, createdById])
   @@map("music_preparation")
+  episodeId String?
+  episode MemoryEpisode? @relation(fields: [episodeId], references: [id], onDelete: Restrict)
+
 }
 
 model MusicPreparationSource {
@@ -356,6 +374,9 @@ model Creation {
   @@index([familyId, createdById, createdAt])
   @@index([status])
   @@map("creation")
+  episodeId String?
+  episode MemoryEpisode? @relation(fields: [episodeId], references: [id], onDelete: Restrict)
+
 }
 
 model CreationSource {
@@ -366,4 +387,149 @@ model CreationSource {
 
   @@id([creationId, sourceId])
   @@map("creation_source")
+}
+
+// Private contextual assistant. Access is always resolved against live family resources.
+model AssistantDocument {
+  embeddingModel String @default("openai:text-embedding-3-small")
+  id String @id @default(cuid())
+  sourceId String @unique
+  familyId String
+  ownerId String
+  sourceVersion DateTime
+  memoryVersion DateTime
+  version String
+  status String @default("PENDING")
+  category String @default("TESTIMONY")
+  derived Json?
+  errorCode String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  passages AssistantPassage[]
+  @@index([familyId, status])
+  @@map("assistant_document")
+}
+model AssistantPassage {
+  id String @id @default(cuid())
+  documentId String
+  text String @db.Text
+  locator Json
+  embedding Unsupported("vector(1536)")?
+  document AssistantDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  fragments AssistantFragment[]
+  @@index([documentId])
+  @@map("assistant_passage")
+}
+model AssistantFragment {
+  id String @id @default(cuid())
+  passageId String @unique
+  approvedById String
+  approvedAt DateTime @default(now())
+  revokedAt DateTime?
+  passage AssistantPassage @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  @@map("assistant_fragment")
+}
+model AssistantConversation {
+  id String @id @default(cuid())
+  familyId String
+  userId String
+  context Json
+  contextRevision Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  turns AssistantTurn[]
+  voices AssistantVoiceSession[]
+  @@index([familyId, userId, updatedAt])
+  @@map("assistant_conversation")
+}
+model AssistantTurn {
+  id String @id @default(cuid())
+  conversationId String
+  requestKey String
+  question String @db.Text
+  answer String? @db.Text
+  status String @default("PENDING")
+  context Json
+  contextRevision Int
+  destinations Json @default("[]")
+  model String @default("gpt-6-luna")
+  instructionsVersion String @default("assistant-v1")
+  createdAt DateTime @default(now())
+  conversation AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  citations AssistantCitation[]
+  @@unique([conversationId, requestKey])
+  @@map("assistant_turn")
+}
+model AssistantCitation {
+  id String @id @default(cuid())
+  turnId String
+  passageId String
+  sourceVersion String
+  turn AssistantTurn @relation(fields: [turnId], references: [id], onDelete: Cascade)
+  @@index([passageId])
+  @@map("assistant_citation")
+}
+model AssistantVoiceSession {
+  id String @id @default(cuid())
+  conversationId String
+  tokenHash String @unique
+  providerConversationId String? @unique
+  reservationId String @unique
+  status String @default("CONNECTING")
+  expiresAt DateTime
+  lastActivityAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  conversation AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  @@map("assistant_voice_session")
+}
+model UsageReservation {
+  id String @id @default(cuid())
+  operationKey String @unique
+  familyId String
+  userId String
+  capability String
+  reservedCents Int
+  actualCents Int?
+  status String @default("RESERVED")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([createdAt, familyId, userId])
+  @@map("usage_reservation")
+}
+
+model SourceStoryAnalysis {
+  id String @id @default(cuid())
+  sourceId String @unique
+  requestedById String
+  sourceVersion DateTime
+  status String @default("PENDING")
+  transcript String? @db.Text
+  timestamps Json?
+  errorCode String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  source MemorySource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  @@index([status])
+  @@map("source_story_analysis")
+}
+model MemoryEpisode {
+  id String @id @default(cuid())
+  sourceId String
+  sourceVersion DateTime
+  title String
+  summary String @db.Text
+  excerpt String @db.Text
+  startOffset Int
+  endOffset Int
+  audioStart Float?
+  audioEnd Float?
+  status String @default("SUGGESTED")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  source MemorySource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  books StoryPreparation[]
+  songs MusicPreparation[]
+  creations Creation[]
+  @@unique([sourceId, sourceVersion, startOffset, endOffset])
+  @@map("memory_episode")
 }

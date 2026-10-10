@@ -1,3 +1,4 @@
+import { AssistantScope } from "./assistant/provider";
 import { GlassHeader, type GlassHeaderProps } from "./private/glass-header";
 import { ConfirmationProvider } from "./private/confirmation-provider";
 import { MotionProvider } from "./motion/motion-provider";
@@ -9,6 +10,7 @@ export function AppShell({
 }) {
   return (
     <ConfirmationProvider>
+      <AssistantScope familyId={header.family?.id} />
       <MotionProvider>
         <div className="app-shell">
           <a href="#main" className="skip-link">

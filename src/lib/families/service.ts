@@ -160,6 +160,9 @@ export async function getFamily(actorId: string, familyId: string) {
             name: true,
             relationship: true,
             biography: true,
+            voiceStatus: true,
+            voiceLanguage: true,
+            voicePreviewKey: true,
             createdById: true,
             createdBy: { select: { name: true } },
           },
@@ -516,6 +519,8 @@ export async function updateProfile(
         "FORBIDDEN",
         "Only the profile's creator or an administrator can edit it.",
       );
+    if (found.voiceOperation && found.voiceStartedAt && Date.now() - found.voiceStartedAt.getTime() < 180000)
+      throw new AccessError(409, "VOICE_BUSY", "Wait for voice creation to finish before editing this profile.");
     await tx.personProfile.update({
       where: { id: found.id },
       data: fields ?? { archivedAt: new Date() },

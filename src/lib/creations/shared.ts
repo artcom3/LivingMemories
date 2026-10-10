@@ -83,7 +83,10 @@ export const musicStyles = {
     prompt: "Original cheerful family pop, acoustic rhythm, positive and warm.",
   },
 } as const;
+export type MusicalMoment = { mode: "NEW" | "EXISTING"; afterPage: number; creationId?: string };
+export type MusicalMomentDraft = MusicalMoment & { title: string; musicPrompt: string; lyrics: string };
 export type CreationSettings = {
+  musicMoment?: MusicalMoment | null;
   kind: "STORY" | "MUSIC";
   title: string;
   language: string;
@@ -107,8 +110,11 @@ export type CreationSettings = {
   ttsModel: string;
   musicModel: string;
   voiceId: string;
+  voiceProfileId?: string;
+  voiceName?: string;
 };
 export type Evidence = {
+  fragment?: { startOffset: number; endOffset: number; audioStart: number | null; audioEnd: number | null };
   sourceId: string;
   memoryId: string;
   memoryTitle: string;
@@ -133,6 +139,7 @@ export type Evidence = {
   sampledSeconds?: number[];
 };
 export type CreativeDraft = {
+  musicMoment?: MusicalMomentDraft;
   title: string;
   summary: string;
   notes: string[];

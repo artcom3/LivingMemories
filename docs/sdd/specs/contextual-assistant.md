@@ -24,7 +24,7 @@ Aceptación: «¿Dónde ocurrió esto?» usa el contexto de la página. Cambiar 
 
 **Preguntas por texto o grabación y respuestas escuchables.** Una pregunta grabada puede transcribirse y revisarse; la respuesta permanece escrita y puede reproducirse con voz sintética.
 
-Aceptación: un fallo de transcripción permite corregir o escribir la pregunta. Un fallo de narración deja accesibles el texto y las citas. No se requiere voz en tiempo real. [SCN-11](../validation.md#scn-11), [SCN-13](../validation.md#scn-13). Tarea: [TASK-011](../tasks.md#task-011).
+Aceptación: un fallo de transcripción permite corregir o escribir la pregunta. Un fallo de narración deja accesibles el texto y las citas. DEC-025 amplía esta entrega con voz en tiempo real, sin eliminar texto ni las respuestas con citas. [SCN-11](../validation.md#scn-11), [SCN-13](../validation.md#scn-13). Tarea: [TASK-011](../tasks.md#task-011).
 
 ### REQ-AST-003
 
@@ -46,4 +46,18 @@ La presentación mantiene el idioma y perfil del cuento; en biblioteca usa una c
 
 El historial es privado del adulto que conversa, sin acceso automático de familiares o administradores. Texto y citas se conservan hasta su eliminación por el adulto; audios de preguntas y respuestas, 7 días. Antes de mostrar o reutilizar turnos se comprueban los permisos actuales y se ocultan respuestas afectadas por fuentes retiradas. Acuerdo: [DEC-019](../decisions.md#dec-019).
 
+La implementación local incluye RAG híbrido, conversaciones privadas y un adaptador Custom LLM para voz. La activación y la evidencia real del piloto permanecen pendientes; detalles en [integración](../../assistant-integration.md).
+
 Dependencias: biblioteca autorizada, recuperación con evidencia, transcripción con scribe_v2, respuestas con gpt-6-luna y narración con eleven_multilingual_v2. Presentación y conservación: DEC-018 y DEC-019. Las consultas consumen los topes mensuales de DEC-023. Cuando un audio expire a los 7 días, el texto sigue disponible; narrarlo de nuevo necesita una nueva operación dentro del saldo disponible.
+
+### Fallback de proveedor (2026-10-10)
+
+Por instrucción del usuario, OpenAI conserva prioridad cuando existe `OPENAI_API_KEY`. Sin esa clave, se reutiliza Gemini para respuestas y embeddings (`gemini-embedding-001`, 1.536 dimensiones normalizadas). Cada documento identifica el espacio de embeddings; no se comparan vectores entre proveedores. El cambio exige preparar fuentes de nuevo para recuperación semántica completa. No hay reintentos automáticos de errores de OpenAI contra Gemini ni presupuestos paralelos. Ambos proveedores mantienen las mismas reglas de evidencia y permisos.
+
+### Consumo ilimitado temporal (2026-10-10)
+
+Por corrección explícita del usuario, no se aplican topes mensuales durante el desarrollo. `CREATION_RESERVATION_LIMITS_ENABLED=false` desactiva los límites compartidos de generación y asistente; se conserva la contabilidad y la deduplicación. DEC-023 queda como política opcional, activable solo al habilitar ese flag. Los controles de permisos y activación de voz siguen vigentes.
+
+### Conversación sin pasajes y títulos (2026-10-10)
+
+Las preguntas generales se envían al modelo aunque el RAG no encuentre pasajes. `GENERAL` permite contexto general o ficción explícita sin citas familiares; `INSUFFICIENT` se reserva para preguntas sobre hechos familiares que no cuentan con evidencia. La búsqueda de historias puede encontrar títulos de recuerdos autorizados antes de indexarlos. Cada conversación obtiene un título breve a partir de su primera pregunta temática todavía autorizada; también se aplica al historial existente y no necesita una llamada adicional al modelo.

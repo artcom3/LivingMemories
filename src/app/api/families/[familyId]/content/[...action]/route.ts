@@ -1,3 +1,4 @@
+import { storySongChoices } from "@/lib/creations/music-moment";
 import {
   approveCreation,
   beginCreation,
@@ -41,6 +42,7 @@ async function handle(request: Request, context: Context) {
     const { familyId, action } = await context.params;
     const [kind, id, child, childId, last] = action;
     if (req.method === "GET") {
+      if(kind === "story-songs" && action.length === 1) return json(await storySongChoices(actorId,familyId));
       if (kind === "overview" && action.length === 1)
         return json(
           await memoryOverview(

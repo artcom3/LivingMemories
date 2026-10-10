@@ -18,6 +18,7 @@ type Content = {
 export async function geminiInteraction(
   body: Record<string, unknown>,
   mode: "interactions" | "generate_content" = "interactions",
+  timeoutMs = 240000,
 ): Promise<Content[]> {
   if (mode === "generate_content") {
     const input = body.input as Content[];
@@ -71,7 +72,7 @@ export async function geminiInteraction(
           "Content-Type": "application/json",
         },
         body: JSON.stringify(request),
-        signal: AbortSignal.timeout(240000),
+        signal: AbortSignal.timeout(timeoutMs),
       },
     );
     if (!response.ok)
@@ -107,7 +108,7 @@ export async function geminiInteraction(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ ...body, store: false }),
-      signal: AbortSignal.timeout(240000),
+      signal: AbortSignal.timeout(timeoutMs),
     },
   );
   if (!response.ok)

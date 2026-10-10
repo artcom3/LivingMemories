@@ -52,6 +52,12 @@ export function StoryDetail({
           Edit preparation
         </Button>
       </div>
+      {preparation.episodeId ? (
+        <p className="feedback">
+          Based on one reviewed story fragment. The rest of the original material is not included.{' '}
+          <Link href={`${base}/stories/discovered#episode-${preparation.episodeId}`}>Review the original fragment</Link>
+        </p>
+      ) : null}
       <div className="story-detail-layout">
         <CreationWorkspace
           familyId={familyId}

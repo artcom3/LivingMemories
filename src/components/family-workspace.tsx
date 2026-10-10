@@ -1,4 +1,5 @@
 "use client";
+import { StorytellerVoice } from "@/components/storyteller-voice";
 import { InitialAvatar } from "@/components/private/initial-avatar";
 import { Feedback, EmptyState } from "@/components/private/content-primitives";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export function FamilyWorkspace({
   } | null>(null);
   const [invitationUrl, setInvitationUrl] = useState("");
   const [editingProfile, setEditingProfile] = useState<string | null>(null);
+  const [voiceProfile, setVoiceProfile] = useState<string | null>(null);
   const base = "/api/families/" + view.family.id;
   const isAdmin = view.role === "ADMIN";
   const canWrite = view.role !== "READER";
@@ -144,6 +146,10 @@ export function FamilyWorkspace({
                               >
                                 Edit profile
                               </Button>
+                              <Button disabled={busy} type="button" variant="outline" aria-expanded={voiceProfile === item.id}
+                                onClick={() => setVoiceProfile(voiceProfile === item.id ? null : item.id)}>
+                                {item.voiceStatus === "READY" ? "Listen to voice" : item.voiceStatus === "NONE" ? "Add voice" : "Manage voice"}
+                              </Button>
                               <Button
                                 disabled={busy}
                                 onClick={async () => {
@@ -165,6 +171,9 @@ export function FamilyWorkspace({
                                 Archive
                               </Button>
                             </div>
+                          ) : null}
+                          {voiceProfile === item.id && (isAdmin || item.createdById === userId) ? (
+                            <StorytellerVoice key={item.id} familyId={view.family.id} profile={item} onClose={() => setVoiceProfile(null)} />
                           ) : null}
                         </div>
                       </article>

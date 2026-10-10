@@ -179,7 +179,7 @@ export function CreationWorkspace({
       ? !config?.elevenlabs
       : run?.settings?.narrate &&
         (!config?.elevenlabs ||
-          !(run.settings.language === "en" ? config.voiceEn : config.voiceEs));
+          !(run.settings.voiceId || (run.settings.language === "en" ? config.voiceEn : config.voiceEs)));
   function pageEdit(
     index: number,
     field: "text" | "illustrationPrompt",
@@ -217,10 +217,8 @@ export function CreationWorkspace({
         </p>
       ) : null}
       <p className="form-hint">
-        Each version reserves US$5 of the test allowance, including both stages.
-        This is a conservative reservation, not a provider quote. Up to two
-        regenerations per preparation; monthly limits: US$25 per adult/family
-        and US$100 for the pilot.
+        Monthly reservation limits are disabled during development. Up to two
+        regenerations per preparation.
       </p>
       <Button
         disabled={
@@ -319,7 +317,7 @@ export function CreationWorkspace({
                 <audio
                   key={asset.id}
                   controls
-                  preload="none"
+                  preload="metadata"
                   src={assetUrl(asset.id)}
                   aria-label={`Listen to ${draft?.title || "your music"}`}
                 />
@@ -331,6 +329,7 @@ export function CreationWorkspace({
           Loading versions…
         </p>
       )}
+      {run?.settings?.voiceName && run.settings.narrate ? <p className="form-hint">Narration voice: {run.settings.voiceName}</p> : null}
       {loaded && !versions.length && !error && (
         <p className="music-first-draft">
           {kind === "music"
@@ -376,6 +375,14 @@ export function CreationWorkspace({
               ))}
             </Feedback>
           ) : null}
+          {draft.musicMoment ? <section className="creation-page">
+            <h3>Musical moment · {draft.musicMoment.title}</h3>
+            {run.status === "REVIEW" ? <>
+              <label>Play after page<input type="number" min={1} max={draft.pages.length} value={draft.musicMoment.afterPage} onChange={e=>{setDraft(d=>d?.musicMoment?{...d,musicMoment:{...d.musicMoment,afterPage:Number(e.target.value)}}:d);setConfirmed(false);}}/></label>
+              {draft.musicMoment.mode === "NEW" ? <><FormField control={<Textarea maxLength={3000} value={draft.musicMoment.musicPrompt} onChange={e=>{setDraft(d=>d?.musicMoment?{...d,musicMoment:{...d.musicMoment,musicPrompt:e.target.value}}:d);setConfirmed(false);}}/>}>Musical direction</FormField><FormField control={<Textarea maxLength={2000} value={draft.musicMoment.lyrics} onChange={e=>{setDraft(d=>d?.musicMoment?{...d,musicMoment:{...d.musicMoment,lyrics:e.target.value}}:d);setConfirmed(false);}}/>}>Song lyrics</FormField></> : <p>A finished song will be included without generating it again.</p>}
+            </> : <p>Plays after page {draft.musicMoment.afterPage}.</p>}
+            {run.artifacts?.filter(a=>a.type === "MUSIC").map(a=><audio key={a.id} controls preload="metadata" src={assetUrl(a.id)} aria-label="Preview the book song"/>)}
+          </section> : null}
           <DraftPages collapsed={kind === "stories" && run.status === "READY"}>
             {draft.pages.map((page, index) => (
               <article className="creation-page" key={index}>
@@ -558,7 +565,7 @@ export function CreationWorkspace({
                       key={a.id}
                       controls
                       src={assetUrl(a.id)}
-                      preload="none"
+                      preload="metadata"
                     />
                   ))}
               </div>
@@ -632,7 +639,7 @@ export function CreationWorkspace({
                 I have reviewed the facts, the sources, and{" "}
                 {kind === "music"
                   ? "the proposal and lyrics"
-                  : "the story text"}
+                  : draft.musicMoment ? "the story text and song lyrics" : "the story text"}
                 .
               </FormField>
               {renderDisabled ? (

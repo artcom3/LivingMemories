@@ -1,5 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
+import { AssistantScope } from "../assistant/provider";
 import Link from "next/link";
 import {
   Component,
@@ -68,10 +69,14 @@ export function StoryExperience({
   book,
   returnUrl,
   accessUrl,
+  familyId,
+  creationId,
 }: {
   book: StoryBook;
   returnUrl: string;
   accessUrl: string;
+  familyId: string;
+  creationId: string;
 }) {
   const [navigation, dispatch] = useReducer(bookNavigation, initialNavigation);
   const [playing, setPlaying] = useState(false);
@@ -87,6 +92,12 @@ export function StoryExperience({
   const [expanded, setExpanded] = useState<"image" | "text" | null>(null);
   const [container, setContainer] = useState<HTMLElement | null>(null);
   const audio = useRef<HTMLAudioElement>(null);
+  const musicAudio = useRef<HTMLAudioElement>(null);
+  const [musicEnabled,setMusicEnabled] = useState(true);
+  const [musicActive,setMusicActive] = useState(false);
+  const [musicPlaying,setMusicPlaying] = useState(false);
+  const musicStarted = useRef(false);
+  const playedMoments = useRef(new Set<number>());
   const trigger = useRef<HTMLElement | null>(null);
   const lock = useRef(false);
   const revoked = useRef(false);
@@ -101,6 +112,7 @@ export function StoryExperience({
     serverMotionSnapshot,
   );
   const page = book.pages[navigation.page];
+  const assistantPaused = useRef(false);
   const reading = navigation.phase === "reading";
   const active =
     navigation.phase !== "cover" && navigation.phase !== "closing" && !blocked;
@@ -111,6 +123,11 @@ export function StoryExperience({
       audio.current.pause();
       audio.current.currentTime = 0;
     }
+    musicAudio.current?.pause();
+    if(musicAudio.current)musicAudio.current.currentTime=0;
+    musicStarted.current=false;
+    setMusicActive(false);
+    setMusicPlaying(false);
     setPlaying(false);
     setTime({ current: 0, duration: 0 });
   }, []);
@@ -127,6 +144,7 @@ export function StoryExperience({
     retry,
     deny,
   );
+  const song = usePrivateMedia(active && book.musicMoment && (musicActive || navigation.page === book.musicMoment.afterPage - 1) ? book.musicMoment.url : null,retry,deny);
   const verifyAccess = useCallback((): Promise<boolean> => {
     if (revoked.current || !mounted.current) return Promise.resolve(false);
     if (pendingAccess.current) return pendingAccess.current;
@@ -166,11 +184,15 @@ export function StoryExperience({
     mounted.current = true;
     accessController.current = new AbortController();
     const element = audio.current;
+    const musicalElement = musicAudio.current;
     const revision = playRevision;
     return () => {
       mounted.current = false;
       revision.current++;
       element?.pause();
+      musicalElement?.pause();
+      musicalElement?.removeAttribute("src");
+      musicalElement?.load();
       element?.removeAttribute("src");
       element?.load();
       accessController.current?.abort();
@@ -187,6 +209,18 @@ export function StoryExperience({
     const timer = setTimeout(settle, reducedMotion ? 80 : 350);
     return () => clearTimeout(timer);
   }, [flat, navigation.phase, navigation.page, reducedMotion, settle]);
+  useEffect(() => {
+    const pause = () => {
+      assistantPaused.current = true;
+      playRevision.current++;
+      resumePage.current = null;
+      audio.current?.pause();
+      musicAudio.current?.pause();
+      setPlaying(false);
+    };
+    window.addEventListener("livingmemories:assistant-pause", pause);
+    return () => window.removeEventListener("livingmemories:assistant-pause", pause);
+  }, []);
   const playAudio = useCallback(
     async (restart = false) => {
       const element = audio.current;
@@ -198,6 +232,7 @@ export function StoryExperience({
         revoked.current
       )
         return;
+      assistantPaused.current = false;
       const revision = ++playRevision.current;
       setError("");
       if (!(await verifyAccess()) || revision !== playRevision.current) return;
@@ -236,6 +271,7 @@ export function StoryExperience({
       lock.current = false;
       return;
     }
+    playedMoments.current.clear();
     dispatch({ type: "open" });
   }, [navigation.phase, verifyAccess]);
   const content: BookContentProps = useMemo(
@@ -279,7 +315,7 @@ export function StoryExperience({
       lock.current = true;
       const continuePlaying =
         automatic &&
-        (fromEnded || Boolean(audio.current && !audio.current.paused));
+        (fromEnded || Boolean(audio.current && !audio.current.paused) || Boolean(musicAudio.current && !musicAudio.current.paused));
       stop();
       setError("");
       if (!(await verifyAccess())) {
@@ -299,6 +335,47 @@ export function StoryExperience({
       verifyAccess,
     ],
   );
+  const finishMusic = useCallback(()=>{
+    musicAudio.current?.pause();
+    musicStarted.current=false;
+    setMusicActive(false);
+    setMusicPlaying(false);
+    if(automatic && !assistantPaused.current)void turn(1,true);
+  },[automatic,turn]);
+  const playMusic = useCallback(async()=>{
+    const element=musicAudio.current;
+    if(!element || !song.url || !reading)return;
+    assistantPaused.current=false;
+    const revision=playRevision.current;
+    if(!await verifyAccess() || revision!==playRevision.current || !mounted.current)return;
+    try {
+      element.volume=0.85;
+      await element.play();
+      if(revision!==playRevision.current || !mounted.current)element.pause();
+    } catch {
+      setError("The song could not play. Skip it to continue the story.");
+    }
+  },[song.url,reading,verifyAccess]);
+  useEffect(()=>{
+    if(musicActive && song.url && !musicStarted.current){musicStarted.current=true;void playMusic();}
+  },[musicActive,song.url,playMusic]);
+  useEffect(()=>{
+    const resume=()=>{if(assistantPaused.current && reading && !blocked){if(musicActive)void playMusic();else void playAudio();}};
+    window.addEventListener("livingmemories:assistant-resume",resume);
+    return()=>window.removeEventListener("livingmemories:assistant-resume",resume);
+  },[reading,blocked,musicActive,playMusic,playAudio]);
+  const narrationEnded = () => {
+    setPlaying(false);
+    if(assistantPaused.current)return;
+    const cue=book.musicMoment;
+    if(cue && musicEnabled && navigation.page===cue.afterPage-1 && !playedMoments.current.has(cue.afterPage)) {
+      playedMoments.current.add(cue.afterPage);
+      musicStarted.current=false;
+      setMusicActive(true);
+      return;
+    }
+    if(automatic)void turn(1,true);
+  };
   const closeBook = useCallback(() => {
     if (lock.current || !reading) return;
     lock.current = true;
@@ -311,6 +388,7 @@ export function StoryExperience({
         playRevision.current++;
         resumePage.current = null;
         audio.current?.pause();
+        musicAudio.current?.pause();
       } else void verifyAccess();
     };
     const onFocus = () => {
@@ -387,7 +465,8 @@ export function StoryExperience({
   }, [navigation.phase, navigation.page, reading, book.pages.length, closeBook, openBook, turn, stop, verifyAccess]);
 
   return <Dialog.Root open={expanded !== null} onOpenChange={open => { if (!open) setExpanded(null); }}>
-    <main ref={setContainer} className="story-mode" data-phase={navigation.phase} data-reader={flat ? "flat" : "turnjs"}>
+    <main ref={setContainer} className="story-mode" data-phase={navigation.phase} data-reader={flat ? "flat" : "turnjs"} data-has-music={Boolean(book.musicMoment)}>
+      {!blocked && <AssistantScope familyId={familyId} creationId={creationId} page={navigation.page} language={book.language === "es" ? "es" : "en"} />}
       <header className="story-hud">
         <Link className="story-back" href={returnUrl.substring(0, returnUrl.lastIndexOf("/"))} onClick={stop}><ArrowLeft size={18} /><span>Stories</span></Link>
         <div className="story-reader-brand"><span className="book-mark" aria-hidden="true" /><span>LivingMemories</span></div>
@@ -406,21 +485,25 @@ export function StoryExperience({
               <label className="story-page-picker"><span className="sr-only">Go to page</span><select disabled={!reading} value={navigation.page} onChange={e => void navigateTo(Number(e.target.value))}>{book.pages.map((_, i) => <option key={i} value={i}>Page {i + 1} of {book.pages.length}</option>)}</select></label>
               <Button variant="ghost" size="icon" aria-label="Next page" disabled={!reading || navigation.page === book.pages.length - 1} onClick={() => void turn(1)}><ChevronRight /></Button>
               <span className="story-control-divider" />
-              <Button className="story-listen" disabled={!reading || !narration.url} onClick={() => {
+              <Button className="story-listen" disabled={!reading || (musicActive ? !song.url : !narration.url)} onClick={() => {
+                if(musicActive){if(musicAudio.current && !musicAudio.current.paused)musicAudio.current.pause();else void playMusic();return;}
                 if (audio.current && !audio.current.paused) { playRevision.current++; resumePage.current = null; audio.current.pause(); }
                 else void playAudio();
-              }}>{playing ? <Pause /> : <Play />}{playing ? "Pause" : narration.loading ? "Loading…" : "Listen"}</Button>
+              }}>{(musicActive?musicPlaying:playing) ? <Pause /> : <Play />}{(musicActive?musicPlaying:playing) ? "Pause" : musicActive ? "Play song" : narration.loading ? "Loading…" : "Listen"}</Button>
               <DropdownMenu.Root><DropdownMenu.Trigger asChild><Button variant="ghost" size="icon" aria-label="Story options" disabled={!reading}><Ellipsis /></Button></DropdownMenu.Trigger><DropdownMenu.Portal container={container}>
                 <DropdownMenu.Content className="story-options" side="top" align="end" sideOffset={12}>
-                  <DropdownMenu.Item disabled={!narration.url} onSelect={() => void playAudio(true)}><RotateCcw />Repeat narration</DropdownMenu.Item>
+                  <DropdownMenu.Item disabled={!narration.url || musicActive} onSelect={() => void playAudio(true)}><RotateCcw />Repeat narration</DropdownMenu.Item>
                   <DropdownMenu.CheckboxItem checked={automatic} onCheckedChange={v => { setAutomatic(v); if (!v) resumePage.current = null; }}><span className="story-menu-check"><DropdownMenu.ItemIndicator><Check /></DropdownMenu.ItemIndicator></span>Automatic pages</DropdownMenu.CheckboxItem>
+                  {book.musicMoment ? <DropdownMenu.CheckboxItem checked={musicEnabled} onCheckedChange={v=>{setMusicEnabled(v);if(!v && musicActive)finishMusic();}}><span className="story-menu-check"><DropdownMenu.ItemIndicator><Check /></DropdownMenu.ItemIndicator></span>Music</DropdownMenu.CheckboxItem> : null}
                   <DropdownMenu.Separator /><DropdownMenu.Item onSelect={closeBook}><BookOpen />Close book</DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Portal></DropdownMenu.Root>
             </div>
             <div className="story-reader-status">
-              {page.narrationUrl ? <><progress aria-label="Narration progress" value={time.current} max={time.duration || 1} /><span>{playing ? "Listening" : automatic ? "Automatic pages on" : "Read at your own pace"}</span></> : <span>No narration on this page. Keep reading at your own pace.</span>}
-              {!flat && !playing ? <span>Drag the illustration or a page edge to turn</span> : null}
+              {musicActive ? <span role="status">{song.error ? "Song unavailable — skip it to continue" : song.loading ? "Loading song…" : `${musicPlaying?"Playing":"Paused"} · ${book.musicMoment?.title}`}</span> : null}
+              {musicActive ? <Button className="story-skip-song" variant="outline" size="sm" onClick={finishMusic}>Skip song</Button> : null}
+              {page.narrationUrl && !musicActive ? <><progress aria-label="Narration progress" value={time.current} max={time.duration || 1} /><span>{playing ? "Listening" : automatic ? "Automatic pages on" : "Read at your own pace"}</span></> : !musicActive ? <span>No narration on this page. Keep reading at your own pace.</span> : null}
+              {!flat && !playing && !musicActive ? <span>Drag the illustration or a page edge to turn</span> : null}
               {mediaError ? <Button variant="ghost" size="sm" onClick={() => { stop(); setRetry(r => r + 1); }}>Retry voice</Button> : null}
             </div>
           </>}
@@ -438,7 +521,12 @@ export function StoryExperience({
         onLoadedMetadata={event => { if (currentAudioEvent(event.currentTarget)) setTime({ current: 0, duration: event.currentTarget.duration || 0 }); }}
         onTimeUpdate={event => { if (currentAudioEvent(event.currentTarget)) setTime({ current: event.currentTarget.currentTime, duration: event.currentTarget.duration || 0 }); }}
         onError={event => { if (currentAudioEvent(event.currentTarget)) { setAudioError(narration.url); setPlaying(false); } }}
-        onEnded={event => { if (!currentAudioEvent(event.currentTarget) || !event.currentTarget.ended) return; setPlaying(false); if (automatic) void turn(1, true); }} />
+        onEnded={event => { if (!currentAudioEvent(event.currentTarget) || !event.currentTarget.ended) return; narrationEnded(); }} />
+      <audio ref={musicAudio} src={song.url || undefined} preload="auto"
+        onPlay={event=>{if(!musicActive || revoked.current)event.currentTarget.pause();else setMusicPlaying(true);}}
+        onPause={()=>setMusicPlaying(false)}
+        onEnded={event=>{if(musicActive && reading && !revoked.current && event.currentTarget.ended && event.currentTarget.currentSrc === song.url)finishMusic();}}
+        onError={()=>{if(musicActive)setError("The song is unavailable. Skip it to continue.");}} />
     </main>
   </Dialog.Root>;
 }

@@ -1,3 +1,5 @@
+import { existingStorySong } from "./music-moment";
+import { withFamily } from "../families/service";
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
@@ -83,11 +85,20 @@ export async function processCreation(
           evidence: prepared.evidence as unknown as Prisma.InputJsonValue,
         },
       });
-      const draft = validateDraft(
-        await providers.draft(settings, prepared.evidence, prepared.images),
-        settings,
-        ids,
-      );
+      const proposed = await providers.draft(settings, prepared.evidence, prepared.images);
+      if(settings.kind === "STORY" && settings.musicMoment) {
+        const moment = settings.musicMoment;
+        if(moment.mode === "NEW") {
+          const musicSettings = {...settings, kind:"MUSIC" as const, instrumental:false, style:"ACOUSTIC" as const, durationSeconds:60, musicMoment:null};
+          const song = validateDraft(await providers.draft(musicSettings,prepared.evidence,prepared.images),musicSettings,ids);
+          proposed.musicMoment = {...moment,title:song.title,musicPrompt:song.musicPrompt,lyrics:song.lyrics};
+        } else {
+          const song = await withFamily(initial.createdById,initial.familyId,(tx,member)=>existingStorySong(tx,initial.createdById,initial.familyId,member.role,moment.creationId!));
+          const original = song.run.draft as unknown as CreativeDraft;
+          proposed.musicMoment = {...moment,title:original.title,musicPrompt:original.musicPrompt,lyrics:original.lyrics};
+        }
+      }
+      const draft = validateDraft(proposed,settings,ids);
       await check();
       await prisma.creation.update({
         where: { id },
@@ -130,6 +141,7 @@ export async function processCreation(
         data: { artifacts: artifacts as unknown as Prisma.InputJsonValue },
       });
     };
+    let musicWarning: string | null = null;
     if (settings.kind === "MUSIC") {
       await check();
       await save(await providers.music(draft, settings), "MUSIC");
@@ -171,10 +183,24 @@ export async function processCreation(
           );
       }
     }
+    if(settings.kind === "STORY" && draft.musicMoment) {
+      try {
+        await check();
+        if(draft.musicMoment.mode === "NEW") {
+          const songDraft = {...draft,title:draft.musicMoment.title,pages:[],musicPrompt:draft.musicMoment.musicPrompt,lyrics:draft.musicMoment.lyrics};
+          await save(await providers.music(songDraft,{...settings,kind:"MUSIC",style:"ACOUSTIC",instrumental:false,durationSeconds:60}),"MUSIC");
+        } else {
+          const song = await withFamily(initial.createdById,initial.familyId,(tx,member)=>existingStorySong(tx,initial.createdById,initial.familyId,member.role,draft.musicMoment!.creationId!));
+          await check();
+          artifacts.push({...song.asset,id:randomUUID(),page:undefined});
+          await prisma.creation.update({where:{id},data:{artifacts:artifacts as unknown as Prisma.InputJsonValue}});
+        }
+      } catch(error) { musicWarning = "Your book is ready, but its song could not be included. Narration and reading remain available. " + generationError(error); console.error("Book song failed",id,error instanceof Error ? error.name : "UnknownError"); }
+    }
     await check();
     await prisma.creation.update({
       where: { id },
-      data: { status: "READY", errorMessage: null },
+      data: { status: "READY", errorMessage: musicWarning },
     });
   } catch (error) {
     // Provider errors can include sensitive input; expose only a bounded, static diagnosis.

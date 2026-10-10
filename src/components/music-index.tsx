@@ -109,7 +109,7 @@ function MusicPlayer({ familyId, piece }: { familyId: string; piece: Piece }) {
       ) : asset ? (
         <audio
           controls
-          preload="none"
+          preload="metadata"
           src={asset}
           aria-label={`Listen to ${piece.title}`}
           onError={() =>

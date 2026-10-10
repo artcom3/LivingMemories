@@ -18,6 +18,7 @@ import { mutate } from "@/lib/families/client";
 import { musicStyles } from "@/lib/creations/shared";
 import { AlbumSourcePicker } from "./album-source-picker";
 type Preparation = {
+  episodeId?: string | null;
   id: string;
   title: string;
   language: string;
@@ -138,6 +139,7 @@ export function MusicPreparationForm({
 
           <FieldSet className="preparation-step">
             <FieldLegend>1 · Your albums and materials</FieldLegend>
+            {preparation?.episodeId ? <p className="feedback">This preparation uses the exact fragment of a reviewed story. Its original source stays linked; other episodes in that material will not be included.</p> : (
             <AlbumSourcePicker
               familyId={familyId}
               memories={memories}
@@ -145,6 +147,7 @@ export function MusicPreparationForm({
               onChange={setSelected}
               initialAlbum={initialAlbum}
             />
+            )}
           </FieldSet>
           <FieldSet className="preparation-step">
             <FieldLegend>2 · How you want it to sound</FieldLegend>

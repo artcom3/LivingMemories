@@ -1,0 +1,18 @@
+.storyteller-voice { margin-top: 24px; padding: 24px; border: 1px solid var(--rule); border-radius: 20px; background: var(--album); }
+.voice-heading { display: flex; justify-content: space-between; align-items: start; gap: 16px; margin-bottom: 16px; }
+.voice-heading h4 { margin: 4px 0 0; font-size: 1.25rem; font-weight: 600; }
+.voice-reading { max-height: 360px; overflow-y: auto; padding: 24px; border: 1px solid var(--rule); border-radius: 12px; background: var(--paper); line-height: 1.85; overscroll-behavior: contain; }
+.voice-reading:focus-visible { outline: 2px solid var(--family-accent); outline-offset: 3px; }
+.voice-reading p { margin: 16px 0 0; }
+.voice-recording-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.voice-clock { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-variant-numeric: tabular-nums; }
+.voice-clock > svg { width: 24px; height: 24px; color: var(--family-accent); }
+.voice-recording-bar .live-wave { width: 160px; }
+.voice-review, .voice-saved { display: flex; flex-direction: column; align-items: start; gap: 12px; }
+.voice-review h5 { font-size: 1rem; font-weight: 600; margin: 0; }
+.storyteller-voice audio { width: min(100%, 480px); }
+.storyteller-voice .muted { margin-bottom: 20px; }
+.voice-saved .muted { margin: 0; }
+@media (max-width: 600px) { .storyteller-voice { padding: 16px; } .voice-reading { padding: 16px; max-height: 320px; } .voice-recording-bar > button { width: 100%; } }
+.voice-preview-text { margin: 0; padding: 16px; border-left: 2px solid var(--rule); color: var(--soft-ink); line-height: 1.7; }
+.voice-saved > [data-slot="field"] { width: min(100%, 480px); }

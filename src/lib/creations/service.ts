@@ -1,3 +1,6 @@
+import { existingStorySong, validateMusicMoment } from "./music-moment";
+import { episodeFragment } from "../episodes/fragments";
+import { assertMonthlyBudget } from "../assistant/usage";
 import "server-only";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { Prisma } from "@/generated/prisma/client";
@@ -92,8 +95,11 @@ export async function prepareMusic(
       }))
     )
       throw unavailable();
+    const linkedEpisodeId = input.episodeId ? String(input.episodeId) : id ? (await tx.musicPreparation.findUnique({where:{id},select:{episodeId:true}}))?.episodeId : null;
+    if (linkedEpisodeId) await episodeFragment(tx, actorId, familyId, member.role, linkedEpisodeId, ids);
     const data = {
       title,
+      ...(input.episodeId ? { episodeId: String(input.episodeId) } : {}),
       style,
       durationSeconds,
       language: String(input.language),
@@ -182,8 +188,8 @@ function modelSettings(language: string) {
   return {
     ...modelSelection(),
     sttModel: process.env.ELEVENLABS_STT_MODEL || "scribe_v2",
-    ttsModel: process.env.ELEVENLABS_TTS_MODEL || "eleven_multilingual_v2",
-    musicModel: process.env.ELEVENLABS_MUSIC_MODEL || "music_v2",
+    ttsModel: process.env.ELEVENLABS_TTS_MODEL?.trim() || "eleven_v4",
+    musicModel: process.env.ELEVENLABS_MUSIC_MODEL?.trim() || "music_v2_5",
     voiceId:
       process.env[
         language === "en" ? "ELEVENLABS_VOICE_ID_EN" : "ELEVENLABS_VOICE_ID_ES"
@@ -262,27 +268,10 @@ export async function beginCreation(
         "VERSIONS",
         "This trial allows one version and two regenerations per preparation.",
       );
-    // Serialize the pilot allowance across families, in addition to the family lock.
-    await tx.$queryRaw`SELECT pg_advisory_xact_lock(73620419)::text`;
-    const month = new Date();
-    month.setUTCDate(1);
-    month.setUTCHours(0, 0, 0, 0);
-    const usage = await tx.creation.findMany({
-      where: { createdAt: { gte: month } },
-      select: { familyId: true, createdById: true, reservedCents: true },
-    });
-    const sum = (predicate: (v: (typeof usage)[number]) => boolean) =>
-      usage.filter(predicate).reduce((total, v) => total + v.reservedCents, 0);
-    if (
-      sum(() => true) + 500 > 10000 ||
-      sum((v) => v.familyId === familyId) + 500 > 2500 ||
-      sum((v) => v.createdById === actorId) + 500 > 2500
-    )
-      throw new AccessError(
-        409,
-        "BUDGET",
-        "The pilot's monthly reservation allowance has been exhausted. Your preparation is saved.",
-      );
+    if (process.env.CREATION_RESERVATION_LIMITS_ENABLED === "true") await assertMonthlyBudget(tx, actorId, familyId, 500);
+    const moment = kind === "STORY" && "musicMoment" in prep ? validateMusicMoment(prep.musicMoment, "pages" in prep ? prep.pages : 0) : null;
+    const linkedSong = moment?.mode === "EXISTING" ? await existingStorySong(tx,actorId,familyId,member.role,moment.creationId!) : null;
+    const dependencyIds = [...new Set([...ids, ...(linkedSong?.run.sources.map(s=>s.sourceId) || [])])];
     const settings = {
       kind,
       ...Object.fromEntries(
@@ -300,6 +289,14 @@ export async function beginCreation(
       ),
       ...modelSettings(prep.language),
     } as CreationSettings;
+    if (kind === "STORY" && settings.narrate && "memoryId" in prep) {
+      const narrator = sources.find(s => s.memoryId === prep.memoryId)?.memory.narrator;
+      if (narrator?.voiceId && narrator.voiceStatus === "READY" && !narrator.archivedAt) {
+        settings.voiceId = narrator.voiceId;
+        settings.voiceProfileId = narrator.id;
+        settings.voiceName = narrator.name;
+      }
+    }
     const evidence: Evidence[] = sources.map((s) => ({
       sourceId: s.id,
       memoryId: s.memoryId,
@@ -317,15 +314,25 @@ export async function beginCreation(
       dateContext: s.dateContext,
       emotionContext: s.emotionContext,
     }));
+    const episode = prep.episodeId ? await episodeFragment(tx, actorId, familyId, member.role, prep.episodeId, ids) : null;
+    if (episode) {
+      const selected = evidence.find(e => e.sourceId === episode.sourceId)!;
+      if (selected.type === "TEXT") selected.originalText = episode.excerpt;
+      else { selected.transcript = episode.excerpt; selected.timestamps = []; }
+      selected.contextDescription = [selected.contextDescription, "Selected episode: " + episode.title + ". Narrative evidence is restricted to this original fragment. Memory/album context is provenance only: preserve fictional-example labels and uncertainties; do not borrow events from other episodes."].filter(Boolean).join("\n");
+      selected.fragment = { startOffset: episode.startOffset, endOffset: episode.endOffset, audioStart: episode.audioStart, audioEnd: episode.audioEnd };
+    }
     return tx.creation.create({
       data: {
+        ...(episode ? { episodeId: episode.id } : {}),
         familyId,
         createdById: actorId,
         kind,
+        reservedCents: process.env.CREATION_RESERVATION_LIMITS_ENABLED === "true" ? 500 : 0,
         ...relation,
         settings: settings as unknown as Prisma.InputJsonValue,
         evidence: evidence as unknown as Prisma.InputJsonValue,
-        sources: { create: ids.map((sourceId) => ({ sourceId })) },
+        sources: { create: dependencyIds.map((sourceId) => ({ sourceId })) },
       },
       select: { id: true },
     });
@@ -351,6 +358,11 @@ export async function permittedCreation(
       run.sources.map((s) => s.sourceId),
     );
     const settings = run.settings as unknown as CreationSettings;
+    if (settings.voiceProfileId && settings.narrate && ["RENDER_QUEUED", "RENDERING"].includes(run.status)) {
+      const voice = await tx.personProfile.findFirst({ where: { id: settings.voiceProfileId, familyId,
+        archivedAt: null, voiceStatus: "READY", voiceId: settings.voiceId } });
+      if (!voice) throw new AccessError(409, "VOICE_UNAVAILABLE", "This storyteller's voice is no longer available for narration.");
+    }
     if (
       settings.memoryId &&
       !(await tx.memory.findFirst({
@@ -411,6 +423,12 @@ export async function creationList(
       hasDraft: draft !== null,
     }));
   });
+}
+function validateMomentDraft(d: CreativeDraft, settings: CreationSettings) {
+  const m = d.musicMoment;
+  const expected = settings.musicMoment!;
+  if (!m || m.mode !== expected.mode || m.creationId !== expected.creationId || !Number.isInteger(m.afterPage) || m.afterPage < 1 || m.afterPage > d.pages.length || typeof m.title !== "string" || !m.title.trim() || m.title.length > 160 || typeof m.musicPrompt !== "string" || m.musicPrompt.length > 3000 || typeof m.lyrics !== "string" || m.lyrics.length > 2000 || (m.mode === "NEW" && (!m.musicPrompt.trim() || !m.lyrics.trim()))) throw new AccessError(400,"MUSIC_MOMENT","Review the musical moment and its lyrics.");
+  return { mode: m.mode, afterPage: m.afterPage, ...(m.creationId ? {creationId:m.creationId} : {}), title:m.title, musicPrompt:m.musicPrompt, lyrics:m.lyrics };
 }
 export function validateDraft(
   value: unknown,
@@ -482,6 +500,7 @@ export function validateDraft(
       illustrationPrompt: p.illustrationPrompt,
       sourceIds: p.sourceIds,
     })),
+    ...(settings.kind === "STORY" && settings.musicMoment ? { musicMoment: validateMomentDraft(d, settings) } : {}),
     musicPrompt: d.musicPrompt,
     lyrics: d.lyrics,
     sourceIds: d.sourceIds,
@@ -502,7 +521,7 @@ export async function approveCreation(
   const draft = validateDraft(
     input.draft,
     renderingSettings,
-    run.sources.map((s) => s.sourceId),
+    (run.evidence as unknown as Evidence[]).map(e => e.sourceId),
   );
   if (input.confirmed !== true)
     throw new AccessError(
@@ -512,7 +531,7 @@ export async function approveCreation(
     );
   configured(
     settings.kind === "STORY" && !!settings.illustrate,
-    settings.kind === "MUSIC" || !!settings.narrate,
+    settings.kind === "MUSIC" || !!settings.narrate || settings.musicMoment?.mode === "NEW",
     settings.kind === "STORY" && settings.narrate
       ? renderingSettings.voiceId
       : undefined,
@@ -520,6 +539,12 @@ export async function approveCreation(
   );
   return withFamily(actorId, familyId, async (tx, member) => {
     writable(member.role);
+    if (settings.voiceProfileId && settings.narrate) {
+      const voice = await tx.personProfile.findFirst({ where: {
+        id: settings.voiceProfileId, familyId, archivedAt: null, voiceStatus: "READY", voiceId: renderingSettings.voiceId,
+      }});
+      if (!voice) throw new AccessError(409, "VOICE_UNAVAILABLE", "This storyteller's voice is no longer available. Create a new version to use the current narration voice.");
+    }
     await selectedSources(
       tx,
       actorId,

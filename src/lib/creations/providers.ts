@@ -1,6 +1,7 @@
 import "server-only";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { geminiImage, geminiInteraction } from "./gemini";
+import { enhanceNarration } from "./narration-enhance";
 import { required } from "../infrastructure/config";
 import {
   narrativeStyles,
@@ -107,6 +108,21 @@ async function bytes(stream: ReadableStream<Uint8Array>) {
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
+// Preserve the reviewed words while meeting the music API's per-line limit.
+export function formatSongLyrics(lyrics: string) {
+  return lyrics.split("\n").map(original=>{
+    const lines: string[]=[];
+    let remaining=original;
+    while(remaining.length>200) {
+      const boundary=remaining.lastIndexOf(" ",200);
+      const cut=boundary>0?boundary:200;
+      lines.push(remaining.slice(0,cut).trimEnd());
+      remaining=remaining.slice(cut).trimStart();
+    }
+    lines.push(remaining);
+    return lines.join("\n");
+  }).join("\n");
+}
 export const generationProviders: GenerationProviders = {
   async transcribe(file, name, modelId) {
     const result = await eleven().speechToText.convert({
@@ -175,7 +191,15 @@ ${settings.kind === "STORY" ? `El recuerdo principal es ${settings.memoryId}; la
           response_format: {
             type: "text",
             mime_type: "application/json",
-            schema: draftSchema,
+            schema: settings.kind === "MUSIC"
+              ? {
+                  ...draftSchema,
+                  properties: {
+                    ...draftSchema.properties,
+                    pages: { ...draftSchema.properties.pages, maxItems: 0 },
+                  },
+                }
+              : draftSchema,
           },
         },
         settings.geminiApiMode,
@@ -216,10 +240,12 @@ ${settings.kind === "STORY" ? `El recuerdo principal es ${settings.memoryId}; la
     return JSON.parse(output);
   },
   async narrate(text, settings, previous, next) {
+    const narrationScript = await enhanceNarration(text, settings.ttsModel);
     return bytes(
       await eleven().textToSpeech.convert(settings.voiceId, {
-        text,
+        text: narrationScript,
         modelId: settings.ttsModel,
+        languageCode: settings.language,
         outputFormat: "mp3_44100_128",
         previousText: previous,
         nextText: next,
@@ -291,7 +317,7 @@ ${settings.kind === "STORY" ? `El recuerdo principal es ${settings.memoryId}; la
         compositionPlan: {
           chunks: [
             {
-              text: "[Song]\n" + draft.lyrics,
+              text: "[Song]\n" + formatSongLyrics(draft.lyrics),
               durationMs: settings.durationSeconds! * 1000,
               positiveStyles: [
                 musicStyles[settings.style!].prompt,

@@ -539,7 +539,30 @@ button:disabled {
   margin-top: 24px;
   font-size: 14px;
 }
+.group-loading-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+.group-loading-name {
+  height: 1.4em;
+  font-size: 24px;
+  width: min(70%, 420px);
+  margin-bottom: 8px;
+}
 @media (max-width: 640px) {
+  .group-loading-avatar {
+    width: 44px;
+    height: 44px;
+  }
+  .group-loading-name {
+    font-size: 18px;
+    width: 85%;
+  }
+  .group-loading-name-long {
+    height: 2.8em;
+  }
   .groups-heading {
     align-items: flex-start;
     flex-direction: column;
@@ -2873,3 +2896,15 @@ html {
     animation: none;
   }
 }
+
+/* Story discovery retains the private app's existing card and type styles. */
+.memory-episodes { margin-block: 1.5rem; }
+.episode-toolbar, .episode-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-block: 1rem; }
+.episode-toolbar label { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.episode-toolbar select { border: 1px solid var(--border); border-radius: .5rem; background: var(--background); padding: .65rem; min-height: 44px; }
+.episode-entry { padding-block: 1.25rem; border-top: 1px solid var(--border); }
+.episode-entry h3 { font-size: 1.25rem; margin-block: .5rem; }
+.episode-entry p { margin-block: .5rem; }
+.episode-entry summary { cursor: pointer; padding-block: .75rem; min-height: 44px; }
+.episode-excerpt { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 18rem; overflow: auto; padding: 1rem; background: var(--muted); border-radius: .75rem; }
+.episode-edit { display: grid; gap: .75rem; margin-block: 1rem; }

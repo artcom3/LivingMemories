@@ -1,4 +1,5 @@
 "use client";
+import { MemoryEpisodes } from "./memory-episodes";
 import { sourceDisplayName } from "@/lib/ui/english-system-message";
 import { Button } from "@/components/ui/button";
 import { Feedback, EmptyState } from "@/components/private/content-primitives";
@@ -209,6 +210,7 @@ export function MemoryEditor({
           {error}
         </Feedback>
       ) : null}
+      <MemoryEpisodes familyId={familyId} memoryId={memory.id} version={memory.sources.map(s=>s.id).join(",")} />
       <div className="memory-editor-layout reveal-blocks">
         <aside className="memory-capture" aria-label="Memory actions">
           <Card>

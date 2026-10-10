@@ -125,6 +125,15 @@ test("Gemini receives context, inline images, JSON schema and returns PNG illust
     );
     assert.equal(Buffer.from(bytes).toString("base64"), "iVBORw==");
     assert.equal(requests[1].model, settings.imageModel);
+    await generationProviders.draft(
+      { ...settings, kind: "MUSIC", style: "ACOUSTIC", instrumental: true, durationSeconds: 30 },
+      [],
+      images,
+    );
+    const musicFormat = requests[2].response_format as { schema: { properties: { pages: { maxItems: number } } } };
+    assert.equal(musicFormat.schema.properties.pages.maxItems, 0);
+    const storyFormat = requests[0].response_format as { schema: { properties: { pages: { maxItems?: number } } } };
+    assert.equal(storyFormat.schema.properties.pages.maxItems, undefined);
   } finally {
     globalThis.fetch = originalFetch;
     if (originalKey === undefined) delete process.env.GEMINI_API_KEY;

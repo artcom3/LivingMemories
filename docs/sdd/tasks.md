@@ -96,7 +96,10 @@ Dependencias: TASK-009; aplicar revisión/retirada de DEC-017 y proteger todos l
 
 ### TASK-011
 
-- [ ] Construir el asistente en cuentos y biblioteca.
+- [x] Activar conversación local por voz con un agente privado, HTTPS limitado y prueba real acotada.
+- [ ] Completar la evaluación del piloto familiar del asistente en cuentos y biblioteca.
+
+Implementados chat contextual, recuperación híbrida con permisos, fragmentos aprobados, historial privado, panel global y adaptador de voz en tiempo real con respuesta validada. Migración y pruebas de integración incluidas. Activación local, precios/retención y prueba real acotada completados el 2026-10-10. Pendiente: evaluación del piloto familiar y prueba de dispositivos/micrófonos de sus participantes. Véase [integración](../assistant-integration.md).
 
 Añadir preguntas textuales/grabadas y respuestas escritas/escuchables con citas, contexto de página y límites de evidencia. Mantenerlo separado de operaciones de modificación y publicación. Aplicar permisos vigentes también a contexto conversacional reutilizado.
 
