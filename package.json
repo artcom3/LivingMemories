@@ -39,6 +39,7 @@
     "test:assistant": "node --import=tsx scripts/test-access.mts tests/assistant.integration.test.ts",
     "worker:assistant": "node --env-file=.env --env-file-if-exists=.env.local --conditions=react-server --import=tsx scripts/assistant/worker.mts",
     "test:music-moment": "node --import=tsx scripts/test-access.mts tests/music-moment.integration.test.ts",
+    "test:locales": "node --import=tsx scripts/test-access.mts tests/localization.integration.test.ts",
     "assistant:voice:proxy": "node --env-file=.env --env-file-if-exists=.env.local --import=tsx scripts/assistant/voice-proxy.mts",
     "assistant:voice:configure": "node --import=tsx scripts/assistant/configure-voice.mts"
   },

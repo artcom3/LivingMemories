@@ -70,3 +70,17 @@ Referencias oficiales consultadas el 10 de octubre de 2026: [OpenAI Responses es
 El [registro de prueba](testing/real-story-flow.md) conserva el resultado de texto + fotografía → cuatro páginas → revisión de citas → cuatro narraciones. En la cuenta de desarrollo funcionó `GEMINI_MODEL_TEXT=gemini-3.5-flash-lite` con `GEMINI_API_MODE=generate_content`. No hay cambio automático de endpoint tras errores; queda registrado en cada versión. Los intentos fallidos sin borrador no consumen las regeneraciones de contenido, aunque su reserva sigue contando.
 
 La demostración de imágenes se hizo separadamente mediante MCP de ElevenLabs. Su API automática de imágenes requiere Pro o superior; la clave de desarrollo es Creator. No se presenta el resultado del MCP como integración automática del worker.
+
+## Idiomas de un cuento aprobado
+
+Desde una versión terminada, **Languages → Translate story** añade una edición en español, inglés, italiano, francés, alemán o portugués. La traducción parte del cuento aprobado, no vuelve a interpretar la memoria. Conserva las páginas, su orden y las referencias originales. Los títulos, textos y letras se revisan antes de **Generate translated audio**.
+
+Cada `StoryLocale` pertenece a una `Creation` terminada y conserva una copia del borrador base, la configuración, el texto traducido, el estado y sus audios. La edición original permanece intacta. Las ilustraciones se sirven desde los archivos originales; no se copian ni regeneran. La narración conserva el ID de voz de la versión original. La canción con letra se genera de nuevo con la duración y estilo originales; una canción reutilizada a través de otros cuentos conserva la configuración de su pieza de origen. Una pieza instrumental reutiliza el mismo archivo. La melodía y la voz cantante de una canción traducida pueden variar.
+
+El lector ofrece **Story language** para los idiomas terminados. Cambiar de idioma conserva la página, detiene el audio y carga el texto y audios correspondientes. La canción empieza al finalizar la narración de la página prevista, sin depender de la duración del idioma anterior. Un enlace con `?language=es` abre directamente la edición española.
+
+Estados: `QUEUED → ANALYZING → REVIEW → RENDER_QUEUED → RENDERING → READY`. El worker usa una cola independiente sin reintentos automáticos. Un fallo conserva el texto y los audios terminados; **Retry missing content** requiere una acción explícita. Al revisar el reintento, cambiar un texto o una letra invalida solo su audio anterior para evitar voz desactualizada. La edición fallida no aparece en el selector; las demás siguen disponibles. Cada intento registra una reserva con los controles mensuales existentes.
+
+Todas las operaciones y archivos heredan los permisos y dependencias de la creación original. Retirar una fuente o perder la membresía bloquea también las traducciones. Los endpoints están bajo `/api/families/:familyId/content/creations/:creationId/locales`: GET lista ediciones, POST crea una traducción; `/:language` consulta el estado; `/:language/approve` confirma revisión; `/:language/retry` solicita reintento y `/:language/assets/:assetId` sirve audio privado.
+
+La migración `20261011180000_story_locales` agrega la tabla sin modificar las creaciones anteriores. Después de aplicarla y generar Prisma Client, reinicia app y worker para cargar el nuevo modelo. `pnpm test:locales` valida aislamiento, conservación de imágenes y originales, voz y canción, concurrencia, reintentos parciales, cambios de texto, música instrumental y retirada de fuentes.

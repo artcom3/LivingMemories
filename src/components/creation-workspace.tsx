@@ -1,5 +1,6 @@
 "use client";
 import { Badge } from "@/components/ui/badge";
+import { StoryLanguages } from "@/components/story-languages";
 import { BookOpen, ArrowRight } from "lucide-react";
 import { Feedback } from "@/components/private/content-primitives";
 import { Button } from "@/components/ui/button";
@@ -305,6 +306,9 @@ export function CreationWorkspace({
           )}
         </div>
       )}
+      {kind === "stories" && run?.status === "READY" && run.draft ? (
+        <StoryLanguages key={run.id} familyId={familyId} creationId={run.id} originalLanguage={run.settings.language} original={run.draft} />
+      ) : null}
       {kind === "music" &&
         run?.status === "READY" &&
         run.artifacts?.some((asset) => asset.type === "MUSIC") && (

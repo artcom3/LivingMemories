@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { StoryExperience } from "@/components/story-mode/story-experience";
+import { MultilingualStory } from "@/components/story-mode/multilingual-story";
+import { localizedBooks } from "@/lib/creations/localization";
 import { creationView } from "@/lib/creations/service";
-import { storyBook } from "@/lib/creations/story-book";
 import {
   creationStatusLabels,
   type CreationSettings,
@@ -13,11 +13,13 @@ import { Button } from "@/components/ui/button";
 import "@/components/story-mode/story-mode.css";
 export default async function StoryModePage({
   params,
+  searchParams,
 }: {
   params: Promise<{
     familyId: string;
     creationId: string;
   }>;
+  searchParams: Promise<{language?:string}>;
 }) {
   const { familyId, creationId } = await params;
   const { user } = await familyPageContext(familyId);
@@ -40,20 +42,17 @@ export default async function StoryModePage({
     );
   }
   const settings = run.settings as unknown as CreationSettings;
+  const books = await localizedBooks(user.id, familyId, creationId);
+  const requested = (await searchParams).language;
+  if (requested && !Object.hasOwn(books, requested)) notFound();
   return (
-    <StoryExperience
+    <MultilingualStory
       key={creationId}
       familyId={familyId}
       creationId={creationId}
-      book={storyBook(
-        familyId,
-        creationId,
-        settings.language,
-        draft,
-        run.artifacts,
-      )}
+      books={books}
+      initialLanguage={requested || settings.language}
       returnUrl={returnUrl}
-      accessUrl={`/api/families/${familyId}/content/creations/${creationId}`}
     />
   );
 }

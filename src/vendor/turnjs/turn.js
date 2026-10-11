@@ -908,7 +908,12 @@ turnMethods = {
 
 		data.tpage = page;
 
-		this.turn('stop');
+		// An authorized drag already has a folded page in motion. Keep its
+		// geometry instead of stopping it and starting again at the corner.
+		var released = data.releasedTurn;
+		delete data.releasedTurn;
+		if (!released || $.inArray(released.next, newView)==-1)
+			this.turn('stop');
 
 		turnMethods._makeRange.call(this);
 
@@ -1087,8 +1092,22 @@ turnMethods = {
 			e.preventDefault();
             if (data.opts.turn.data().opts.requestTurn) {
                 var next = data.opts.next;
-                that.flip('hideFoldedPage', false);
-                data.opts.turn.data().opts.requestTurn(next);
+                var bookData = data.opts.turn.data();
+                var pending = {next: next};
+                bookData.releasedTurn = pending;
+                // Leave the fold where the reader released it while access is
+                // checked. A denied request returns it gently to its origin.
+                Promise.resolve(bookData.opts.requestTurn(next)).then(function(accepted) {
+                    if (!accepted && bookData.releasedTurn===pending) {
+                        delete bookData.releasedTurn;
+                        that.flip('hideFoldedPage', true);
+                    }
+                }, function() {
+                    if (bookData.releasedTurn===pending) {
+                        delete bookData.releasedTurn;
+                        that.flip('hideFoldedPage', true);
+                    }
+                });
                 return;
             }
 			data.opts.turn.data().tpage = data.opts.next;
@@ -1811,6 +1830,7 @@ flipMethods = {
 	_eventStart: function(e) {
 
 		var data = this.data().f;
+		if (data.opts.turn.data().releasedTurn) return;
 		// Page controls, text selection and scrolling must not start a corner gesture.
 		if ($(e.target).closest('button, a, input, select, textarea, .story-page-text').length) return;
 
@@ -1829,6 +1849,7 @@ flipMethods = {
 	_eventMove: function(e) {
 
 		var data = this.data().f;
+		if (data.opts.turn.data().releasedTurn) return;
 		if (!data.corner && $(e.target).closest('button, a, input, select, textarea, .story-page-text').length) {
 			if (!this.flip('isTurning')) flipMethods.hideFoldedPage.call(this, true);
 			return;

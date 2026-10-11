@@ -582,6 +582,9 @@ export async function creationAsset(
     (a) => a.id === assetId,
   );
   if (!asset) throw unavailable();
+  return storedAssetResponse(asset, range);
+}
+export async function storedAssetResponse(asset: Artifact, range: string | null) {
   if (range && !/^bytes=\d+-\d*$/.test(range))
     throw new AccessError(416, "RANGE", "The requested range is invalid.");
   const object = await storage().send(

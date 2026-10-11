@@ -2,6 +2,8 @@
 import dynamic from "next/dynamic";
 import { AssistantScope } from "../assistant/provider";
 import Link from "next/link";
+import { NativeSelect, NativeSelectOption } from "../ui/native-select";
+import { languageName } from "@/lib/creations/languages";
 import {
   Component,
   type ReactNode,
@@ -71,14 +73,22 @@ export function StoryExperience({
   accessUrl,
   familyId,
   creationId,
+  initialPage = 0,
+  initialOpen = false,
+  languages = [],
+  onLanguageChange,
 }: {
   book: StoryBook;
   returnUrl: string;
   accessUrl: string;
   familyId: string;
   creationId: string;
+  initialPage?: number;
+  initialOpen?: boolean;
+  languages?: string[];
+  onLanguageChange?: (language: string, page: number, open: boolean) => void;
 }) {
-  const [navigation, dispatch] = useReducer(bookNavigation, initialNavigation);
+  const [navigation, dispatch] = useReducer(bookNavigation, initialNavigation, initial => ({...initial, page: Math.max(0, Math.min(initialPage, book.pages.length - 1)), phase: initialOpen ? "reading" as const : "cover" as const}));
   const [playing, setPlaying] = useState(false);
   const [automatic, setAutomatic] = useState(true);
   const [blocked, setBlocked] = useState(false);
@@ -264,15 +274,16 @@ export function StoryExperience({
     }
   }, [reading, narration.url, navigation.page, playAudio]);
   const openBook = useCallback(async () => {
-    if (lock.current || navigation.phase !== "cover") return;
+    if (lock.current || navigation.phase !== "cover") return false;
     lock.current = true;
     setError("");
     if (!(await verifyAccess())) {
       lock.current = false;
-      return;
+      return false;
     }
     playedMoments.current.clear();
     dispatch({ type: "open" });
+    return true;
   }, [navigation.phase, verifyAccess]);
   const content: BookContentProps = useMemo(
     () => ({
@@ -311,7 +322,7 @@ export function StoryExperience({
         next >= book.pages.length ||
         revoked.current
       )
-        return;
+        return false;
       lock.current = true;
       const continuePlaying =
         automatic &&
@@ -320,11 +331,12 @@ export function StoryExperience({
       setError("");
       if (!(await verifyAccess())) {
         lock.current = false;
-        return;
+        return false;
       }
       resumePage.current =
         continuePlaying && book.pages[next].narrationUrl ? next : null;
       dispatch({ type: "turn", direction, count: book.pages.length });
+      return true;
     },
     [
       automatic,
@@ -453,23 +465,27 @@ export function StoryExperience({
     !revoked.current &&
     Boolean(narration.url && element.currentSrc === narration.url);
   const navigateTo = useCallback(async (target: number) => {
-    if (lock.current || revoked.current) return;
-    if (target < 0) { closeBook(); return; }
-    if (navigation.phase === "cover") { void openBook(); return; }
-    if (!reading || target === navigation.page || target >= book.pages.length) return;
-    if (Math.abs(target - navigation.page) === 1) { void turn(target > navigation.page ? 1 : -1); return; }
+    if (lock.current || revoked.current) return false;
+    if (target < 0) { closeBook(); return reading; }
+    if (navigation.phase === "cover") return openBook();
+    if (!reading || target === navigation.page || target >= book.pages.length) return false;
+    if (Math.abs(target - navigation.page) === 1) return turn(target > navigation.page ? 1 : -1);
     lock.current = true;
     stop();
-    if (!(await verifyAccess())) { lock.current = false; return; }
+    if (!(await verifyAccess())) { lock.current = false; return false; }
     dispatch({ type: "go", page: target, count: book.pages.length });
+    return true;
   }, [navigation.phase, navigation.page, reading, book.pages.length, closeBook, openBook, turn, stop, verifyAccess]);
 
   return <Dialog.Root open={expanded !== null} onOpenChange={open => { if (!open) setExpanded(null); }}>
-    <main ref={setContainer} className="story-mode" data-phase={navigation.phase} data-reader={flat ? "flat" : "turnjs"} data-has-music={Boolean(book.musicMoment)}>
+    <main ref={setContainer} className="story-mode" lang={book.language} data-phase={navigation.phase} data-reader={flat ? "flat" : "turnjs"} data-has-music={Boolean(book.musicMoment)}>
       {!blocked && <AssistantScope familyId={familyId} creationId={creationId} page={navigation.page} language={book.language === "es" ? "es" : "en"} />}
       <header className="story-hud">
         <Link className="story-back" href={returnUrl.substring(0, returnUrl.lastIndexOf("/"))} onClick={stop}><ArrowLeft size={18} /><span>Stories</span></Link>
         <div className="story-reader-brand"><span className="book-mark" aria-hidden="true" /><span>LivingMemories</span></div>
+        {languages.length > 1 && onLanguageChange ? <NativeSelect className="story-language-select max-w-36" size="sm" aria-label="Story language" value={book.language} disabled={blocked || !["cover", "reading"].includes(navigation.phase)} onChange={event => {stop();onLanguageChange(event.target.value,navigation.page,reading);}}>
+          {languages.map(language => <NativeSelectOption key={language} value={language}>{languageName(language)}</NativeSelectOption>)}
+        </NativeSelect> : null}
         <Button variant="ghost" size="icon" onClick={toggleFullscreen} aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen"}>{fullscreen ? <Minimize2 /> : <Maximize2 />}</Button>
       </header>
       {blocked ? <div className="story-blocked" role="alert"><BookOpen /><h1>This story is no longer available</h1><p>A source or your access has changed.</p><Button asChild><Link href={returnUrl}>Back to preparation</Link></Button></div> : <>

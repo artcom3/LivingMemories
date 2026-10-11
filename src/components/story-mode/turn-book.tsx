@@ -13,7 +13,7 @@ type Props = {
   navigation: BookNavigation;
   reducedMotion: boolean;
   onComplete: () => void;
-  onRequest: (page: number) => void;
+  onRequest: (page: number) => Promise<boolean>;
   onDenied: () => void;
   onUnavailable: () => void;
   onExpand: (kind: "image" | "text", trigger: HTMLElement) => void;

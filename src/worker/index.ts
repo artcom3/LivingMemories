@@ -4,6 +4,8 @@ import { processDocument } from "../lib/assistant/indexing";
 import { expireVoiceSessions } from "../lib/assistant/voice";
 import { prisma } from "../lib/prisma";
 import { processCreation } from "../lib/creations/process";
+import { processLocale, expireLocales } from "../lib/creations/localization-process";
+import { LOCALE_QUEUE } from "../lib/creations/localization";
 import { CREATION_QUEUE } from "../lib/creations/queue";
 import { createServer } from "node:http";
 import { PgBoss } from "pg-boss";
@@ -41,6 +43,10 @@ await boss.work<{
   },
 );
 await boss.createQueue(ASSISTANT_QUEUE, { policy: "short", retryLimit: 0, expireInSeconds: 1800 });
+await boss.createQueue(LOCALE_QUEUE, { policy: "short", retryLimit: 0, expireInSeconds: 1800 });
+await boss.work<{localeId:string}>(LOCALE_QUEUE, {batchSize:1,pollingIntervalSeconds:2}, async jobs => {
+  for (const job of jobs) await processLocale(job.data.localeId);
+});
 await boss.work<{documentId:string}>(ASSISTANT_QUEUE, {batchSize:1,pollingIntervalSeconds:2}, async jobs => {
   for(const job of jobs) await processDocument(job.data.documentId);
 });
@@ -82,6 +88,9 @@ async function dispatchCreations() {
   if (dispatching) return;
   dispatching = true;
   try {
+    await expireLocales();
+    const locales = await prisma.storyLocale.findMany({where:{status:{in:["QUEUED","RENDER_QUEUED"]}},select:{id:true,status:true},take:20,orderBy:{createdAt:"asc"}});
+    for (const locale of locales) await boss.send(LOCALE_QUEUE,{localeId:locale.id},{singletonKey:locale.id+":"+locale.status,retryLimit:0,expireInSeconds:1800});
     // Interrupted paid operations are never replayed automatically.
     await prisma.creation.updateMany({
       where: {

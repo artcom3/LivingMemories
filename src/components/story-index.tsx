@@ -33,6 +33,7 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty";
 import { creationStatusLabels } from "@/lib/creations/shared";
+import { languageName } from "@/lib/creations/languages";
 import { readerProfiles, type ReaderProfile } from "@/lib/memories/shared";
 import type { MemoryOverview } from "@/lib/memories/service";
 
@@ -229,14 +230,16 @@ export function StoryIndex({
                           <div>
                             <dt>
                               <Globe aria-hidden="true" />
-                              Language
+                              {status === "READY" ? "Available languages" : "Language"}
                             </dt>
-                            <dd>
-                              {story.language === "en"
-                                ? "English"
-                                : story.language === "es"
-                                  ? "Spanish"
-                                  : story.language}
+                            <dd className="flex flex-wrap gap-2">
+                              {status === "READY" ? [...new Set([latest.language, ...latest.locales.map(locale => locale.language)])].map(language => (
+                                <Badge asChild variant="outline" key={language}>
+                                  <Link href={`${storyHref}?language=${encodeURIComponent(language)}`} prefetch={false} aria-label={`Read ${story.title} in ${languageName(language)}`}>
+                                    {languageName(language)}
+                                  </Link>
+                                </Badge>
+                              )) : languageName(story.language)}
                             </dd>
                           </div>
                           <div>

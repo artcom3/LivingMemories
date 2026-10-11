@@ -19,7 +19,7 @@ import {
 } from "@/lib/families/validation";
 import { storage } from "@/lib/infrastructure/connections";
 import { required } from "@/lib/infrastructure/config";
-import { narrativeStyles, visualStyles } from "../creations/shared";
+import { narrativeStyles, visualStyles, type CreationSettings } from "../creations/shared";
 import { hasContext, readerProfiles, type ReaderProfile } from "./shared";
 type Tx = Prisma.TransactionClient;
 type Member = {
@@ -114,14 +114,23 @@ export async function memoryOverview(
         sources: { select: { sourceId: true } },
         creations: {
           where: scope,
-          select: { id: true, status: true },
+          select: {
+            id: true, status: true, settings: true,
+            locales: { where: { status: "READY" }, select: { language: true }, orderBy: { createdAt: "asc" } },
+          },
           orderBy: { createdAt: "desc" },
           take: 1,
         },
       },
       orderBy: { updatedAt: "desc" },
     });
-    return { memories, collections, preparations };
+    return { memories, collections, preparations: preparations.map(preparation => ({
+      ...preparation,
+      creations: preparation.creations.map(({settings, ...creation}) => ({
+        ...creation,
+        language: (settings as unknown as CreationSettings).language || preparation.language,
+      })),
+    })) };
   });
 }
 export async function createCollection(

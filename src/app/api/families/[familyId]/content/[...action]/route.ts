@@ -1,4 +1,5 @@
 import { storySongChoices } from "@/lib/creations/music-moment";
+import { createLocale, localeList, localeView, localeAsset, approveLocale, retryLocale } from "@/lib/creations/localization";
 import {
   approveCreation,
   beginCreation,
@@ -42,6 +43,12 @@ async function handle(request: Request, context: Context) {
     const { familyId, action } = await context.params;
     const [kind, id, child, childId, last] = action;
     if (req.method === "GET") {
+      if (kind === "creations" && child === "locales" && action.length === 3)
+        return json(await localeList(actorId, familyId, id));
+      if (kind === "creations" && child === "locales" && action.length === 4)
+        return json(await localeView(actorId, familyId, id, childId));
+      if (kind === "creations" && child === "locales" && last === "assets" && action.length === 6)
+        return localeAsset(actorId, familyId, id, childId, action[5], req.headers.get("range"));
       if(kind === "story-songs" && action.length === 1) return json(await storySongChoices(actorId,familyId));
       if (kind === "overview" && action.length === 1)
         return json(
@@ -115,6 +122,11 @@ async function handle(request: Request, context: Context) {
       return json(await uploadSource(actorId, familyId, id, file), 201);
     }
     const input = await body(req, kind === "creations" ? 256000 : 16384);
+    if (req.method === "POST" && kind === "creations" && child === "locales") {
+      if (action.length === 3) return json(await createLocale(actorId, familyId, id, input), 202);
+      if (last === "approve" && action.length === 5) return json(await approveLocale(actorId, familyId, id, childId, input), 202);
+      if (last === "retry" && action.length === 5) return json(await retryLocale(actorId, familyId, id, childId), 202);
+    }
     if (
       req.method === "POST" &&
       (kind === "stories" || kind === "music") &&

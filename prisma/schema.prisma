@@ -349,6 +349,7 @@ enum CreationStatus {
 }
 
 model Creation {
+  locales            StoryLocale[]
   id                 String            @id @default(cuid())
   familyId           String
   createdById        String
@@ -377,6 +378,28 @@ model Creation {
   episodeId String?
   episode MemoryEpisode? @relation(fields: [episodeId], references: [id], onDelete: Restrict)
 
+}
+
+model StoryLocale {
+  id           String         @id @default(cuid())
+  creationId   String
+  createdById  String
+  language     String
+  status       CreationStatus @default(QUEUED)
+  baseDraft    Json
+  settings     Json
+  draft        Json?
+  artifacts    Json           @default("[]")
+  attempts     Int            @default(0)
+  errorMessage String?
+  reviewedAt   DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  creation     Creation       @relation(fields: [creationId], references: [id], onDelete: Cascade)
+
+  @@unique([creationId, language])
+  @@index([status])
+  @@map("story_locale")
 }
 
 model CreationSource {
