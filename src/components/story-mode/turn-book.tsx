@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "re
 import { createPortal } from "react-dom";
 import type { StoryBook } from "@/lib/creations/story-book";
 import type { BookNavigation } from "./navigation";
+import type { OriginSelection } from "./story-origins";
 import { physicalPage, storyPage } from "./turn-layout";
 import { BookCover, StorySheet } from "./book-content";
 
@@ -14,6 +15,7 @@ type Props = {
   reducedMotion: boolean;
   onComplete: () => void;
   onRequest: (page: number) => Promise<boolean>;
+  onOrigin: (selection: OriginSelection) => void;
   onDenied: () => void;
   onUnavailable: () => void;
   onExpand: (kind: "image" | "text", trigger: HTMLElement) => void;
@@ -139,7 +141,7 @@ function TurnIsland(props: Props & { single: boolean }) {
         const visible = props.navigation.phase !== "cover" && props.navigation.phase !== "closing" && page === props.navigation.page;
         content = <div className="story-sheet-root" inert={!visible} aria-hidden={!visible}>
           <StorySheet book={book} page={page} kind={kind} enabled={props.navigation.phase !== "cover" && (Math.abs(props.navigation.page - page) <= 1 || (props.navigation.phase === "turning" && page === settledPage))}
-            onDenied={props.onDenied} onExpand={props.onExpand} />
+            onDenied={props.onDenied} onExpand={props.onExpand} onOrigin={props.onOrigin} />
         </div>;
       }
       return createPortal(content, element, String(i));

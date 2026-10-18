@@ -1,5 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
+import { SelectableStoryText, StoryOriginsDialog, type OriginSelection } from "./story-origins";
 import { AssistantScope } from "../assistant/provider";
 import Link from "next/link";
 import { NativeSelect, NativeSelectOption } from "../ui/native-select";
@@ -89,6 +90,7 @@ export function StoryExperience({
   onLanguageChange?: (language: string, page: number, open: boolean) => void;
 }) {
   const [navigation, dispatch] = useReducer(bookNavigation, initialNavigation, initial => ({...initial, page: Math.max(0, Math.min(initialPage, book.pages.length - 1)), phase: initialOpen ? "reading" as const : "cover" as const}));
+  const [originSelection, setOriginSelection] = useState<OriginSelection | null>(null);
   const [playing, setPlaying] = useState(false);
   const [automatic, setAutomatic] = useState(true);
   const [blocked, setBlocked] = useState(false);
@@ -145,7 +147,12 @@ export function StoryExperience({
     revoked.current = true;
     stop();
     setBlocked(true);
+    setOriginSelection(null);
     setExpanded(null);
+  }, [stop]);
+  const showOrigin = useCallback((selection: OriginSelection) => {
+    stop();
+    setOriginSelection(selection);
   }, [stop]);
   const unavailableBook = useCallback(() => setFlat(true), []);
   const image = usePrivateMedia(active && expanded === "image" ? page.imageUrl : null, retry, deny);
@@ -419,7 +426,7 @@ export function StoryExperience({
   }, [verifyAccess]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (expanded || blocked || event.altKey || event.ctrlKey || event.metaKey)
+      if (expanded || originSelection || blocked || event.altKey || event.ctrlKey || event.metaKey)
         return;
       const target = event.target as HTMLElement;
       if (
@@ -439,7 +446,7 @@ export function StoryExperience({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [turn, expanded, blocked]);
+  }, [turn, expanded, originSelection, blocked]);
   useEffect(() => {
     const update = () => setFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener("fullscreenchange", update);
@@ -491,8 +498,8 @@ export function StoryExperience({
       {blocked ? <div className="story-blocked" role="alert"><BookOpen /><h1>This story is no longer available</h1><p>A source or your access has changed.</p><Button asChild><Link href={returnUrl}>Back to preparation</Link></Button></div> : <>
         <div className="story-reader-heading"><span className="story-eyebrow">Your family, in pages</span><h1>{book.title}</h1></div>
         <div className="story-stage">
-          {flat ? <div className="story-flat-stage">{navigation.phase === "cover" || navigation.phase === "closing" ? <BookCover title={book.title} count={book.pages.length} /> : <StorySheet book={book} page={navigation.page} kind="combined" enabled={active} onDenied={deny} onExpand={content.onExpand} />}</div>
-            : <BookBoundary onUnavailable={unavailableBook}><TurnBook book={book} navigation={navigation} reducedMotion={reducedMotion} onComplete={settle} onRequest={navigateTo} onDenied={deny} onUnavailable={unavailableBook} onExpand={content.onExpand} /></BookBoundary>}
+          {flat ? <div className="story-flat-stage">{navigation.phase === "cover" || navigation.phase === "closing" ? <BookCover title={book.title} count={book.pages.length} /> : <StorySheet book={book} page={navigation.page} kind="combined" enabled={active} onDenied={deny} onExpand={content.onExpand} onOrigin={showOrigin} />}</div>
+            : <BookBoundary onUnavailable={unavailableBook}><TurnBook book={book} navigation={navigation} reducedMotion={reducedMotion} onComplete={settle} onRequest={navigateTo} onDenied={deny} onUnavailable={unavailableBook} onExpand={content.onExpand} onOrigin={showOrigin} /></BookBoundary>}
         </div>
         <footer className="story-reader-footer">
           {navigation.phase === "cover" ? <div className="story-start"><Button size="lg" onClick={() => void openBook()}>Open story<ChevronRight /></Button><p>Take a moment. Turn a page.</p></div> : <>
@@ -527,9 +534,10 @@ export function StoryExperience({
         <span className="sr-only" role="status">{navigation.phase === "turning" ? "Turning page" : navigation.phase === "opening" ? "Opening book" : navigation.phase === "closing" ? "Closing book" : `Page ${navigation.page + 1} of ${book.pages.length}`}</span>
         <Dialog.Portal container={container}><Dialog.Overlay className="story-modal-overlay" /><Dialog.Content className="story-modal" aria-describedby={undefined} onCloseAutoFocus={e => { e.preventDefault(); trigger.current?.focus(); }}>
           <div className="story-modal-heading"><Dialog.Title>Page {navigation.page + 1} · {expanded === "image" ? "Illustration" : "Reading view"}</Dialog.Title><Dialog.Close asChild><Button variant="ghost" size="icon" aria-label="Close expanded view"><X /></Button></Dialog.Close></div>
-          {expanded === "image" ? <div className="story-expanded-image"><Illustration {...content} /></div> : <div className="story-expanded-text" lang={book.language}>{page.text}</div>}
+          {expanded === "image" ? <div className="story-expanded-image"><Illustration {...content} /></div> : <div className="story-expanded-text" lang={book.language}><SelectableStoryText text={page.text} page={navigation.page} className="story-page-text" onOrigin={showOrigin} /></div>}
         </Dialog.Content></Dialog.Portal>
       </>}
+      <StoryOriginsDialog selection={blocked ? null : originSelection} familyId={familyId} creationId={creationId} language={book.language} container={container} onClose={() => setOriginSelection(null)} onDenied={deny} />
       {!blocked && error ? <Alert className="story-error" role="alert"><AlertDescription>{error}</AlertDescription></Alert> : null}
       <audio ref={audio} src={narration.url || undefined} preload="auto"
         onPlay={event => { if (currentAudioEvent(event.currentTarget)) setPlaying(true); else event.currentTarget.pause(); }}

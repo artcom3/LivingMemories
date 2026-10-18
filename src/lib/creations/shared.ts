@@ -113,7 +113,18 @@ export type CreationSettings = {
   voiceProfileId?: string;
   voiceName?: string;
 };
+export type StoryCitation = {
+  sourceId: string;
+  field: "originalText" | "transcript" | "contextDescription" | "peopleContext" | "locationContext" | "dateContext" | "emotionContext" | "memoryDescription" | "albumDescription";
+  quote: string;
+};
+export type StoryOrigin = {
+  text: string;
+  kind: "SUPPORTED" | "ADAPTED" | "AI_ADDED" | "UNVERIFIED";
+  citations: StoryCitation[];
+};
 export type Evidence = {
+  sourceVersion?: string;
   fragment?: { startOffset: number; endOffset: number; audioStart: number | null; audioEnd: number | null };
   sourceId: string;
   memoryId: string;
@@ -138,7 +149,15 @@ export type Evidence = {
   }[];
   sampledSeconds?: number[];
 };
+export type OriginAnalysis = {
+  status: "PROCESSING" | "READY" | "FAILED";
+  method: "RETROSPECTIVE";
+  startedAt: string;
+  model: string;
+  token: string;
+};
 export type CreativeDraft = {
+  originAnalysis?: OriginAnalysis;
   musicMoment?: MusicalMomentDraft;
   title: string;
   summary: string;
@@ -146,6 +165,7 @@ export type CreativeDraft = {
   pages: {
     text: string;
     illustrationPrompt: string;
+    origins?: StoryOrigin[];
     sourceIds: string[];
   }[];
   musicPrompt: string;

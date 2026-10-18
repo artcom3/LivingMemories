@@ -1,3 +1,5 @@
+import { prepareStoryOrigins, alignOriginFragments } from "../src/lib/creations/origin-analysis";
+import { storyOrigins, storyOriginalAudio } from "../src/lib/creations/origin-service";
 import assert from "node:assert/strict";
 import { before, after, test } from "node:test";
 import { execFileSync } from "node:child_process";
@@ -535,4 +537,114 @@ test("ElevenLabs adapter guarantees instrumental mode and sends reviewed lyrics 
   } finally {
     globalThis.fetch = saved;
   }
+});
+
+test("story origins retain reviewed excerpts, isolate AI additions, enforce live access and play original audio", async () => {
+  const memoryId = (await createMemory(adult, family, { title: "Origin fixture", originalText: "Vendíamos pan." })).id;
+  const dir = mkdtempSync(join(tmpdir(), "livingmemories-origin-"));
+  let audioId: string;
+  try {
+    execFileSync("ffmpeg", ["-v", "error", "-f", "lavfi", "-i", "sine=frequency=400", "-t", "2", join(dir, "original.mp3")]);
+    audioId = (await uploadSource(adult, family, memoryId, new File([readFileSync(join(dir, "original.mp3"))], "original.mp3", {type:"audio/mpeg"}))).id;
+  } finally { rmSync(dir, {recursive:true,force:true}); }
+  const providers: GenerationProviders = {...fakeProviders,
+    async transcribe() {return {text:"Vendíamos pan.",timestamps:[{text:"Vendíamos",start:0.1,end:0.6},{text:"pan.",start:0.7,end:1.2}]};},
+    async draft(settings, evidence) {
+      return {title:"El pan",summary:"Prueba",notes:[],sourceIds:[audioId],musicPrompt:"",lyrics:"",
+        pages:Array.from({length:settings.pages!},()=>({text:"Vendían pan. El día sonreía.",illustrationPrompt:"",sourceIds:[audioId],origins:[
+          {text:"Vendían pan. ",kind:"ADAPTED" as const,citations:[{sourceId:audioId,field:"transcript" as const,quote:evidence[0].transcript!}]},
+          {text:"El día sonreía.",kind:"AI_ADDED" as const,citations:[]},
+        ]}))};
+    },
+  };
+  const prep=await prepareStory(adult,family,{title:"Origin test",memoryId,sourceIds:[audioId],language:"es",readerProfile:"AGE_2_5",pages:4,narrativeStyle:"CHILDREN",visualStyle:"WATERCOLOR",narrate:false,illustrate:false,genericCharacters:true});
+  const created=await beginCreation(adult,family,"STORY",prep.id);
+  await processCreation(created.id,providers);
+  const run=await creationView(adult,family,created.id);
+  assert.equal(run.status,"REVIEW");
+  const draft=run.draft as unknown as CreativeDraft;
+  const forged=structuredClone(draft);
+  forged.pages[0].origins![0].citations[0].quote="An invented quote";
+  await assert.rejects(approveCreation(adult,family,created.id,{confirmed:true,draft:forged}));
+  await approveCreation(adult,family,created.id,{confirmed:true,draft});
+  await processCreation(created.id,providers);
+  const query=new URLSearchParams({page:"0",start:"0",end:"27",language:"es"});
+  const view=await storyOrigins(adult,family,created.id,query);
+  assert.equal(view.scope,"fragment");
+  assert.equal(view.parts[0].kind,"ADAPTED");
+  assert.deepEqual(view.parts[0].sources[0].clip,{start:0.1,end:1.2,scope:"quote"});
+  assert.equal(view.parts[1].kind,"AI_ADDED");
+  assert.deepEqual(view.parts[1].sources,[]);
+  assert.ok((await storyOriginalAudio(adult,family,created.id,audioId,null)).ok);
+  await assert.rejects(storyOrigins(foreign,family,created.id,query));
+  await assert.rejects(storyOrigins(reader,family,created.id,query));
+  await assert.rejects(storyOrigins(adult,family,created.id,new URLSearchParams({page:"0",start:"0",end:"9000"})));
+  await assert.rejects(storyOriginalAudio(adult,family,created.id,textId,null));
+  // Backfill an earlier book with no mapping/version anchors and an existing translated edition.
+  const legacy = structuredClone(draft);
+  legacy.pages.forEach(p => { delete p.origins; });
+  // run was the pre-render projection; use the persisted transcription snapshot.
+  const persisted = await prisma.creation.findUniqueOrThrow({where:{id:created.id}});
+  const snapshots = (persisted.evidence as unknown as import("../src/lib/creations/shared").Evidence[]).map(e => {const item = {...e}; delete item.sourceVersion; return item;});
+  const audioSource = await prisma.memorySource.findUniqueOrThrow({where:{id:audioId}});
+  await prisma.sourceStoryAnalysis.upsert({where:{sourceId:audioId},create:{sourceId:audioId,requestedById:adult,sourceVersion:audioSource.updatedAt,status:"READY",transcript:snapshots[0].transcript,timestamps:snapshots[0].timestamps},update:{sourceVersion:audioSource.updatedAt,status:"READY",transcript:snapshots[0].transcript,timestamps:snapshots[0].timestamps}});
+  snapshots[0].timestamps = [];
+  await prisma.creation.update({where:{id:created.id},data:{draft:legacy as unknown as import("../src/generated/prisma/client").Prisma.InputJsonValue,evidence:snapshots as unknown as import("../src/generated/prisma/client").Prisma.InputJsonValue}});
+  const baseBefore = await prisma.creation.findUniqueOrThrow({where:{id:created.id}});
+  const analyzer = async () => draft.pages.map(p => p.origins!);
+  await prepareStoryOrigins(adult,family,created.id,"es",analyzer);
+  const baseAfter = await prisma.creation.findUniqueOrThrow({where:{id:created.id}});
+  assert.deepEqual((baseAfter.draft as unknown as CreativeDraft).pages.map(p=>p.text),legacy.pages.map(p=>p.text));
+  assert.deepEqual(baseAfter.artifacts,baseBefore.artifacts);
+  assert.equal(baseAfter.reviewedAt?.getTime(),baseBefore.reviewedAt?.getTime());
+  assert.equal((await storyOrigins(adult,family,created.id,query)).retrospective,true);
+  assert.equal((await storyOrigins(adult,family,created.id,query)).parts[0].sources[0].clip?.end,1.2);
+  const translated = {title:"Bread",summary:"Test",pages:legacy.pages.map(()=>"She sold bread. The day smiled."),songTitle:"",lyrics:""};
+  const edition = await prisma.storyLocale.create({data:{creationId:created.id,createdById:adult,language:"en",status:"READY",baseDraft:baseAfter.draft!,settings:baseAfter.settings as import("../src/generated/prisma/client").Prisma.InputJsonValue,draft:translated}});
+  let analyses = 0;
+  const translatedAnalyzer = async (input: import("../src/lib/creations/origin-provider").OriginAnalysisInput) => {
+    analyses++;
+    assert.equal(input.pages[0].text,translated.pages[0]);
+    assert.equal(input.pages[0].originalText,legacy.pages[0].text);
+    return input.pages.map(()=>[
+      {text:"She sold bread.",kind:"ADAPTED" as const,citations:draft.pages[0].origins![0].citations},
+      {text:"The day smiled.",kind:"AI_ADDED" as const,citations:[]},
+    ]);
+  };
+  await prepareStoryOrigins(adult,family,created.id,"en",translatedAnalyzer);
+  await prepareStoryOrigins(adult,family,created.id,"en",translatedAnalyzer);
+  assert.equal(analyses,1);
+  const english = await storyOrigins(adult,family,created.id,new URLSearchParams({page:"0",start:"0",end:"31",language:"en"}));
+  assert.equal(english.scope,"fragment"); assert.equal(english.translated,true);
+  assert.equal(english.parts[0].sources[0].quote,"Vendíamos pan.");
+  assert.deepEqual(english.parts[0].sources[0].clip,{start:0.1,end:1.2,scope:"quote"});
+  const editionAfter = await prisma.storyLocale.findUniqueOrThrow({where:{id:edition.id}});
+  assert.deepEqual((editionAfter.draft as unknown as import("../src/lib/creations/languages").LocalizedStoryText).pages,translated.pages);
+  assert.deepEqual(editionAfter.artifacts,edition.artifacts);
+  await assert.rejects(prepareStoryOrigins(foreign,family,created.id,"en",translatedAnalyzer));
+  const french = await prisma.storyLocale.create({data:{creationId:created.id,createdById:adult,language:"fr",status:"READY",baseDraft:baseAfter.draft!,settings:baseAfter.settings as import("../src/generated/prisma/client").Prisma.InputJsonValue,draft:{...translated,pages:translated.pages.map(()=>"Pain.")}}});
+  await assert.rejects(prepareStoryOrigins(adult,family,created.id,"fr",async()=>translated.pages.map(()=>[{text:"Fabricated text",kind:"AI_ADDED",citations:[]}])));
+  const failedEdition = await prisma.storyLocale.findUniqueOrThrow({where:{id:french.id}});
+  assert.equal((failedEdition.draft as unknown as import("../src/lib/creations/languages").LocalizedStoryText).originAnalysis?.status,"FAILED");
+  assert.deepEqual((failedEdition.draft as unknown as import("../src/lib/creations/languages").LocalizedStoryText).pages,(french.draft as {pages:string[]}).pages);
+  let release!:()=>void;
+  let entered!:()=>void;
+  const gate=new Promise<void>(resolve=>{release=resolve;});
+  const started=new Promise<void>(resolve=>{entered=resolve;});
+  const first=prepareStoryOrigins(adult,family,created.id,"fr",async()=>{entered();await gate;return translated.pages.map(()=>[{text:"Pain.",kind:"UNVERIFIED" as const,citations:[]}]);});
+  await started;
+  const second=await prepareStoryOrigins(adult,family,created.id,"fr",async()=>{throw new Error("Duplicate provider call");});
+  assert.equal(second.status,"PROCESSING");
+  release();await first;
+  assert.equal((await storyOrigins(adult,family,created.id,new URLSearchParams({language:"fr",page:"0",start:"0",end:"5"}))).parts[0].kind,"UNVERIFIED");
+
+  assert.deepEqual(alignOriginFragments([{text:"A.",kind:"UNVERIFIED",citations:[]},{text:"B.",kind:"AI_ADDED",citations:[]}],"A.  B.\n").map(p=>p.text),["A.","  B.\n"]);
+  assert.throws(()=>alignOriginFragments([{text:"Wrong.",kind:"AI_ADDED",citations:[]}],"Original."));
+  await sourceContext(adult,family,memoryId,audioId,{contextDescription:"Updated context"});
+  const changed=await storyOrigins(adult,family,created.id,query);
+  assert.equal(changed.parts[0].sources[0].current,false);
+  assert.equal(changed.parts[0].sources[0].audioUrl,null);
+  await assert.rejects(storyOriginalAudio(adult,family,created.id,audioId,null));
+  await withdrawSource(adult,family,memoryId,audioId);
+  await assert.rejects(storyOrigins(adult,family,created.id,query));
 });

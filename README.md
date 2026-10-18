@@ -1,82 +1,77 @@
 # LivingMemories
 
-Proyecto con Next.js 16, React 19, PostgreSQL, Prisma 7.10.0 y Better Auth 1.7.7. Las dependencias se gestionan con pnpm.
+LivingMemories helps families preserve real memories and turn them into illustrated stories, narration, and music. Original testimony, languages, and cultural context remain traceable through the creative process.
 
-## Especificaciones del producto
+The project uses Next.js 16, React 19, PostgreSQL with pgvector, Prisma 7, Better Auth, and pnpm. It is a private, invitation-only pilot with adult accounts and family spaces.
 
-El [SDD de LivingMemories](docs/sdd/README.md) reúne las decisiones del piloto. Están implementados Docker, invitaciones, familias, narradores, captura básica de memorias, álbumes y preparaciones de cuentos. La revisión, generación AI y publicación siguen en el backlog. Consultar la [guía de acceso](docs/access.md) y la [adaptación funcional de UX](docs/ux-reference-adaptation.md), que mantiene el diseño visual de esta rama.
+## Documentation and language
 
-## Arranque completo con Docker
+English is the primary language for maintained project documentation. Start with the [documentation index](docs/README.md) and [product and specifications](docs/sdd/README.md). The previous Spanish documents are preserved in the [historical archive](docs/history/README.md), including the [original README](docs/history/es/README.md).
+
+This documentation convention does not change the language of family memories, quotations, fixtures, or translated stories. Preserve original testimony and clearly label adaptations.
+
+## Current implementation
+
+The checkout includes invitations and family roles, narrator profiles, memory capture, albums, private story/music generation with adult draft review, story playback, translated story editions, source-origin inspection, and a contextual assistant. See the [content guide](docs/content-generation.md) and [assistant integration guide](docs/assistant-integration.md) for setup and limitations.
+
+Implementation in this repository does not establish production deployment or provider validation. Structured fact review, final reader publication, and a complete retention/purge workflow remain separate work. Historical SDD checklists describe earlier milestones and are not a current feature inventory.
+
+## Start the complete Docker environment
 
 ```bash
 pnpm install
 pnpm docker:up
 ```
 
-El comando prepara secretos locales, respalda la base existente, construye y levanta app, worker, PostgreSQL con pgvector, MinIO, Nginx y Mailpit; aplica migraciones, inicializa el bucket privado y prueba sus conexiones. Abrir [http://localhost:8081](http://localhost:8081).
+Open [http://localhost:8081](http://localhost:8081). The startup command prepares local secrets, backs up a running existing database, builds the checkout, starts the app, worker, PostgreSQL/pgvector, MinIO, Nginx, and Mailpit, applies existing migrations, initializes private storage, and checks connections.
 
-Las claves de OpenAI y ElevenLabs se pueden agregar después en `.env.local`; su ausencia no impide el entorno local. Consultar la [guía de Docker](docs/docker.md) para puertos, diagnósticos, persistencia y trabajo en ramas.
+Provider keys can be added later in `.env.local`; missing keys do not prevent local infrastructure startup. See the [Docker guide](docs/docker.md) for ports, persistence, and troubleshooting, then the [access guide](docs/access.md) to invite the first administrator.
 
-## Desarrollo local
+## Local development
 
-Requisitos: Node.js 22.12+ para el proyecto y worker, Docker con Compose 2.24.0+ y pnpm 12.9.1. Los contenedores usan Node.js 24.18.0.
+Requirements: Node.js 22.12 or later, Docker with Compose 2.24.0 or later, and pnpm 12.9.1. The Docker images use Node.js 24.18.0. Dependency versions are recorded in `package.json` and `pnpm-lock.yaml`.
 
-1. Instalar las dependencias:
+```bash
+pnpm install
+pnpm db:up
+pnpm db:deploy
+pnpm dev
+```
 
-   ```bash
-   pnpm install
-   ```
+Open [http://localhost:3000](http://localhost:3000). `db:up` prepares `.env` and missing local secrets. Keep `DATABASE_URL` aligned with the Compose database credentials and published port. Set `BETTER_AUTH_URL` to the URL used by the native app.
 
-2. Preparar las variables locales y levantar solo la base de datos:
+For content processing, run this in a second terminal:
 
-   ```bash
-   pnpm db:up
-   pnpm db:migrate
-   ```
+```bash
+pnpm worker
+```
 
-   `db:up` crea `.env` y genera los secretos locales que falten. Mantener `DATABASE_URL` sincronizado con `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` y `POSTGRES_PORT` para los procesos nativos.
+PostgreSQL, MinIO, and Mailpit can stay in Docker while the app and worker run locally. `db:up` starts only PostgreSQL; use the complete Docker setup first when storage and mail are needed. Restart the native worker after changes to its code or environment. Starting it also processes previously queued work.
 
-3. Iniciar la app:
+## Database
 
-   ```bash
-   pnpm dev
-   ```
+The default host endpoint is `localhost:5433`; containers use `db:5432`. PostgreSQL data persists in `livingmemories-dev_postgres_data` with the default Compose project. Stopping services preserves volumes. `.env.local` overrides used by native processes must target the same database as Compose.
 
-Abrir [http://localhost:3000](http://localhost:3000). Si se cambia el puerto de la app, actualizar `BETTER_AUTH_URL`.
-
-## Base de datos
-
-`docker-compose.dev.yml` levanta el entorno completo. Para Next.js nativo se puede ejecutar `pnpm dev` usando los servicios de Docker. PostgreSQL 18.6 con pgvector queda en `localhost:5433`, junto a Solutec ERP en 5432. Si se cambia el puerto, ajustar `POSTGRES_PORT` y la URL de la app nativa; los contenedores se conectan a `db:5432`.
-
-Los datos persisten en el volumen `livingmemories-dev_postgres_data`. `pnpm db:down` detiene el servicio y conserva ese volumen. Compose utiliza `.env`; Prisma y Next.js también admiten `.env.local`. Si se usan variables de base de datos en `.env.local`, deben apuntar a la misma instancia configurada para Compose.
-
-| Comando | Uso |
+| Command | Purpose |
 | --- | --- |
-| `pnpm db:up` | Levantar PostgreSQL y esperar a que esté disponible |
-| `pnpm db:down` | Detener PostgreSQL conservando los datos |
-| `pnpm db:logs` | Ver los registros de PostgreSQL |
-| `pnpm db:migrate --name nombre` | Crear y aplicar una migración en desarrollo |
-| `pnpm db:deploy` | Aplicar las migraciones existentes |
-| `pnpm db:status` | Revisar el estado de las migraciones |
-| `pnpm db:generate` | Regenerar Prisma Client después de cambiar el esquema |
-| `pnpm db:studio` | Abrir el explorador de datos de Prisma |
+| `pnpm db:up` | Start PostgreSQL and wait for readiness |
+| `pnpm db:down` | Stop PostgreSQL and keep its data |
+| `pnpm db:logs` | Follow database logs |
+| `pnpm db:deploy` | Apply existing migrations |
+| `pnpm db:migrate --name change-name` | Create and apply a development migration |
+| `pnpm db:status` | Inspect migration status |
+| `pnpm db:generate` | Regenerate Prisma Client |
+| `pnpm db:studio` | Open Prisma Studio |
 
-El esquema está en `prisma/schema.prisma`, la configuración en `prisma.config.ts` y el cliente compartido en `src/lib/prisma.ts`. Prisma Client se genera en `src/generated/prisma`, una carpeta excluida de Git. `pnpm install` y `pnpm build` lo regeneran automáticamente. La generación no requiere una conexión activa a PostgreSQL.
+The schema is in `prisma/schema.prisma`, configuration in `prisma.config.ts`, and shared client in `src/lib/prisma.ts`. Generated files in `src/generated/prisma` are ignored by Git. Install and build regenerate the client without requiring a live database connection.
 
-## Autenticación
+## Authentication
 
-Better Auth utiliza el adaptador oficial de Prisma y las tablas `user`, `session`, `account` y `verification`.
+Better Auth uses the Prisma adapter with `user`, `session`, `account`, and `verification` tables. Server configuration lives in `src/lib/auth.ts`; React code imports `authClient` from `src/lib/auth-client.ts`. GET/POST authentication endpoints are under `/api/auth/[...all]`.
 
-- Configuración del servidor: `src/lib/auth.ts`.
-- Cliente React: `src/lib/auth-client.ts` (importar `authClient`).
-- Endpoints GET/POST: `/api/auth/[...all]`.
-- Inicio de sesión por correo y contraseña; registro directo deshabilitado. El alta requiere una invitación válida y declaración adulta.
-- Cookies con prefijo `livingmemories` para separar las sesiones de otras apps locales.
-- Plugin `nextCookies` preparado para autenticación desde Server Actions.
+Email/password login is available. Registration requires a valid invitation and an explicit adult declaration; direct signup is disabled. Narrators can have profiles without accounts. Family operations check current membership as well as the session. Mailpit captures local email. Social providers and password recovery remain pending.
 
-La app incluye formularios de entrada, aceptación de invitaciones y gestión familiar. El alta invitada crea cuenta y membresía de forma atómica; un narrador no necesita cuenta. Los correos se capturan en Mailpit. Los proveedores sociales y la recuperación de contraseña siguen pendientes. Cada operación familiar comprueba la membresía vigente además de la sesión.
-
-Después de añadir plugins o campos a Better Auth:
+After adding authentication plugins or fields:
 
 ```bash
 pnpm auth:generate
@@ -85,9 +80,9 @@ pnpm db:generate
 pnpm auth:check
 ```
 
-`auth:check` revisa la compatibilidad del cliente generado con Better Auth; `db:status` comprueba que las migraciones estén aplicadas en la base de datos.
+Review generated schema changes before applying them. `auth:check` checks schema compatibility; `db:status` checks applied database migrations.
 
-## Validación
+## Validation
 
 ```bash
 pnpm lint
@@ -98,13 +93,8 @@ pnpm test:access
 pnpm test:content
 ```
 
-## Documentación oficial
+Additional suites cover creations, translations, story playback, and the assistant. See [validation](docs/sdd/validation.md) for commands and the distinction between simulated providers and real generation evidence.
 
-- [Prisma 7](https://www.prisma.io/docs/orm/v7)
-- [Better Auth con Prisma](https://better-auth.com/docs/adapters/prisma)
-- [Better Auth con Next.js](https://better-auth.com/docs/integrations/next)
-- [Imagen oficial de PostgreSQL](https://hub.docker.com/_/postgres)
+## Contributing
 
-La [guía de cuentos y música](docs/content-generation.md) explica cómo reutilizar álbumes, revisar borradores, conectar las claves y realizar las primeras pruebas.
-
-Para iterar en desarrollo, ejecuta `pnpm dev` y `pnpm worker` desde el código local. PostgreSQL, MinIO y Mailpit pueden seguir en Docker; no hace falta reconstruir app/worker por cada cambio. La app local está en `http://localhost:3000`. Reinicia el worker local después de cambiar su código o sus variables.
+Write new maintained documentation in English. Keep historical Spanish records intact, link to them as history, and use English for new decision entries. Preserve existing requirement and decision identifiers. Read `AGENTS.md` and the installed Next.js guides before changing application code.

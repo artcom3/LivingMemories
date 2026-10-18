@@ -1,3 +1,5 @@
+import { prepareStoryOrigins } from "@/lib/creations/origin-analysis";
+import { storyOrigins, storyOriginalAudio } from "@/lib/creations/origin-service";
 import { storySongChoices } from "@/lib/creations/music-moment";
 import { createLocale, localeList, localeView, localeAsset, approveLocale, retryLocale } from "@/lib/creations/localization";
 import {
@@ -43,6 +45,10 @@ async function handle(request: Request, context: Context) {
     const { familyId, action } = await context.params;
     const [kind, id, child, childId, last] = action;
     if (req.method === "GET") {
+      if (kind === "creations" && child === "origins" && action.length === 3)
+        return json(await storyOrigins(actorId, familyId, id, new URL(req.url).searchParams));
+      if (kind === "creations" && child === "origins" && last === "audio" && action.length === 5)
+        return storyOriginalAudio(actorId, familyId, id, childId, req.headers.get("range"));
       if (kind === "creations" && child === "locales" && action.length === 3)
         return json(await localeList(actorId, familyId, id));
       if (kind === "creations" && child === "locales" && action.length === 4)
@@ -102,6 +108,11 @@ async function handle(request: Request, context: Context) {
         return json(providerConfiguration());
       }
       throw unavailable();
+    }
+    if (req.method === "POST" && kind === "creations" && child === "origins" && childId === "prepare" && action.length === 4) {
+      const input = await body(req);
+      if (typeof input.language !== "string" || input.language.length > 8) throw new AccessError(400, "LANGUAGE", "Choose the story language.");
+      return json(await prepareStoryOrigins(actorId, familyId, id, input.language));
     }
     if (
       req.method === "POST" &&

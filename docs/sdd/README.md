@@ -1,57 +1,40 @@
-# SDD de LivingMemories
+# LivingMemories product and specifications
 
-LivingMemories ayuda a las familias a conservar sus recuerdos y convertirlos en historias que otras generaciones puedan leer y escuchar. Este SDD es la base para desarrollar un piloto privado mediante especificaciones verificables.
+LivingMemories preserves family memories and adapts them into stories that later generations can read and hear. This English guide is the primary entry point for product rules and implementation documentation. The [Spanish SDD snapshot](../history/es/docs/sdd/README.md) retains the original plans, acceptance criteria, decisions, and traceability.
 
-**Versión:** 0.5. **Estado:** acceso, captura, álbumes, selección reutilizable y generación privada por etapas de cuentos/música implementados; validación con proveedores reales, revisión estructurada de hechos y publicación pendientes. **Fecha:** 2026-10-10.
+## Reading path
 
-La aplicación tiene Next.js, Prisma, Better Auth y el entorno Docker conectado. La [guía de Docker](../docker.md) describe su arranque y la [guía de acceso](../access.md) cubre las invitaciones, familias y perfiles. La [adaptación funcional de UX](../ux-reference-adaptation.md) añade captura básica, álbumes, contexto manual y preparaciones de cuentos sin adoptar la UI de referencia. La [generación de contenido](../content-generation.md) incorpora video como fuente, estilos, borradores revisables, narración, ilustraciones y música privada. Biblioteca, revisión estructurada de hechos, publicación y asistente siguen pendientes. Una casilla del backlog solo se completa con evidencia de implementación y validación.
-
-## Ruta de lectura
-
-| Documento | Contenido |
+| Document | Purpose |
 | --- | --- |
-| [Creaciones desde álbumes](specs/album-creations.md) | Selección reutilizable, estilos, cuento y música privada |
-| [Producto](product.md) | Propósito, usuarios, recorrido y límites del piloto |
-| [Acceso y familias](specs/access-and-families.md) | Invitaciones, espacios privados y narradores |
-| [Memorias y fuentes](specs/memories-and-sources.md) | Captura, originales, transcripciones y fragmentos |
-| [Entrevistas y revisión](specs/interviews-and-review.md) | Preguntas guiadas, evidencia, diferencias y aprobación |
-| [Biblioteca](specs/library.md) | Documentos de contexto y recuperación autorizada |
-| [Cuentos y reproducción](specs/stories-and-playback.md) | Adaptación, ilustración, narración y publicación |
-| [Asistente contextual](specs/contextual-assistant.md) | Consultas durante la lectura y en la biblioteca |
-| [Arquitectura](architecture.md) | Componentes, datos, interfaces y procesamiento propuestos |
-| [Decisiones](decisions.md) | Acuerdos confirmados y propuestas con referencias |
-| [Tareas](tasks.md) | Dependencias y trazabilidad requisito → tarea → escenario |
-| [Resoluciones iniciales](open-questions.md) | Registro de las 11 preguntas resueltas y tareas asociadas |
-| [Validación](validation.md) | Escenarios de aceptación y revisión documental |
+| [Product](product.md) | Purpose, participants, fidelity, and pilot boundaries |
+| [Architecture](architecture.md) | Implemented components and data relationships |
+| [Access and families](specs/access-and-families.md) | Invitations, roles, and narrator profiles |
+| [Memories and sources](specs/memories-and-sources.md) | Capture, originals, context, and withdrawal |
+| [Album creations](specs/album-creations.md) | Selection, story/music review, and generation |
+| [Stories and playback](specs/stories-and-playback.md) | Private books, narration, and languages |
+| [Contextual assistant](specs/contextual-assistant.md) | Authorized answers and evidence |
+| [Interviews and review](specs/interviews-and-review.md) | Planned structured review and its historical criteria |
+| [Library](specs/library.md) | Source/context boundaries and retrieval |
+| [Decisions](decisions.md) | Preserved decision identifiers and original agreements |
+| [Tasks](tasks.md) | Historical backlog and present implementation guidance |
+| [Initial questions](open-questions.md) | Original resolutions |
+| [Validation](validation.md) | Available checks and historical acceptance scenarios |
 
-## Cómo interpretar el estado
+## Status and evidence
 
-- **Confirmado:** acuerdo de producto identificado como `DEC-*` en [decisiones](decisions.md). No implica que el comportamiento ya exista en la app.
-- **Propuesto:** detalle técnico identificado como `PROP-*`. Cuando una resolución lo adopta, se indica su acuerdo; la compatibilidad técnica se valida al implementarlo.
-- **Resuelto:** pregunta inicial `Q-*` con respuesta, acuerdo y tarea responsable en [resoluciones](open-questions.md). Las 11 están resueltas; una futura duda se añade con otro identificador sin reabrirlas automáticamente.
+The checkout contains access/families, memory capture, albums, staged private story/music generation, story playback, translations, source-origin analysis, and contextual assistant integration. Consult the [content guide](../content-generation.md) and [assistant guide](../assistant-integration.md) for operational details. Final reader publication, structured fact review, and a complete purge/retention workflow remain separate work.
 
-Los identificadores `REQ-*`, `TASK-*` y `SCN-*` conectan requisitos, trabajo y aceptación. Los estados de dominio y contratos en arquitectura son propuestas; no son enumeraciones ni APIs ya implementadas.
+The original SDD spans different milestones. Its checkboxes and proposed domain/API contracts are historical records, not a complete inventory of the current application. Implementation, a passing local test, a real-provider trial, and deployment are distinct evidence levels. This language review does not certify any new runtime behavior.
 
-## Flujo de trabajo SDD
+## Common rules
 
-1. Leer la especificación del módulo y los acuerdos adoptados; verificar los prerrequisitos técnicos de la tarea elegida.
-2. Actualizar primero los requisitos y criterios afectados. Registrar nuevas decisiones y sus motivos sin renumerar identificadores existentes.
-3. Mantener alineados arquitectura, permisos, contratos y dependencias. Un cambio de proveedor no puede alterar las reglas de fidelidad o acceso.
-4. Implementar la tarea con los escenarios previstos y registrar qué se comprobó, con qué datos y qué limitaciones quedaron.
-5. Revisar los enlaces y la matriz de [trazabilidad](tasks.md#trazabilidad) antes de dar la tarea por terminada.
+- Adapt real testimony without inventing family events, people, direct quotations, motives, or endings.
+- Adult review confirms that evidence was reviewed; it does not establish absolute historical truth.
+- Keep family testimony, documentary context, and insufficient evidence distinct.
+- An inaccessible source must not leak through answers, citations, search, or generated files.
+- Preserve originals, their languages, source references, and uncertainty across adaptations.
+- Private generation and assistant conversations do not automatically publish or rewrite an approved story.
 
-La calidad de una respuesta de AI no se establece solo porque pase una validación de estructura: requiere comprobar su respaldo en fuentes y su adecuación al lector.
+## Specification workflow
 
-## Reglas comunes
-
-- Los relatos familiares se adaptan sin inventar acontecimientos, personas, diálogos ni desenlaces.
-- Confirmar un dato significa que un adulto ha revisado el testimonio y su evidencia; no demuestra su verdad histórica absoluta.
-- Testimonio familiar, contexto documental e información insuficiente son categorías distintas.
-- Una fuente inaccesible para el usuario tampoco puede aparecer indirectamente en una respuesta, cita, búsqueda o archivo generado.
-- El cuento publicado es una versión aprobada. Las conversaciones del asistente no lo modifican.
-
-## Qué falta ejecutar
-
-Los límites, topes de consumo, modelos y metas del piloto están fijados en DEC-014 a DEC-024. Falta implementar las tareas, configurar las cuentas y claves, validar permisos/modalidades/precios, escoger voces disponibles y ejecutar los escenarios. Esto no acredita un gasto realizado ni un benchmark aprobado.
-
-El primer piloto es local y supervisado con Docker. Contratar servicios, abrir acceso remoto o cambiar los modelos requiere una decisión posterior explícita.
+Read the relevant specification and decision before implementation. Write new maintained requirements and decision updates in English, preserve existing `REQ-*`, `DEC-*`, `PROP-*`, `Q-*`, `TASK-*`, and `SCN-*` identifiers, and link their historical definitions where relevant. Record what was implemented, what was actually checked, and remaining limits. Do not mark an acceptance scenario complete based on a document or schema check alone.

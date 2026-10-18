@@ -34,7 +34,7 @@
     "test:creations": "node --import=tsx scripts/test-access.mts tests/creations.integration.test.ts",
     "test:providers": "node --conditions=react-server --import=tsx --test tests/gemini.test.ts",
     "test:dashboard": "node --import=tsx scripts/test-access.mts tests/dashboard.integration.test.ts",
-    "test:story-mode": "node --import=tsx --test tests/story-mode.test.ts",
+    "test:story-mode": "node --import=tsx --test tests/story-mode.test.ts tests/story-origins.test.ts",
     "test:narration": "node --conditions=react-server --import=tsx --test tests/narration-enhance.test.ts",
     "test:assistant": "node --import=tsx scripts/test-access.mts tests/assistant.integration.test.ts",
     "worker:assistant": "node --env-file=.env --env-file-if-exists=.env.local --conditions=react-server --import=tsx scripts/assistant/worker.mts",

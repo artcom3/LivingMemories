@@ -5,6 +5,8 @@ export const storyLanguages = {
 export type StoryLanguage = keyof typeof storyLanguages;
 export const languageName = (language: string) => storyLanguages[language as StoryLanguage] || language;
 export type LocalizedStoryText = {
+  origins?: import("./shared").StoryOrigin[][];
+  originAnalysis?: import("./shared").OriginAnalysis;
   title: string;
   summary: string;
   pages: string[];

@@ -1,3 +1,4 @@
+import { validateOrigins } from "./origins";
 import { existingStorySong, validateMusicMoment } from "./music-moment";
 import { episodeFragment } from "../episodes/fragments";
 import { assertMonthlyBudget } from "../assistant/usage";
@@ -299,6 +300,7 @@ export async function beginCreation(
     }
     const evidence: Evidence[] = sources.map((s) => ({
       sourceId: s.id,
+      sourceVersion: s.updatedAt.toISOString(),
       memoryId: s.memoryId,
       memoryTitle: s.memory.title,
       memoryDescription: s.memory.description,
@@ -318,7 +320,13 @@ export async function beginCreation(
     if (episode) {
       const selected = evidence.find(e => e.sourceId === episode.sourceId)!;
       if (selected.type === "TEXT") selected.originalText = episode.excerpt;
-      else { selected.transcript = episode.excerpt; selected.timestamps = []; }
+      else {
+        selected.transcript = episode.excerpt;
+        const analysis = await tx.sourceStoryAnalysis.findUnique({ where: { sourceId: episode.sourceId } });
+        selected.timestamps = analysis?.sourceVersion.getTime() === episode.sourceVersion.getTime()
+          ? (analysis.timestamps as unknown as NonNullable<Evidence["timestamps"]> || []).filter(w => episode.audioStart != null && episode.audioEnd != null && w.start >= episode.audioStart && w.end <= episode.audioEnd)
+          : [];
+      }
       selected.contextDescription = [selected.contextDescription, "Selected episode: " + episode.title + ". Narrative evidence is restricted to this original fragment. Memory/album context is provenance only: preserve fictional-example labels and uncertainties; do not borrow events from other episodes."].filter(Boolean).join("\n");
       selected.fragment = { startOffset: episode.startOffset, endOffset: episode.endOffset, audioStart: episode.audioStart, audioEnd: episode.audioEnd };
     }
@@ -434,6 +442,7 @@ export function validateDraft(
   value: unknown,
   settings: CreationSettings,
   ids: string[],
+  evidence?: Evidence[],
 ): CreativeDraft {
   const fail = () => {
     throw new AccessError(
@@ -499,6 +508,10 @@ export function validateDraft(
       text: p.text,
       illustrationPrompt: p.illustrationPrompt,
       sourceIds: p.sourceIds,
+      ...(() => {
+        try { const origins = validateOrigins(p.origins, p.text, p.sourceIds, evidence); return origins ? { origins } : {}; }
+        catch { return fail(); }
+      })(),
     })),
     ...(settings.kind === "STORY" && settings.musicMoment ? { musicMoment: validateMomentDraft(d, settings) } : {}),
     musicPrompt: d.musicPrompt,
@@ -522,6 +535,7 @@ export async function approveCreation(
     input.draft,
     renderingSettings,
     (run.evidence as unknown as Evidence[]).map(e => e.sourceId),
+    run.evidence as unknown as Evidence[],
   );
   if (input.confirmed !== true)
     throw new AccessError(

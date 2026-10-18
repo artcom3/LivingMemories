@@ -1,86 +1,107 @@
-# Cuentos y música a partir de los álbumes
+# Stories and music from albums
 
-La implementación conserva la UI de LivingMemories. Los álbumes agrupan memorias y la selección referencia sus `MemorySource` existentes; no copia ni vuelve a subir sus archivos.
+Albums group memories. Selections reference existing `MemorySource` records without copying or uploading their originals again. The [previous Spanish guide](history/es/docs/content-generation.md) preserves the earlier implementation notes and existing origin-analysis documentation.
 
-## Recorrido para probar
+## Try the creation flow
 
-1. Abre una familia y crea un álbum o usa uno existente.
-2. Guarda una memoria dentro del álbum. Añade fotos, texto, audios o videos; el contexto por archivo es opcional y editable.
-3. Desde el álbum elige **Crear cuento con este álbum** o **Crear música con este álbum**. También puedes entrar desde una memoria o las pestañas Cuentos/Música.
-4. Marca uno o varios álbumes. Selecciona archivos concretos o todo el álbum. Revisa el contexto y las vistas previas. Cambiar el filtro de álbumes conserva los materiales seleccionados; **Limpiar selección** los quita explícitamente.
-5. Para el cuento, elige la memoria principal, idioma, lector, estilo narrativo y visual. La narración y las ilustraciones son opcionales. Para música, elige género, idioma, duración e instrumental o canción con letra.
-6. **Guarda** la preparación y crea un borrador. Se procesa en segundo plano usando la última preparación guardada y una copia del contexto del álbum, memoria y fuentes en ese momento.
-7. Revisa el texto, las citas, incertidumbres, transcripciones y, si corresponde, letra y dirección musical. Puedes editar el texto antes de confirmar.
-8. Confirma la revisión. Se generan ilustraciones/audio por página o la pieza musical. Vuelve a esta pantalla para leer y escuchar los resultados. Permanecen privados; no se publican para lectores.
+1. Open a family and create or select an album.
+2. Save a memory with photos, text, audio, or video. Per-file context is optional and editable.
+3. Start a story or music preparation from the album, a memory, or the story/music sections.
+4. Select one or more albums, then individual files or an entire album. Review context and previews. Changing album filters preserves selected materials; clearing the selection removes them explicitly.
+5. For a story, choose its primary memory, language, reader profile, narrative style, and visual style. Narration and illustrations are optional. For music, choose genre, language, duration, and instrumental or lyrics mode.
+6. Save the preparation and create a draft. Background processing uses the latest saved preparation and a snapshot of album, memory, and source context.
+7. Review text, citations, uncertainty, transcripts, and any lyrics or musical direction. Edit the draft before approval.
+8. Approve the review to generate page illustrations/narration or music. Return to read and listen. Results remain private; completion does not publish them to readers.
 
-Cada versión conserva las referencias a los originales. Al retirar cualquiera de sus fuentes, poner su memoria en la papelera o perder permisos, el acceso a sus resultados queda bloqueado. Corregir el contexto después de comenzar no cambia una versión existente: crea otra versión para usar la corrección.
+Every version retains original-source references. Withdrawal, a trashed memory, or lost permissions blocks access to dependent results. Later context changes do not rewrite an existing version; create another version to use corrected context.
 
-## Conectar los servicios
+## Configure providers
 
-Guarda las claves en `.env.local`, que se excluye del repositorio y de las imágenes de Docker:
+Keep keys in `.env.local`, excluded from Git and Docker images. Use `.env.example` for model variables and defaults; account access must be checked separately.
 
 ```dotenv
 OPENAI_API_KEY=
-# Alternativa automática cuando la clave de OpenAI está vacía
+# Used when the OpenAI key is empty
 GEMINI_API_KEY=
-# interactions (por defecto) o generate_content
+# interactions or generate_content
 GEMINI_API_MODE=interactions
-GEMINI_MODEL_TEXT=gemini-3.8-flash
-GEMINI_MODEL_IMAGE=gemini-nano-banana-2.1
 ELEVENLABS_API_KEY=
 ELEVENLABS_VOICE_ID_ES=
 ELEVENLABS_VOICE_ID_EN=
 ELEVENLABS_MUSIC_MODEL=music_v2
 ```
 
-- Selección: si hay `OPENAI_API_KEY`, se usa OpenAI; si está vacía y existe `GEMINI_API_KEY`, se usa Gemini para borradores, interpretación visual e ilustraciones. Se conservan prompts de fidelidad, esquema del borrador, citas y revisión. No se cambia de proveedor tras errores 401/429/timeouts. Las versiones anteriores conservan su proveedor (OpenAI si no lo registraban); crea una nueva versión para cambiar.
-- Gemini: crea la clave en [Google AI Studio](https://aistudio.google.com/apikey). Usa Interactions API con `store: false`, `gemini-3.8-flash` para texto y `gemini-nano-banana-2.1` para imágenes. Los modelos son configurables y el acceso depende de la cuenta. ElevenLabs sigue a cargo de transcripción, narración y música. [JSON estructurado](https://ai.google.dev/gemini-api/docs/structured-output), [imágenes](https://ai.google.dev/gemini-api/docs/image-generation).
-- OpenAI: acceso a Responses con `gpt-6.1-sol`; para ilustrar, acceso a `gpt-image-2.5-flare` mediante Images. Las ilustraciones se generan con calidad baja y una referencia de hasta tres fotografías seleccionadas para el primer test.
-- ElevenLabs: la API key debe habilitar **Speech to Text**, **Text to Speech**, **Voices** (consulta de catálogo) y **Music**. La cuenta necesita crédito y acceso a las funciones que se prueben. Un catálogo accesible no confirma que la generación musical esté habilitada.
-- Selecciona voces sintéticas de la cuenta y copia su ID para español/inglés. No hacen falta clonación de voz, agentes conversacionales, webhooks ni claves en el navegador. La música usa su modelo propio y no requiere un ID de voz.
-- Los modelos siguen configurables en `.env.local`. Scribe v2 transcribe grabaciones; Multilingual v2 narra. El modo canción usa un plan de composición v2 con la letra revisada; instrumental usa `force_instrumental`.
+OpenAI is selected when its key exists; otherwise Gemini is selected when configured for drafts, visual interpretation, and illustrations. Fidelity rules, draft schemas, citations, and review still apply. Authentication failures, rate limits, and timeouts do not trigger automatic switching to another paid provider. Existing versions retain their recorded provider; create a new version to change it.
 
-En el recorrido Docker completo, después de conectar o cambiar las variables, ejecuta `pnpm docker:up` para recrear app/worker. Para las iteraciones actuales usamos `pnpm dev` y `pnpm worker` locales; reinicia esos procesos al cambiar variables, sin reconstruir Docker. `pnpm docker:check:apis` consulta modelos y voces sin generar contenido ni gastar créditos de generación. Reinicia también `pnpm dev` si lo usas fuera de Docker. El worker local necesita FFmpeg y `heif-convert` si se prueban archivos HEIC. El worker de Docker los incluye para quien utilice ese recorrido.
+Gemini supports the configured API mode and model overrides. OpenAI uses the configured text and image models. Model names in configuration describe this checkout rather than guaranteed account availability. ElevenLabs handles transcription, narration, and music. Its key needs the relevant Speech to Text, Text to Speech, Voices catalog, and Music permissions; successful catalog access does not prove that music generation is enabled.
 
-Primer ensayo sugerido: una memoria escrita de la abuela en Perú, una foto con contexto, cuento infantil de cuatro páginas sin ilustraciones al principio y pieza instrumental acústica de 30 segundos. Después prueba una grabación corta, un video corto y compara estilos visuales o canciones con letra. Las pruebas reales no se han ejecutado sin claves de OpenAI/Gemini y ElevenLabs: todavía hay que evaluar fidelidad, calidad, latencia, voces y coste efectivo con la cuenta.
+Choose synthetic voice IDs available to the account. Story creation does not require voice cloning, conversational agents, or browser-side keys. Music has its own model and needs no narration voice ID. Lyrics mode uses a composition plan with reviewed lyrics; instrumental mode uses `force_instrumental`.
 
-## Procesamiento y límites de desarrollo
+For Docker, run `pnpm docker:up` after environment changes. For native development, restart `pnpm dev` and `pnpm worker`. The native worker needs FFmpeg and `heif-convert` for applicable inputs; the worker image includes them. `pnpm docker:check:apis` checks catalogs without generating content.
 
-`Creation` registra preparación, configuración/modelos, estado, contexto usado, borrador, referencias y archivos generados privados en MinIO. El worker despacha registros pendientes a pg-boss cada diez segundos; cada etapa reclama el registro una sola vez. Estados:
+Start with a short written memory and one contextualized photo, a four-page story without illustrations, and a short instrumental track. Evaluate fidelity, quality, latency, voices, and actual account consumption before expanding. The [historical real-story test](testing/real-story-flow.md) records the provider configuration that worked for that specific local run.
 
-`QUEUED → ANALYZING → REVIEW → RENDER_QUEUED → RENDERING → READY`.
+## Processing and development limits
 
-Un error produce `FAILED`, preservando resultados parciales. No se repite automáticamente una llamada facturable con resultado incierto. Procesos sin progreso durante treinta minutos quedan fallidos para revisión manual. La publicación final, el asistente contextual y una revisión estructurada de hechos siguen pendientes.
+`Creation` records preparation, configuration/models, status, context, draft, source references, and private generated files. The worker dispatches pending records to pg-boss every ten seconds; a stage claims each record once.
 
-- Captura: hasta veinte fuentes por memoria; fotos 15 MB, audio/video 100 MB. Video MP4, MOV o WebM; WebM se clasifica por su tipo MIME.
-- Generación inicial: de una a veinte fuentes por versión. Audio hasta treinta minutos; video hasta diez minutos; máximo treinta minutos combinados. Video usa tres fotogramas y audio si existe, no análisis completo de cada instante. Una transcripción de más de 40.000 caracteres requiere una selección más breve.
-- Música: 30, 60 o 90 segundos. Es una interpretación creativa del recuerdo, no un documento histórico.
-- Cuento: hasta veinticuatro páginas, con rango de palabras según el perfil. Cómic/manga es estilo narrativo/visual de páginas, no un editor de viñetas o generador de video.
-- Se reserva US$5 por versión para ambas etapas; topes simultáneos de US$25 por adulto/familia y US$100 para la app por mes UTC. Una reserva sigue contándose tras un fallo que pudo generar cargos. Hay una versión inicial y hasta dos regeneraciones de la preparación.
-- La reserva controla el cupo local de pruebas. **No es una tarifa ni un límite de facturación impuesto al proveedor**: la conciliación de tokens, créditos y precios efectivos por cuenta todavía está pendiente. Las suscripciones se pagan aparte. Empieza con pocos materiales y comprueba consumo en los paneles antes de ampliar las pruebas.
+`QUEUED → ANALYZING → REVIEW → RENDER_QUEUED → RENDERING → READY`
 
-## Validación y referencias
+Errors produce `FAILED` while preserving partial results. Unknown paid-call outcomes are not automatically replayed. Processing without progress for thirty minutes fails for manual review. Final publication and structured fact review remain separate work; the contextual assistant has its own [integration guide](assistant-integration.md).
 
-`pnpm test:creations` usa una base temporal y objetos sintéticos; comprueba reutilización y contexto, video y transcripción, revisión, aislamiento, retirada, fallos sin repetición y reserva concurrente. Los proveedores están simulados en esta suite; el procesamiento de archivos y MinIO son reales. `pnpm test:content` conserva los recorridos de captura anteriores.
+| Area | Development limits |
+| --- | --- |
+| Capture | Up to 20 sources per memory; photos 15 MB, audio/video 100 MB |
+| Video formats | MP4, MOV, WebM; WebM classified by MIME type |
+| Generation selection | 1–20 sources per version |
+| Duration | Audio up to 30 minutes; video up to 10 minutes; 30 minutes combined |
+| Video analysis | Three frames and available audio, rather than every instant |
+| Transcript | More than 40,000 characters requires a shorter selection |
+| Music | 30, 60, or 90 seconds |
+| Story | Up to 24 pages, with reader-profile word ranges |
+| Reservation | US$5 per version for both stages |
+| Monthly reservations | US$25 per adult and family; US$100 app-wide, UTC month |
+| Regeneration | One initial version and up to two preparation regenerations |
 
-Referencias oficiales consultadas el 10 de octubre de 2026: [OpenAI Responses estructuradas](https://developers.openai.com/api/docs/guides/structured-outputs), [visión](https://developers.openai.com/api/docs/guides/images-vision), [edición de imágenes](https://developers.openai.com/api/reference/resources/images/methods/edit), [ElevenLabs Scribe](https://elevenlabs.io/docs/api-reference/speech-to-text/convert), [narración](https://elevenlabs.io/docs/api-reference/text-to-speech/convert), [Music](https://elevenlabs.io/docs/api-reference/music/compose) y [planes de composición](https://elevenlabs.io/docs/eleven-api/guides/how-to/music/composition-plans).
+Music is a creative interpretation, not historical evidence. Comic/manga styles apply to illustrated pages; they do not provide a panel editor or generated video. Reservations may remain counted after failures that could have incurred charges. They govern local test allowance, not provider prices or provider-enforced billing caps. Subscription costs are separate, and effective account usage still needs reconciliation.
 
-## Primera prueba real
+## Validation and historical evidence
 
-El [registro de prueba](testing/real-story-flow.md) conserva el resultado de texto + fotografía → cuatro páginas → revisión de citas → cuatro narraciones. En la cuenta de desarrollo funcionó `GEMINI_MODEL_TEXT=gemini-3.5-flash-lite` con `GEMINI_API_MODE=generate_content`. No hay cambio automático de endpoint tras errores; queda registrado en cada versión. Los intentos fallidos sin borrador no consumen las regeneraciones de contenido, aunque su reserva sigue contando.
+`pnpm test:creations` uses a temporary database, synthetic inputs, simulated providers, and real file processing/MinIO. It covers reuse, context, video/transcripts, review, isolation, withdrawal, failures without replay, and concurrent reservations. `pnpm test:content` covers earlier capture flows. Passing mocked-provider tests does not establish real-provider quality.
 
-La demostración de imágenes se hizo separadamente mediante MCP de ElevenLabs. Su API automática de imágenes requiere Pro o superior; la clave de desarrollo es Creator. No se presenta el resultado del MCP como integración automática del worker.
+The [real-story report](testing/real-story-flow.md) records text/photo input, four reviewed pages, and four narrations. A separate image demonstration used ElevenLabs MCP; it does not establish automatic worker image integration. Account tiers and model access described there are historical observations.
 
-## Idiomas de un cuento aprobado
+## Languages of an approved story
 
-Desde una versión terminada, **Languages → Translate story** añade una edición en español, inglés, italiano, francés, alemán o portugués. La traducción parte del cuento aprobado, no vuelve a interpretar la memoria. Conserva las páginas, su orden y las referencias originales. Los títulos, textos y letras se revisan antes de **Generate translated audio**.
+From a completed version, **Languages → Translate story** adds Spanish, English, Italian, French, German, or Portuguese. Translation starts from the approved story without reinterpreting the memory. It preserves page order and original references. Review titles, text, and lyrics before **Generate translated audio**.
 
-Cada `StoryLocale` pertenece a una `Creation` terminada y conserva una copia del borrador base, la configuración, el texto traducido, el estado y sus audios. La edición original permanece intacta. Las ilustraciones se sirven desde los archivos originales; no se copian ni regeneran. La narración conserva el ID de voz de la versión original. La canción con letra se genera de nuevo con la duración y estilo originales; una canción reutilizada a través de otros cuentos conserva la configuración de su pieza de origen. Una pieza instrumental reutiliza el mismo archivo. La melodía y la voz cantante de una canción traducida pueden variar.
+Each `StoryLocale` belongs to a completed `Creation` and stores the base-draft snapshot, configuration, translated text, status, and audio. The original edition stays intact. Illustrations reuse the original files. Narration retains the original version's voice ID. A lyrical song is generated again with its original duration/style; a song reused from another story retains its source track's configuration. Instrumental music reuses the same file. A translated song's melody and singing voice may differ.
 
-El lector ofrece **Story language** para los idiomas terminados. Cambiar de idioma conserva la página, detiene el audio y carga el texto y audios correspondientes. La canción empieza al finalizar la narración de la página prevista, sin depender de la duración del idioma anterior. Un enlace con `?language=es` abre directamente la edición española.
+**Story language** lists completed editions. Switching languages keeps the page, stops audio, and loads the selected text/audio. Music starts after narration ends on its designated page. A `?language=es` link opens the Spanish edition.
 
-Estados: `QUEUED → ANALYZING → REVIEW → RENDER_QUEUED → RENDERING → READY`. El worker usa una cola independiente sin reintentos automáticos. Un fallo conserva el texto y los audios terminados; **Retry missing content** requiere una acción explícita. Al revisar el reintento, cambiar un texto o una letra invalida solo su audio anterior para evitar voz desactualizada. La edición fallida no aparece en el selector; las demás siguen disponibles. Cada intento registra una reserva con los controles mensuales existentes.
+Locale stages follow the same creation statuses in a separate queue without automatic retries. Failures preserve text and completed audio; **Retry missing content** requires explicit action. Editing text or lyrics during retry invalidates only the affected audio. Failed editions stay out of the selector while other editions remain usable. Each attempt records a reservation under existing monthly controls.
 
-Todas las operaciones y archivos heredan los permisos y dependencias de la creación original. Retirar una fuente o perder la membresía bloquea también las traducciones. Los endpoints están bajo `/api/families/:familyId/content/creations/:creationId/locales`: GET lista ediciones, POST crea una traducción; `/:language` consulta el estado; `/:language/approve` confirma revisión; `/:language/retry` solicita reintento y `/:language/assets/:assetId` sirve audio privado.
+All locale operations/assets inherit original-creation permissions and dependencies. Source withdrawal or membership loss also blocks translations. Endpoints under `/api/families/:familyId/content/creations/:creationId/locales` provide GET listing, POST translation, `/:language` status, `/:language/approve`, `/:language/retry`, and `/:language/assets/:assetId` private audio.
 
-La migración `20261011180000_story_locales` agrega la tabla sin modificar las creaciones anteriores. Después de aplicarla y generar Prisma Client, reinicia app y worker para cargar el nuevo modelo. `pnpm test:locales` valida aislamiento, conservación de imágenes y originales, voz y canción, concurrencia, reintentos parciales, cambios de texto, música instrumental y retirada de fuentes.
+The additive migration `20261011180000_story_locales` adds the table without changing earlier creations. Apply migrations, regenerate Prisma Client, and restart app/worker to load it. `pnpm test:locales` covers isolation, preserved originals/images, voice/music, concurrency, partial retries, edits, instrumentals, and source withdrawal.
+
+## Story text origins
+
+
+New story drafts include `pages[].origins`: consecutive text fragments classified as `SUPPORTED`, `ADAPTED`, or `AI_ADDED`. Their text must concatenate exactly to the page text. Supported/adapted fragments cite a selected source, an evidence field, and a unique verbatim quote. AI additions have no citations; this classification does not authorize invented family facts. The draft review shows the proposed links so an adult can check meaning before approval. Validation proves excerpt membership and coverage, not historical truth or semantic entailment.
+
+In story mode, selecting text offers **View origin of selection**. **View page sources** is also available without selection, including keyboard access. The origin dialog loads private evidence on demand, shows all overlapping fragments, links to their memories, and pauses generated narration/music before original playback. Audio word times come from the source transcript; no model-supplied times are accepted. An episode-wide fallback is labeled explicitly. Without reliable times, only the full original recording is offered.
+
+The origins and audio endpoints use live family/creation authorization. Original playback also requires the source version saved at creation time to match the current source. Permissions/version are checked before each playback, private blobs are released on close, and the open dialog refreshes every 30 seconds. Withdrawal or access revocation removes access to origins and audio. Source edits disable original playback for the saved evidence.
+
+Earlier books, edited pages without mappings, and translated editions receive retrospective fragment analysis when the reader opens their origins. The POST `creations/:id/origins/prepare` annotates the saved page texts against frozen source evidence. It neither regenerates the story nor translates it again. Translated fragments quote the original sources in their original language and can play the same original recording. Existing page text, illustrations, narration, music, review timestamps and preparation settings remain unchanged.
+
+Retrospective classification is explicitly an AI assessment; it is not included in the earlier adult approval. `UNVERIFIED` identifies factual claims with no located support. Missing evidence must not be labeled proof of AI authorship. Obvious creative language can be labeled `AI_ADDED`, with the retrospective caveat. All supported/adapted citations still require unique exact excerpts of allowed evidence fields; selection ignores whitespace-only overlaps.
+
+Analysis status and a unique claim token live in the existing draft JSON. Concurrent requests reuse the in-progress claim, output uses optimistic concurrency, and failed analysis preserves all content and offers an explicit retry. Claims older than 30 minutes surface as failed rather than loading forever. The reader polls an open analysis; provider failures are not automatically replayed. No schema migration is needed.
+
+Legacy source-version anchors are recovered only when source records predate the creation and have not changed since it. Missing audio word times can be recovered from an analysis of that same source version and matching transcript. If a source changed or trustworthy timing is unavailable, the reader says so instead of making a precise original-audio claim. Editing draft text or page sources invalidates that page's existing mapping.
+
+For local maintenance, run `node --env-file=.env --env-file-if-exists=.env.local --conditions=react-server --import=tsx scripts/maintenance/backfill-story-origins.mts --actor <authorized-owner-id>`. It analyzes ready books and ready translated editions owned by that user, saves private backups in the system temp directory, and verifies content/audio preservation. It refuses a non-local database.
+
+Validation: `pnpm test:story-mode` covers mapping and word alignment; `pnpm test:creations` covers persisted mappings, forged quotes, live access, original audio and source changes.

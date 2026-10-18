@@ -191,7 +191,7 @@ export function CreationWorkspace({
         ? {
             ...d,
             pages: d.pages.map((p, i) =>
-              i === index ? { ...p, [field]: value } : p,
+              i === index ? { ...p, [field]: value, ...(field === "text" ? { origins: undefined } : {}) } : p,
             ),
           }
         : d,
@@ -391,6 +391,14 @@ export function CreationWorkspace({
             {draft.pages.map((page, index) => (
               <article className="creation-page" key={index}>
                 <h3>Page {index + 1}</h3>
+                {page.origins ? <Disclosure title="Review text origins and AI additions">
+                  <p>{draft.originAnalysis?.method === "RETROSPECTIVE" ? "These links were analyzed after the story was created. They were not part of the original adult review." : "These links are proposed by AI. Verify that each original excerpt supports the claim before approving."}</p>
+                  {page.origins.map((origin, n) => <div key={n}>
+                    <strong>{origin.kind === "AI_ADDED" ? "Added by AI" : origin.kind === "ADAPTED" ? "Narrative adaptation" : origin.kind === "UNVERIFIED" ? "No supporting source found" : "Supported by sources"}</strong>
+                    <p>{origin.text}</p>
+                    {origin.citations.map((citation, c) => <blockquote key={c}>{citation.quote} · {sourceDisplayName(run.evidence.find(e => e.sourceId === citation.sourceId)?.originalName || "Source")}</blockquote>)}
+                  </div>)}
+                </Disclosure> : <p className="form-hint">Sources are linked to this page. Fragment origins are unavailable after text or source edits, or for earlier versions.</p>}
                 {run.status === "REVIEW" ? (
                   <>
                     <FormField
@@ -431,6 +439,7 @@ export function CreationWorkspace({
                                           i === index
                                             ? {
                                                 ...p,
+                                                origins: undefined,
                                                 sourceIds: p.sourceIds.includes(
                                                   source.sourceId,
                                                 )

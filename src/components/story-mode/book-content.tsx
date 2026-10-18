@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ImageOff, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StoryBook } from "@/lib/creations/story-book";
+import { SelectableStoryText, type OriginSelection } from "./story-origins";
 import { usePrivateMedia } from "./use-private-media";
 
 export type BookContentProps = {
@@ -37,9 +38,10 @@ export function Illustration(props: BookContentProps) {
   </div>;
 }
 
-export function StorySheet({ book, page, kind, enabled, onDenied, onExpand }: {
+export function StorySheet({ book, page, kind, enabled, onDenied, onExpand, onOrigin }: {
   book: StoryBook; page: number; kind: "image" | "text" | "combined"; enabled: boolean;
   onDenied: () => void; onExpand: BookContentProps["onExpand"];
+  onOrigin: (selection: OriginSelection) => void;
 }) {
   const [retry, setRetry] = useState(0);
   const body = useRef<HTMLDivElement>(null);
@@ -66,7 +68,7 @@ export function StorySheet({ book, page, kind, enabled, onDenied, onExpand }: {
     <div className="story-page-caption"><span>LivingMemories</span><span>{String(page + 1).padStart(2, "0")}</span></div>
     <div ref={body} className="story-page-body" tabIndex={kind === "image" ? undefined : 0}>
       {kind !== "text" && (kind !== "combined" || data.imageUrl) ? <div className="story-picture-frame"><Illustration {...content} />{kind === "combined" && image.url && !content.imageError ? <Button className="story-picture-expand" variant="secondary" size="icon" aria-label="View image" onClick={e => onExpand("image", e.currentTarget)}><Maximize2 /></Button> : null}</div> : null}
-      {kind !== "image" ? <><span className="story-chapter-label">{page === 0 ? "Our story begins" : `The story continues · ${page + 1}`}</span><div className="story-page-text">{data.text}</div></> : null}
+      {kind !== "image" ? <><span className="story-chapter-label">{page === 0 ? "Our story begins" : `The story continues · ${page + 1}`}</span><SelectableStoryText text={data.text} page={page} className="story-page-text" onOrigin={onOrigin} /></> : null}
     </div>
     <div className="story-leaf-footer"><span>{kind === "image" ? "A moment to remember" : more ? "Scroll to continue ↓" : `${page + 1} / ${book.pages.length}`}</span>
       {kind === "image" ? image.url && !content.imageError ? <Button variant="ghost" size="sm" onClick={e => onExpand("image", e.currentTarget)}><Maximize2 />View image</Button> : null

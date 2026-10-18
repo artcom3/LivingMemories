@@ -98,7 +98,7 @@ export async function processCreation(
           proposed.musicMoment = {...moment,title:original.title,musicPrompt:original.musicPrompt,lyrics:original.lyrics};
         }
       }
-      const draft = validateDraft(proposed,settings,ids);
+      const draft = validateDraft(proposed,settings,ids,prepared.evidence);
       await check();
       await prisma.creation.update({
         where: { id },
@@ -109,7 +109,7 @@ export async function processCreation(
       });
       return;
     }
-    const draft = validateDraft(initial.draft, settings, ids) as CreativeDraft;
+    const draft = validateDraft(initial.draft, settings, ids, evidence) as CreativeDraft;
     const artifacts = initial.artifacts as unknown as Artifact[];
     const save = async (
       bytes: Uint8Array,
